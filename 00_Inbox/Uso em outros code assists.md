@@ -1,0 +1,1 @@
+"Consulte o arquivo /mnt/c/Users/saoflfer/Documents/obsidian/flv_fit_vault/00_META/Agent-Instruction.md para entender meus padrões de engenharia e estrutura de conhecimento antes de começar."

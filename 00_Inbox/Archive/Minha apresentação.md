@@ -1,0 +1,11 @@
+Sou engenheiro mecatrônico, formado em 2022, e atuo com sistemas embarcados desde 2019, quando ainda estava na graduação. Desde então, minha trajetória tem sido majoritariamente em P&D, sempre trabalhando com desenvolvimento de produtos baseados em microcontroladores, integração de sensores, comunicação sem fio e firmware.
+
+Durante a graduação participei de projetos de robótica móvel autônoma, foguete modelismo (atuando com telemetria e sistemas embarcados de acionamento) e também colaborei em um projeto de respirador durante a pandemia, com foco em modelagem 3D e prototipação. Em paralelo, fundei uma startup de robótica educacional, onde fui responsável pelo desenvolvimento dos produtos de hardware, desde kits eletrônicos até plataformas de robótica móvel multisensor, experiência que mantive de forma integral até 2022 e parcialmente até 2025.
+
+Posteriormente, atuei no time de P&D de uma empresa do setor de radares de velocidade e soluções para cidades inteligentes, desenvolvendo produtos embarcados com comunicação via rádio 2.4 GHz, sistemas multisensoriais e uma nova linha de radar com toda a eletrônica reprojetada. Nesse período, tive contato intenso com validação experimental, testes e processos de homologação e certificação (INMETRO), o que contribuiu bastante para minha maturidade técnica e visão de engenharia aplicada.
+
+Atualmente trabalho com ensino e desenvolvimento de conteúdo na área de sistemas embarcados, IoT e inteligência artificial na borda, buscando integrar fundamentos técnicos com visão de produto e aplicação prática.
+
+Minha principal área de interesse é firmware e arquitetura de sistemas embarcados, que é onde me sinto mais motivado a aprofundar e investigar. Também tenho grande interesse em sistemas de controle — já apliquei conceitos como PID em projetos anteriores e é umas das áreas que eu gostaria de me aprofundar.
+
+Quanto à disponibilidade, gostaria de entender quais são as necessidades para o mestrado, para que eu possa ajustar minha carga de trabalho e horários pra atender o curso e a pesquisa.
