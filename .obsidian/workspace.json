@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "3ebd1fe6a25b68aa",
+        "id": "f00235856dceaf4a",
         "type": "tabs",
         "children": [
           {
-            "id": "2223e726749e0085",
+            "id": "b5f4027f3a35f139",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md",
+                "file": "00_Inbox/Uso em outros code assists.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Estrutura de Artigos Científicos (IMRaD)"
+              "title": "Uso em outros code assists"
             }
           }
         ]
@@ -72,6 +72,16 @@
               "state": {},
               "icon": "lucide-bookmark",
               "title": "Bookmarks"
+            }
+          },
+          {
+            "id": "40e1cbec1ccf8529",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
             }
           }
         ]
@@ -131,12 +141,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md",
+                "file": "20_Permanent_Notes/Capella e os 3 Pilares - Exemplo Prático.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Estrutura de Artigos Científicos (IMRaD)"
+              "title": "Outgoing links from Capella e os 3 Pilares - Exemplo Prático"
             }
           },
           {
@@ -174,17 +184,17 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "create a link.md",
+                "file": "20_Permanent_Notes/Capella e os 3 Pilares - Exemplo Prático.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of create a link"
+              "title": "Outline of Capella e os 3 Pilares - Exemplo Prático"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
@@ -199,37 +209,40 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "obsidian-git:Open Git source control": false
     }
   },
-  "active": "93e2c50982147730",
+  "active": "b5f4027f3a35f139",
   "lastOpenFiles": [
+    "20_Permanent_Notes/MBSE com Agentic AI.md",
+    "00_Inbox/Uso em outros code assists.md",
+    "Systems Engineering Handbook.md",
+    "90_Assets/Skill - Academic-Evidence-Mapper.md",
+    "90_Assets/Skill - Project-Bootstrapper.md",
+    "90_Assets/Skill - Graph-Gardener.md",
+    "90_Assets/Skill - SE-Gated Development.md",
+    "20_Permanent_Notes/Fase A - Desenvolvimento de Conceito.md",
+    "30_MOCs/Referências Bibliográficas.md",
+    "META.md",
+    "20_Permanent_Notes/Fase F - Encerramento (Closeout).md",
+    "20_Permanent_Notes/Padrão de Documentação Agêntica Local.md",
+    "20_Permanent_Notes/Engenharia de Sistemas Agêntica.md",
+    "30_MOCs/Engenharia de Sistemas.md",
+    "00_META/Agent-Instruction.md",
+    "PRD.md",
+    "20_Permanent_Notes/Capella e os 3 Pilares - Exemplo Prático.md",
+    "20_Permanent_Notes/Framework 3 Pilares SE.md",
+    "20_Permanent_Notes/SysML.md",
+    "20_Permanent_Notes/MBSE.md",
+    "20_Permanent_Notes/Ciclo de Vida de Engenharia de Sistemas.md",
+    "20_Permanent_Notes/Digital Twin.md",
+    "40_Projects/birthday_counter.md",
+    "40_Projects/birthday_counter.md.d1fe3e2cd807.tmp",
+    "40_Projects/birthday_counter.md.528dadbfe4ea.tmp",
+    "20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md",
     "10_Literature_Notes/References/Whitesides 2004.md",
     "20_Permanent_Notes/Escrita Acadêmica de Alto Impacto.md",
-    "30_MOCs/Engenharia de Sistemas.md",
-    "90_Assets/Template_Referencia.md",
-    "00_Inbox/Uso em outros code assists.md",
-    "20_Permanent_Notes/Estratégia de Publicação e Ética Científica.md",
-    "20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md",
-    "20_Permanent_Notes/Análise de Trade-off (Trade Study).md",
-    "10_Literature_Notes/References/Behara & Naidoo 2026.md",
-    "20_Permanent_Notes/IA Generativa na Engenharia de Sistemas.md",
-    "10_Literature_Notes/References/Brynjolfsson et al 2025.md",
-    "20_Permanent_Notes/Skill - Ingestão de Notas de Literatura.md",
-    "10_Literature_Notes/References/Durrani et al 2025.md",
-    "20_Permanent_Notes/Agentic AI.md",
-    "20_Permanent_Notes/Matriz de V&V - Birthday Counter.md",
-    "20_Permanent_Notes/Registro de Riscos - Birthday Counter.md",
-    "20_Permanent_Notes/Caso de Uso - SEMP Birthday Counter.md",
-    "20_Permanent_Notes/Detalhamento dos Processos Técnicos no SEMP.md",
-    "20_Permanent_Notes/Fase A - Desenvolvimento de Conceito.md",
-    "20_Permanent_Notes/Skill - Pesquisa Acadêmica Rigorosa.md",
-    "20_Permanent_Notes/Plano de Gerenciamento de Engenharia de Sistemas (SEMP).md",
-    "10_Literature_Notes/NASA Systems Engineering Handbook.md",
-    "20_Permanent_Notes/MBSE com Agentic AI.md",
-    "20_Permanent_Notes/NASA SE Engine.md",
-    "20_Permanent_Notes/Fase E - Operações e Sustentação.md",
-    "20_Permanent_Notes/Capella e os 3 Pilares - Exemplo Prático.md",
     "00_META",
     "90_Assets/Utilities",
     "00_Inbox/Archive",
@@ -237,8 +250,6 @@
     "10_Literature_Notes/References",
     "40_Projects/Mestrado_ITA",
     "40_Projects",
-    "90_Assets",
-    "30_MOCs",
-    "20_Permanent_Notes"
+    "90_Assets"
   ]
 }
