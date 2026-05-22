@@ -22,6 +22,7 @@ Em sistemas de larga escala (ex: avaliar 100+ repositórios), o uso de agentes p
 - **Velocidade**: Ganho de até 10x comparado a frameworks de agentes puros (ex: CrewAI).
 - **Custo**: Redução drástica no consumo de tokens.
 - **Confiabilidade**: Scripts determinísticos não sofrem de alucinações em tarefas de IO.
+- **Escalabilidade**: Permite o uso de [[Arquitetura de Diretórios para Pipelines de Validação]] para manter o projeto organizado mesmo com centenas de arquivos gerados.
 
 ## Links
 - [[hermes_validator]]
