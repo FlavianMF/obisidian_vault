@@ -26,7 +26,7 @@ Ao desenvolver software para o Flavian, você **deve** seguir estes padrões ext
 1. **DooD (Docker-out-of-Docker)**: Sempre que precisar de sandboxing para ferramentas, use [[Docker-out-of-Docker (DooD)]].
 2. **Ciclo de Vida SE**: Siga o [[Engenharia de Sistemas Agêntica|Padrão Agêntico de SE]] (Pré-Fase A até Fase B) antes de codar.
 3. **Orquestração Híbrida**: Se o projeto for de larga escala, prefira [[Orquestração Híbrida de Agentes]] (Scripts + LLM).
-4. **Local Project Brain**: Utilize a pasta `docs/` do projeto como um cérebro local. Siga o [[Padrão de Documentação Agêntica Local]] e utilize o template em `90_Assets/Template_Project_Prompt.md` para criar o `PROMPT.md` do projeto.
+4. **Local Project Brain (MANDATÓRIO)**: Se a pasta `docs/` não existir no diretório raiz do projeto, você **deve criá-la imediatamente**. Popule-a com os arquivos iniciais (`PROMPT.md`, `index.md`, `PRD.md`, `architecture.md`) utilizando o conteúdo que você leu do código/README original. Siga o [[Padrão de Documentação Agêntica Local]] e utilize o template em `90_Assets/Template_Project_Prompt.md` para o `PROMPT.md`.
 
 ## 🏗️ Skills de Automação (COMPORTAMENTOS)
 Além dos padrões técnicos, você deve operar utilizando estas "Skills":

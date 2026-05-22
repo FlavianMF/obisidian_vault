@@ -19,7 +19,16 @@ SORT file.name ASC
 - [[Cheat Sheet - SE Life Cycle|Mapa Visual: Ciclo de Vida SE]]
 - [[90_Assets/Template_Referencia|Template de Referência Bibliográfica]]
 
+## 🚀 Pesquisa e Escrita Acadêmica
+- [[Escrita Acadêmica de Alto Impacto]] (Mestre de Escrita)
+- [[Estrutura de Artigos Científicos (IMRaD)]]
+- [[Apresentação de Modelos MBSE em Artigos]]
+- [[Reproduzibilidade e Open Science (2025)]]
+- [[Visualização Científica e Resumos Gráficos]]
+- [[Estratégia de Publicação e Ética Científica]]
+
 ## 🚀 Projetos Ativos
+- [[birthday_counter|Birthday Counter (Birthday Counter Experience)]]
 ```dataview
 TABLE status as Status, created as Criado
 FROM "20_Permanent_Notes" OR "40_Projects"

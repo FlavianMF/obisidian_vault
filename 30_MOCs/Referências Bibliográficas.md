@@ -4,6 +4,7 @@
 > Use `[[Sobrenome Ano]]` para citar rapidamente em qualquer lugar do cofre.
 
 ## 📖 Literatura Citada
+- [[Whitesides 2004]] - Metodologia de escrita e planejamento de artigos.
 - [[Adeyeye & Akanbi 2024]] - Review de AI para SE Complexity.
 - [[Rouse 2020]] - AI como Augmented Intelligence.
 - [[Yu et al 2024]] - AI em Sistemas Inteligentes Complexos.

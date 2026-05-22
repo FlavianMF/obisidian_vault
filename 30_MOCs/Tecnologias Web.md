@@ -1,0 +1,20 @@
+---
+title: MOC Tecnologias Web
+type: moc
+tags: [moc, web-dev, stack]
+created: 2026-05-21
+---
+
+# 🌐 MOC Tecnologias Web
+
+## 🚀 Frameworks & Stack
+- [[Ruby on Rails]]
+- [[Hotwire]] ([[Turbo]], [[Stimulus]])
+- [[TailwindCSS]]
+
+## 🗄️ Dados
+- [[PostgreSQL]]
+- [[JSONB]]
+
+## 🔗 Relacionado
+- [[Engenharia de Sistemas]]

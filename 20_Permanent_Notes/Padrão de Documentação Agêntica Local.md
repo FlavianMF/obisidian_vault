@@ -9,8 +9,8 @@ created: 2026-05-21
 
 Este padrão define como um projeto deve estruturar sua pasta `docs/` para servir como um "segundo cérebro" para agentes de IA, permitindo que a base de conhecimento cresça recursivamente com o projeto.
 
-## 📂 Estrutura Obrigatória da Pasta `docs/`
-Todo projeto deve conter:
+## 📂 Estrutura Obrigatória e Inicialização
+Se a pasta `docs/` não existir, o agente **deve criá-la imediatamente** na primeira sessão. Todo projeto deve conter:
 1.  **`PROMPT.md`**: O "System Prompt" local. O agente deve ler este arquivo em cada nova sessão.
 2.  **`index.md`**: Mapa de Conteúdo (MOC) do projeto.
 3.  **`PRD.md`**: Requisitos e Visão de Produto (Fase A).

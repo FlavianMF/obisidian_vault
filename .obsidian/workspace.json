@@ -13,15 +13,58 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00_Inbox/Uso em outros code assists.md",
+                "file": "20_Permanent_Notes/Pré-Fase A - Análise de Conceito.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Uso em outros code assists"
+              "title": "Pré-Fase A - Análise de Conceito"
+            }
+          },
+          {
+            "id": "49e30598ddffb8d9",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "20_Permanent_Notes/Ciclo de Vida de Engenharia de Sistemas.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Ciclo de Vida de Engenharia de Sistemas"
+            }
+          },
+          {
+            "id": "8fcc6a5ab329768a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "20_Permanent_Notes/Fase A - Desenvolvimento de Conceito.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Fase A - Desenvolvimento de Conceito"
+            }
+          },
+          {
+            "id": "a6cb6b85b8a127a0",
+            "type": "leaf",
+            "state": {
+              "type": "split-diff-view",
+              "state": {
+                "aFile": "we.md",
+                "bFile": "we.md",
+                "aRef": ""
+              },
+              "icon": "diff",
+              "title": "Diff: we  (Working Tree)"
             }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -53,7 +96,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "ia generativa",
+                "query": "escrita Acade",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -84,7 +127,8 @@
               "title": "Source Control"
             }
           }
-        ]
+        ],
+        "currentTab": 3
       },
       {
         "id": "3671d67b61218076",
@@ -213,43 +257,43 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "b5f4027f3a35f139",
+  "active": "a6cb6b85b8a127a0",
   "lastOpenFiles": [
-    "20_Permanent_Notes/MBSE com Agentic AI.md",
     "00_Inbox/Uso em outros code assists.md",
-    "Systems Engineering Handbook.md",
-    "90_Assets/Skill - Academic-Evidence-Mapper.md",
-    "90_Assets/Skill - Project-Bootstrapper.md",
-    "90_Assets/Skill - Graph-Gardener.md",
-    "90_Assets/Skill - SE-Gated Development.md",
-    "20_Permanent_Notes/Fase A - Desenvolvimento de Conceito.md",
-    "30_MOCs/Referências Bibliográficas.md",
-    "META.md",
-    "20_Permanent_Notes/Fase F - Encerramento (Closeout).md",
-    "20_Permanent_Notes/Padrão de Documentação Agêntica Local.md",
-    "20_Permanent_Notes/Engenharia de Sistemas Agêntica.md",
-    "30_MOCs/Engenharia de Sistemas.md",
+    "20_Permanent_Notes/Pitfalls no Uso de rstrip para URLs.md",
     "00_META/Agent-Instruction.md",
-    "PRD.md",
-    "20_Permanent_Notes/Capella e os 3 Pilares - Exemplo Prático.md",
-    "20_Permanent_Notes/Framework 3 Pilares SE.md",
-    "20_Permanent_Notes/SysML.md",
-    "20_Permanent_Notes/MBSE.md",
+    "Untitled.base",
+    "20_Permanent_Notes/Escrita Acadêmica de Alto Impacto.md",
+    "20_Permanent_Notes/Pré-Fase A - Análise de Conceito.md",
+    "20_Permanent_Notes/Apresentação de Modelos MBSE em Artigos.md",
+    "20_Permanent_Notes/Reproduzibilidade e Open Science (2025).md",
+    "20_Permanent_Notes/Visualização Científica e Resumos Gráficos.md",
+    "20_Permanent_Notes/Fase A - Desenvolvimento de Conceito.md",
     "20_Permanent_Notes/Ciclo de Vida de Engenharia de Sistemas.md",
-    "20_Permanent_Notes/Digital Twin.md",
+    "we.md",
+    "10_Literature_Notes/NASA Systems Engineering Handbook.md",
+    "20_Permanent_Notes/NASA SE Engine.md",
+    "30_MOCs/Engenharia de Sistemas.md",
+    "30_MOCs/Tecnologias Web.md",
+    "30_MOCs/Referências Bibliográficas.md",
+    "20_Permanent_Notes/Engenharia de Sistemas Agêntica.md",
+    "20_Permanent_Notes/MBSE com Agentic AI.md",
+    "20_Permanent_Notes/Ruby on Rails.md",
     "40_Projects/birthday_counter.md",
+    "20_Permanent_Notes/Hotwire.md",
+    "20_Permanent_Notes/JSONB.md",
+    "20_Permanent_Notes/PostgreSQL.md",
+    "20_Permanent_Notes/TailwindCSS.md",
+    "20_Permanent_Notes/Stimulus.md",
+    "20_Permanent_Notes/Turbo.md",
     "40_Projects/birthday_counter.md.d1fe3e2cd807.tmp",
     "40_Projects/birthday_counter.md.528dadbfe4ea.tmp",
-    "20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md",
-    "10_Literature_Notes/References/Whitesides 2004.md",
-    "20_Permanent_Notes/Escrita Acadêmica de Alto Impacto.md",
     "00_META",
     "90_Assets/Utilities",
     "00_Inbox/Archive",
     "30_MOCs/sedSfMOAG",
     "10_Literature_Notes/References",
     "40_Projects/Mestrado_ITA",
-    "40_Projects",
-    "90_Assets"
+    "40_Projects"
   ]
 }

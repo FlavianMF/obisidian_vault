@@ -1,7 +1,16 @@
-# birthday_counter Engineering Testing Overview
+# birthday_counter Engineering & Architecture
 
 ## Project Context
 The birthday_counter application calculates the number of days until a person's next birthday based on their birth date. In a system engineering context, this simple application provides an excellent testbed for various engineering practices.
+
+## Web Architecture (Ruby on Rails)
+Aplicação [[Ruby on Rails|Ruby on Rails 7.1]] focada em interatividade de tempo real para eventos ("Minuto Zero").
+
+### Stack Tecnológico
+- **Frontend**: [[Hotwire]] ([[Turbo]] + [[Stimulus]]) para uma experiência SPA-like. Estilização via [[TailwindCSS]] ("Modern Festive Dark" com glassmorphism).
+- **Backend**: [[Ruby on Rails|Ruby on Rails 7.1]]. API v1 (JSON) + Views dinâmicas.
+- **Real-time**: [[ActionCable]] (WebSockets) para eventos de celebração.
+- **Banco de Dados**: [[PostgreSQL]] com uso intensivo de [[JSONB]] para configurações dinâmicas e índices de performance.
 
 ## System Engineering Testing Aspects
 
@@ -37,3 +46,4 @@ This project demonstrates system-level testing practices for date-handling appli
 - Validation of error conditions
 - Performance benchmarking
 - Integration testing with system components
+- **Containerização**: Preparado para [[Docker-out-of-Docker (DooD)]].
