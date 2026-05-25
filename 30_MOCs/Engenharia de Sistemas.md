@@ -37,6 +37,7 @@ SORT status DESC
 ```
 
 ## 🛠️ Ferramentas e Padrões
+- [[Ruby-Testing-Docker|Padrão: Testes Ruby on Rails com Docker]]
 - [[Plano de Gerenciamento de Engenharia de Sistemas (SEMP)|O SEMP como Guia de Gestão Técnica]]
 ```dataview
 TABLE type as Tipo, project as Projeto
