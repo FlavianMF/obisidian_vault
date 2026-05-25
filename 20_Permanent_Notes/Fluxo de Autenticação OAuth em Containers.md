@@ -15,10 +15,11 @@ Padrão para lidar com fluxos de autenticação que requerem redirecionamento vi
 Agentes como o Gemini CLI ou Hermes Agent frequentemente usam Google OAuth, que abre um navegador e redireciona para um `localhost:port`. Dentro de um container ou servidor remoto, esse redirecionamento falha.
 
 ## Solução
-1. **Exposição de Portas**: Expor a porta de callback (geralmente `8080`) no `docker-compose.yml`.
+1. **Exposição de Portas**: Expor a porta de callback (geralmente `8080`) no `docker-compose.yml`. Em cenários multi-instância, essa porta deve ser parametrizada via variável de ambiente (ex: `OAUTH_PORT`).
 2. **Tunneling (Se remoto)**: Usar SSH Tunneling para mapear a porta do servidor para o host local:
    `ssh -L 8080:localhost:8080 user@remote-ip`
 3. **Redirect URI**: Configurar o provider para aceitar `http://localhost:8080`.
+4. **Persistência de Tokens**: Mapear uma pasta de configuração (ex: `/root/.gemini`) como volume persistente (`gemini_data`) para evitar re-autenticação a cada reinício de container.
 
 ## Links
 - [[hermes_docker]]
