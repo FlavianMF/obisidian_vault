@@ -11,7 +11,12 @@ Esta nota serve como instrução para **outros agentes de IA** (Claude Code, Cur
 
 ## 🏛️ Estrutura do Vault para Agentes
 Se você é um agente operando em outro projeto, use estas regras para navegar aqui:
-- **30_MOCs/Engenharia de Sistemas.md**: O ponto de entrada. Contém o índice de todas as ferramentas e conceitos validados.
+- **00_META/manifests/INDEX.md**: O ponto de entrada para agentes. Os MOCs em
+  `30_MOCs/` usam blocos `dataview`, que só renderizam dentro do app Obsidian —
+  para um agente lendo o filesystem direto, esses blocos são texto morto. Os
+  manifests em `00_META/manifests/` são a versão estática e sempre atualizada
+  do mesmo índice, particionada por `type` (ver [[Skill - Sincronização de
+  Conhecimento Recursiva]] para como são gerados).
 - **20_Permanent_Notes/**: Onde residem os padrões técnicos. Busque aqui por termos como "Docker", "OAuth", "Trade-off" ou "V-Model".
 - **10_Literature_Notes/**: Base teórica e referências acadêmicas (NASA, INCOSE).
 
@@ -41,7 +46,11 @@ Além dos padrões técnicos, você deve operar utilizando estas "Skills":
     - `obsidian_rag_query`: Para busca semântica em todo o vault.
     - `obsidian_read_note`: Para leitura otimizada de notas.
     - `obsidian_link_audit`: Para verificar a integridade das conexões.
-2. **Filesystem Search (FALLBACK)**: Caso não tenha as extensões, use `grep` ou ferramentas de busca de conteúdo procurando por arquivos que tenham `type: pattern` ou `type: decision`.
+2. **Manifest-First (FALLBACK — caso do Claude Code e outros agentes sem essas extensões)**:
+    - Leia `00_META/manifests/INDEX.md` primeiro (pequeno, seguro ler inteiro).
+    - **`grep` — nunca `Read` completo** — os arquivos `00_META/manifests/by_type/<type>*.md` pela sua palavra-chave. O glob cobre shards automaticamente se um `type` crescer além do limite de linhas por arquivo.
+    - Abra (leitura completa) só as notas específicas retornadas pelo grep.
+    - Nunca leia `20_Permanent_Notes/` (ou outra pasta) inteira por varredura — isso custa tokens proporcionais ao tamanho do vault, não ao que você precisa.
 3. **Traceability**: Sempre verifique o [[PRD]] e os [[stakeholders]] do projeto atual para garantir que o código atenda aos requisitos originais.
 
 ---
