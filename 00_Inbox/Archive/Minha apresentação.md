@@ -1,3 +1,11 @@
+---
+title: Minha apresentação
+type: inbox
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 Sou engenheiro mecatrônico, formado em 2022, e atuo com sistemas embarcados desde 2019, quando ainda estava na graduação. Desde então, minha trajetória tem sido majoritariamente em P&D, sempre trabalhando com desenvolvimento de produtos baseados em microcontroladores, integração de sensores, comunicação sem fio e firmware.
 
 Durante a graduação participei de projetos de robótica móvel autônoma, foguete modelismo (atuando com telemetria e sistemas embarcados de acionamento) e também colaborei em um projeto de respirador durante a pandemia, com foco em modelagem 3D e prototipação. Em paralelo, fundei uma startup de robótica educacional, onde fui responsável pelo desenvolvimento dos produtos de hardware, desde kits eletrônicos até plataformas de robótica móvel multisensor, experiência que mantive de forma integral até 2022 e parcialmente até 2025.

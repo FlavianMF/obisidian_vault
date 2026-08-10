@@ -1,3 +1,11 @@
+---
+title: Palestra: O Método NASA para Desenvolvimento de Produtos de Elite
+type: project
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Palestra: O Método NASA para Desenvolvimento de Produtos de Elite
 
 ## 🎯 Objetivo

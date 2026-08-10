@@ -3,6 +3,7 @@ title: Estratégia de Publicação e Ética Científica
 type: pattern
 tags: [publication, ethics, journals, academic-career]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🎯 Estratégia de Publicação e Ética Científica

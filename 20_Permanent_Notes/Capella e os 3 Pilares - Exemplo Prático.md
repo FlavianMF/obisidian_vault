@@ -1,3 +1,11 @@
+---
+title: Capella e os 3 Pilares - Exemplo Prático
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Capella e os 3 Pilares - Exemplo Prático
 
 Este guia mostra como navegar no Capella através dos 3 pilares do framework, usando o exemplo de um **Medidor de Energia Inteligente**.

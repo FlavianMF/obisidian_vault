@@ -1,3 +1,11 @@
+---
+title: Fase B - Definição Preliminar
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Fase B - Definição Preliminar
 
 ## 🎯 Objetivo

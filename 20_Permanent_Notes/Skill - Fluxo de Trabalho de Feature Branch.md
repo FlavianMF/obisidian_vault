@@ -3,6 +3,7 @@ title: Skill: Fluxo de Trabalho de Feature Branch
 type: pattern
 tags: [agentic-ai, git, workflow, automation]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Fluxo de Trabalho de Feature Branch

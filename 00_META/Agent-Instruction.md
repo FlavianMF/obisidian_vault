@@ -3,6 +3,7 @@ title: Agentic Knowledge Bridge
 type: meta
 tags: [meta, agentic-ai, knowledge-base, instructions]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🤖 Agentic Knowledge Bridge

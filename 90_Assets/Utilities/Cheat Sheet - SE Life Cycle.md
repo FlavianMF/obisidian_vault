@@ -1,3 +1,11 @@
+---
+title: 🗺️ Cheat Sheet: Ciclo de Vida SE Completo
+type: template
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # 🗺️ Cheat Sheet: Ciclo de Vida SE Completo
 
 Resumo visual das fases NASA/INCOSE para consulta rápida durante estudos.

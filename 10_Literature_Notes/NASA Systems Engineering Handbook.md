@@ -3,6 +3,7 @@ title: NASA Systems Engineering Handbook (NASA/SP-2016-6105 Rev 2)
 type: literature
 tags: [systems-engineering, nasa, aerospace, lifecycle, processes]
 created: 2026-05-21
+provenance: manual
 source: https://www.nasa.gov/reference/systems-engineering-handbook/
 ---
 

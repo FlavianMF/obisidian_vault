@@ -1,3 +1,11 @@
+---
+title: Fase A - Desenvolvimento de Conceito
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Fase A - Desenvolvimento de Conceito
 
 ## 🎯 Objetivo

@@ -3,6 +3,7 @@ title: Estrutura de Artigos Científicos (IMRaD)
 type: pattern
 tags: [academic-writing, methodology, imrad, structure]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🏗️ Estrutura de Artigos Científicos (IMRaD)

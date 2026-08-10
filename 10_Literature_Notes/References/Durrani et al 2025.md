@@ -1,10 +1,12 @@
 ---
 title: Impact of Artificial Intelligence on Software Engineering Phases and Activities (2013–2024)
+type: literature-note
+tags: [ai, systems-engineering, software-engineering, quantitative-analysis, efficiency]
+created: 2026-05-21
+provenance: manual
 authors: Durrani et al.
 year: 2025
 journal: IEEE Access
-type: literature-note
-tags: [ai, systems-engineering, software-engineering, quantitative-analysis, efficiency]
 ---
 
 # 📄 Impact of Artificial Intelligence on Software Engineering Phases and Activities (2013–2024)

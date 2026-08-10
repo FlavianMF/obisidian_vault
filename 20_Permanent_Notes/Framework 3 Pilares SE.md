@@ -1,3 +1,11 @@
+---
+title: Detalhamento do Framework: Os 3 Pilares do Produto de Elite
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Detalhamento do Framework: Os 3 Pilares do Produto de Elite
 
 Este documento detalha o passo a passo técnico para aplicar o rigor da Engenharia de Sistemas (NASA/MBSE) no desenvolvimento comercial de produtos e serviços.

@@ -1,3 +1,11 @@
+---
+title: 🧠 Guia de Gestão do Segundo Cérebro (META)
+type: unclassified
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # 🧠 Guia de Gestão do Segundo Cérebro (META)
 
 Este arquivo serve como instrução para futuras sessões de IA para manter a integridade e o estilo deste cofre.

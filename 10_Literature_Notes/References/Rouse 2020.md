@@ -1,10 +1,14 @@
 ---
 title: "AI as Systems Engineering Augmented Intelligence for Systems Engineers"
+type: article
+tags: []
+created: 2026-05-21
+provenance: manual
 authors: Rouse, W.B.
 year: 2020
-type: article
 citekey: Rouse2020
 ---
+
 # AI as Systems Engineering Augmented Intelligence for Systems Engineers
 
 ## 📝 Resumo

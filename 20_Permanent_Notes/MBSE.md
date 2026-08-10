@@ -1,3 +1,11 @@
+---
+title: MBSE (Model-Based Systems Engineering)
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # MBSE (Model-Based Systems Engineering)
 
 ## 💡 Definição

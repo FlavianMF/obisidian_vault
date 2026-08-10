@@ -3,6 +3,7 @@ title: Skill: Academic-Evidence-Mapper
 type: pattern
 tags: [agentic-ai, research, academic]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Academic-Evidence-Mapper

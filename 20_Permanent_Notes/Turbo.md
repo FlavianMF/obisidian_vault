@@ -3,6 +3,7 @@ title: Turbo
 type: permanent
 tags: [hotwire, turbo, frontend]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🚀 Turbo

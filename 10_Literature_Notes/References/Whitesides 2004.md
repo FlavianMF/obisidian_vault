@@ -3,6 +3,7 @@ title: Whitesides' Group: Writing a Paper
 type: literature
 tags: [academic-writing, methodology, research-process, publication]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Whitesides' Group: Writing a Paper

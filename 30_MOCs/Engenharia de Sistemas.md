@@ -1,3 +1,11 @@
+---
+title: Engenharia de Sistemas (MOC)
+type: moc
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Engenharia de Sistemas (MOC)
 
 ## 📌 Visão Geral

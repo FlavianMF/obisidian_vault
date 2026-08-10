@@ -3,6 +3,7 @@ title: Testes de Software em Ruby on Rails com Docker
 type: permanent
 tags: [ruby, rails, testing, rspec, docker, dev-experience]
 created: 2026-05-22
+provenance: manual
 ---
 
 # 🧪 Testes de Software em Ruby on Rails com Docker

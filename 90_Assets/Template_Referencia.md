@@ -1,10 +1,14 @@
 ---
 title: {{title}}
+type: article/book/paper
+tags: []
+created: 2026-05-21
+provenance: manual
 authors: 
 year: 
-type: article/book/paper
 citekey: 
 ---
+
 # {{title}}
 
 ## 📝 Resumo

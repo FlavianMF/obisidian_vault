@@ -3,6 +3,7 @@ title: Skill: Graph-Gardener
 type: pattern
 tags: [agentic-ai, obsidian, knowledge-graph]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Graph-Gardener

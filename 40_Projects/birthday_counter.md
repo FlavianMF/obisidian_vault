@@ -1,3 +1,11 @@
+---
+title: birthday_counter Engineering & Architecture
+type: project
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # birthday_counter Engineering & Architecture
 
 ## Project Context

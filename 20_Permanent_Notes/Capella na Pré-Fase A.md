@@ -1,3 +1,11 @@
+---
+title: Capella na Pré-Fase A
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Capella na Pré-Fase A
 
 A Pré-Fase A da NASA foca na **Análise de Conceito**, o que no Capella corresponde à camada **Operational Analysis (OA)**.

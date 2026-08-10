@@ -1,3 +1,11 @@
+---
+title: Guia de Inicialização para Agentes de Código
+type: inbox
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Guia de Inicialização para Agentes de Código
 
 Ao iniciar uma sessão neste projeto, use o comando abaixo para carregar as instruções de trabalho e garantir a integridade do sistema:

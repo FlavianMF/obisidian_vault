@@ -3,6 +3,7 @@ title: Skill: Project-Bootstrapper
 type: pattern
 tags: [agentic-ai, automation, dev-environment]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Project-Bootstrapper

@@ -3,6 +3,7 @@ title: TailwindCSS
 type: permanent
 tags: [css, frontend, styling]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🎨 TailwindCSS

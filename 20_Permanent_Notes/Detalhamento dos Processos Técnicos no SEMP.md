@@ -3,6 +3,7 @@ title: Detalhamento dos Processos Técnicos no SEMP
 type: concept
 tags: [systems-engineering, semp, nasa, processes, technical-management]
 created: 2026-05-21
+provenance: manual
 ---
 
 # ⚙️ Detalhamento dos Processos Técnicos no SEMP

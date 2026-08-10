@@ -1,3 +1,11 @@
+---
+title: IA na engenharia de sistemas
+type: inbox
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 Quero estudar o uso de IA generativa como uma ferramenta de analise no fluxo de engenharia de sistema
 
 A engenharia de sistema traz uma visão sistema sobre qualquer tipo de “trabalho” que precise ser realizado, seja ele um produto processo ou serviço

@@ -3,6 +3,7 @@ title: Ruby on Rails
 type: permanent
 tags: [ruby, rails, framework, web]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 💎 Ruby on Rails

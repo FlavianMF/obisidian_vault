@@ -3,6 +3,7 @@ title: Registro de Riscos Técnicos - Birthday Counter
 type: concept
 tags: [systems-engineering, risk-management, birthday_counter, semp]
 created: 2026-05-21
+provenance: manual
 ---
 
 # ⚠️ Registro de Riscos Técnicos (Technical Risk Register)

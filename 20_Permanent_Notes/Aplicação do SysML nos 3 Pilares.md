@@ -1,3 +1,11 @@
+---
+title: Aplicação do SysML nos 3 Pilares da SE
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Aplicação do SysML nos 3 Pilares da SE
 
 Este documento descreve como utilizar os diagramas SysML para modelar cada fase do framework de [[Framework 3 Pilares SE]], facilitando a transição entre a definição do problema e a implementação da solução.

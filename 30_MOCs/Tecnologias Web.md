@@ -3,6 +3,7 @@ title: MOC Tecnologias Web
 type: moc
 tags: [moc, web-dev, stack]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🌐 MOC Tecnologias Web

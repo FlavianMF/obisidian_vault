@@ -3,6 +3,7 @@ title: JSONB
 type: permanent
 tags: [database, postgresql, json]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 📄 JSONB

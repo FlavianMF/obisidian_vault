@@ -1,9 +1,10 @@
 ---
 title: Projeto hermes_docker
 type: project
-status: active
 tags: [project, agentic-ai, docker, infrastructure]
 created: 2026-05-21
+provenance: manual
+status: active
 path: /home/flv/projetos_ai/hermes_docker
 ---
 

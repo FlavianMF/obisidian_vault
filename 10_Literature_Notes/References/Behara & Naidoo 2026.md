@@ -1,10 +1,12 @@
 ---
 title: A Generative AI-Driven Predictive Analytics Framework for Modelling Creativity and Performance in Engineering Design Systems
+type: literature-note
+tags: [ai, engineering-design, generative-ai, predictive-analytics, creativity]
+created: 2026-05-21
+provenance: manual
 authors: Behara & Naidoo
 year: 2026
 journal: Applied Sciences (MDPI)
-type: literature-note
-tags: [ai, engineering-design, generative-ai, predictive-analytics, creativity]
 ---
 
 # 📄 A Generative AI-Driven Predictive Analytics Framework (2026)

@@ -3,6 +3,7 @@ title: Apresentação de Modelos MBSE em Artigos
 type: pattern
 tags: [MBSE, SysML, academic-writing, systems-engineering, modeling]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 📐 Apresentação de Modelos MBSE em Artigos

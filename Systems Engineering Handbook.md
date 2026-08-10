@@ -3,6 +3,7 @@ title: NASA Systems Engineering Handbook
 type: concept
 tags: [systems-engineering, nasa, standard]
 created: 2026-05-21
+provenance: manual
 ---
 
 # NASA Systems Engineering Handbook (SP-2016-6105)

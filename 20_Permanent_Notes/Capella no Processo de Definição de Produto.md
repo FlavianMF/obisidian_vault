@@ -3,6 +3,7 @@ title: Capella no Processo de Definição de Produto
 type: permanent
 tags: [capella, mbse, arcadia, product-definition, visualization]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🚀 Capella no Processo de Definição de Produto

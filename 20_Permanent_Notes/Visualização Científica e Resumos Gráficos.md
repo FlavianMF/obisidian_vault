@@ -3,6 +3,7 @@ title: Visualização Científica e Resumos Gráficos
 type: pattern
 tags: [academic-writing, visualization, graphical-abstract, design]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🎨 Visualização Científica e Resumos Gráficos

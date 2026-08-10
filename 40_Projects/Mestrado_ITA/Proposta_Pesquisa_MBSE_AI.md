@@ -1,3 +1,11 @@
+---
+title: Proposta_Pesquisa_MBSE_AI
+type: project
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 **Título:** MBSE com Agentic AI
 
 **Nome:** Flavian Melquiades Fernandes

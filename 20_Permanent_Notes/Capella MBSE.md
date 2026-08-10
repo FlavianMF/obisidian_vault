@@ -1,3 +1,11 @@
+---
+title: Capella MBSE
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Capella MBSE
 
 ## 💡 Definição

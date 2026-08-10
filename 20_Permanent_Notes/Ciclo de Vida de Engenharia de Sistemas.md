@@ -1,3 +1,11 @@
+---
+title: Ciclo de Vida de Engenharia de Sistemas
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Ciclo de Vida de Engenharia de Sistemas
 
 ## 💡 Definição

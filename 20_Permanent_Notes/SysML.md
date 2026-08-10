@@ -1,3 +1,11 @@
+---
+title: SysML (Systems Modeling Language)
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # SysML (Systems Modeling Language)
 
 ## 💡 Definição

@@ -3,6 +3,7 @@ title: Plano de Gerenciamento de Engenharia de Sistemas (SEMP)
 type: concept
 tags: [systems-engineering, management, nasa, incose, documentation, planning]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 📋 Systems Engineering Management Plan (SEMP)

@@ -3,6 +3,7 @@ title: Reproduzibilidade e Open Science (2025)
 type: pattern
 tags: [academic-writing, reproducibility, open-science, data-sharing, IEEE]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🧬 Reproduzibilidade e Open Science (2025)

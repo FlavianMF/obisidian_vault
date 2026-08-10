@@ -1,10 +1,14 @@
 ---
 title: "Artificial intelligence for systems engineering complexity: a review on the use of AI and machine learning algorithms"
+type: article
+tags: []
+created: 2026-05-21
+provenance: manual
 authors: Adeyeye, Oladele Junior; Akanbi, Ibrahim
 year: 2024
-type: article
 citekey: Adeyeye2024
 ---
+
 # Artificial intelligence for systems engineering complexity: a review on the use of AI and machine learning algorithms
 
 ## 📝 Resumo

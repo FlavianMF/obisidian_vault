@@ -1,3 +1,11 @@
+---
+title: 📚 Referências Bibliográficas (MOC)
+type: moc
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # 📚 Referências Bibliográficas (MOC)
 
 > [!TIP] Atalho de Escrita

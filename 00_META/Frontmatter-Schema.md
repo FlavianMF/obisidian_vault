@@ -3,6 +3,7 @@ title: Frontmatter Schema
 type: meta
 tags: [meta, agentic-ai, knowledge-base, schema]
 created: 2026-08-09
+provenance: manual
 ---
 
 # 🧬 Frontmatter Schema

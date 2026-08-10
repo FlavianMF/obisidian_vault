@@ -1,3 +1,11 @@
+---
+title: IA Generativa na Engenharia de Sistemas
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # IA Generativa na Engenharia de Sistemas
 
 ## 💡 Visão

@@ -3,6 +3,7 @@ title: Skill: Pesquisa Acadêmica Rigorosa
 type: pattern
 tags: [agentic-ai, research, academic, literature-review]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Pesquisa Acadêmica Rigorosa

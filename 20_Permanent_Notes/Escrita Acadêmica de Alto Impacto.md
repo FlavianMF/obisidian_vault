@@ -3,6 +3,7 @@ title: Escrita Acadêmica de Alto Impacto
 type: pattern
 tags: [academic-writing, engineering, excellence, research]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 📝 Escrita Acadêmica de Alto Impacto

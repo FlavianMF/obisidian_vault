@@ -3,6 +3,7 @@ title: Matriz de Verificação e Validação (V&V) - Birthday Counter
 type: concept
 tags: [systems-engineering, verification, validation, birthday_counter, semp]
 created: 2026-05-21
+provenance: manual
 ---
 
 # ✅ Matriz de Verificação e Validação (V&V Matrix)

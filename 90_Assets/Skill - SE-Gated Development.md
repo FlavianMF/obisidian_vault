@@ -3,6 +3,7 @@ title: Skill: SE-Gated Development
 type: pattern
 tags: [agentic-ai, systems-engineering, quality-gate]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: SE-Gated Development

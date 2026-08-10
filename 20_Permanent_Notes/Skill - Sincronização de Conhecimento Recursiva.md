@@ -3,6 +3,7 @@ title: Skill: Sincronização de Conhecimento Recursiva
 type: pattern
 tags: [agentic-ai, knowledge-management, second-brain]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Sincronização de Conhecimento Recursiva

@@ -1,9 +1,10 @@
 ---
 title: Projeto hermes_validator
 type: project
-status: completed
 tags: [project, agentic-ai, crewai, automation, education]
 created: 2026-05-21
+provenance: manual
+status: completed
 path: /home/flv/projetos_crewai/hermes_validator/workspace
 ---
 

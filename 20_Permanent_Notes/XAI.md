@@ -3,6 +3,7 @@ title: XAI
 type: concept
 tags: [ai, explainability, systems-engineering]
 created: 2026-05-21
+provenance: manual
 ---
 
 # XAI (Explainable AI - IA Explicável)

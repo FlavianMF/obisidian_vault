@@ -3,6 +3,7 @@ title: Skill: Ingestão de Notas de Literatura
 type: pattern
 tags: [agentic-ai, knowledge-management, citation, academic]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Skill: Ingestão de Notas de Literatura

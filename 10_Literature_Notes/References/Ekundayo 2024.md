@@ -1,10 +1,14 @@
 ---
 title: "Leveraging AI-driven decision intelligence for complex systems engineering"
+type: article
+tags: []
+created: 2026-05-21
+provenance: manual
 authors: Ekundayo, Foluke
 year: 2024
-type: article
 citekey: Ekundayo2024
 ---
+
 # Leveraging AI-driven decision intelligence for complex systems engineering
 
 ## 📝 Resumo

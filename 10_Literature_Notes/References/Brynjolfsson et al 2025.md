@@ -1,10 +1,12 @@
 ---
 title: Generative AI at Work
+type: literature-note
+tags: [ai, productivity, skill-equalizer, empirical-study, labor-economics]
+created: 2026-05-21
+provenance: manual
 authors: Brynjolfsson, Li, and Raymond
 year: 2025
 journal: Quarterly Journal of Economics (originally NBER)
-type: literature-note
-tags: [ai, productivity, skill-equalizer, empirical-study, labor-economics]
 ---
 
 # 📄 Generative AI at Work (2025)

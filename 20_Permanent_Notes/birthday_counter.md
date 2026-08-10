@@ -1,9 +1,10 @@
 ---
 title: Projeto birthday_counter
 type: project
-status: completed
 tags: [project, web-development, systems-engineering, case-study]
 created: 2026-05-21
+provenance: manual
+status: completed
 path: /home/flv/projetos_web/birthday_counter
 ---
 

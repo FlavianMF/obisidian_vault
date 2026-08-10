@@ -3,6 +3,7 @@ title: Padrão de Documentação Agêntica Local
 type: pattern
 tags: [agentic-ai, documentation, automation, second-brain]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Padrão de Documentação Agêntica Local

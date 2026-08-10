@@ -1,3 +1,11 @@
+---
+title: MBSE com Agentic AI
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # MBSE com Agentic AI
 
 ## 💡 Conceito

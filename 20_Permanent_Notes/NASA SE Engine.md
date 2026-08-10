@@ -3,6 +3,7 @@ title: NASA Systems Engineering Engine
 type: concept
 tags: [systems-engineering, nasa, processes, engine]
 created: 2026-05-21
+provenance: manual
 ---
 
 # ⚙️ NASA Systems Engineering Engine

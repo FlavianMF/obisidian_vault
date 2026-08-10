@@ -1,3 +1,11 @@
+---
+title: Flavian Melquiades Fernandes
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Flavian Melquiades Fernandes
 
 ## 👤 Perfil

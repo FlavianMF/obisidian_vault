@@ -1,3 +1,11 @@
+---
+title: 🧠 PROMPT: Instruções para o Agente de Desenvolvimento
+type: template
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # 🧠 PROMPT: Instruções para o Agente de Desenvolvimento
 
 Este arquivo é o seu **contexto mestre** para este projeto. Leia-o integralmente antes de iniciar qualquer tarefa.

@@ -3,6 +3,7 @@ title: Stimulus
 type: permanent
 tags: [hotwire, stimulus, frontend]
 created: 2026-05-21
+provenance: manual
 ---
 
 # ⚡ Stimulus

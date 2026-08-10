@@ -1,3 +1,11 @@
+---
+title: Pré-Fase A - Análise de Conceito
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Pré-Fase A - Análise de Conceito
 
 ## 🎯 Objetivo

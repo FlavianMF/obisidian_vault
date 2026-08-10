@@ -3,6 +3,7 @@ title: Hotwire
 type: permanent
 tags: [hotwire, frontend, rails]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🔥 Hotwire

@@ -1,3 +1,11 @@
+---
+title: PALESTRA DO CAPELLA SOBRE AGENTE DE IA
+type: literature
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 [PG-CTE - Pós-Graduação em Ciências e Tecnologias Espaciais - ITA/IEAV/IAE](https://www.cte.ita.br/pg/pg-cte-areas.php#CTE-E)
 
 Model Based System Engineering

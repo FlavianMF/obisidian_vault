@@ -1,10 +1,14 @@
 ---
 title: "Explainable AI for engineering design: A unified approach of systems engineering and component-based deep learning demonstrated by energy-efficient building design"
+type: article
+tags: []
+created: 2026-05-21
+provenance: manual
 authors: Geyer, Philipp; Singh, Manav Mahan; Chen, Xia
 year: 2024
-type: article
 citekey: Geyer2024
 ---
+
 # Explainable AI for engineering design
 
 ## 📝 Resumo

@@ -1,10 +1,14 @@
 ---
 title: "AI in the Context of Complex Intelligent Systems: Engineering Management Consequences"
+type: article
+tags: []
+created: 2026-05-21
+provenance: manual
 authors: Yu, Y.; Lakemond, N.; Holmberg, G.
 year: 2024
-type: article
 citekey: Yu2024
 ---
+
 # AI in the Context of Complex Intelligent Systems: Engineering Management Consequences
 
 ## 📝 Resumo

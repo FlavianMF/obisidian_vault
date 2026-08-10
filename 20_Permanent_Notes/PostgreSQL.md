@@ -3,6 +3,7 @@ title: PostgreSQL
 type: permanent
 tags: [database, sql]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🐘 PostgreSQL

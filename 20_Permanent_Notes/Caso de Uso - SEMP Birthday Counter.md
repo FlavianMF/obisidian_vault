@@ -3,6 +3,7 @@ title: Caso de Uso - SEMP aplicado ao Birthday Counter
 type: pattern
 tags: [systems-engineering, semp, use-case, web-development, nasa-standard]
 created: 2026-05-21
+provenance: manual
 ---
 
 # 🚀 Caso de Uso: SEMP aplicado ao Birthday Counter

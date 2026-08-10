@@ -1,3 +1,11 @@
+---
+title: Agentic AI (Agentes de IA)
+type: concept
+tags: []
+created: 2026-05-21
+provenance: manual
+---
+
 # Agentic AI (Agentes de IA)
 
 ## 💡 Definição

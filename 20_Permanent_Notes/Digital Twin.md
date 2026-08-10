@@ -3,6 +3,7 @@ title: Digital Twin
 type: concept
 tags: [systems-engineering, simulation, digital-twin]
 created: 2026-05-21
+provenance: manual
 ---
 
 # Digital Twin (Gêmeo Digital)
