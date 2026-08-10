@@ -16,7 +16,7 @@ Desenvolver este software seguindo rigorosamente os princípios de **Engenharia 
 
 ## 🖇️ Conexão com o Segundo Cérebro (Vault)
 Consulte sempre a base de conhecimento global do Flavian em:
-`/mnt/c/Users/saoflfer/Documents/obsidian/flv_fit_vault/00_META/Agent-Instruction.md`
+`docs/second_brain/00_META/Agent-Instruction.md`
 
 ## 🏗️ Padrões Técnicos
 - **Isolamento**: Use containers (Docker) para ferramentas.

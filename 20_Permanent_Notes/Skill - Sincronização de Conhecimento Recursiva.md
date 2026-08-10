@@ -16,7 +16,7 @@ Ao finalizar uma tarefa (antes de se dar por satisfeito), o agente deve:
     - Atualizar `docs/engineering_notes.md` com novos "Traps" ou "Decisions".
     - Atualizar `docs/architecture.md` se a estrutura mudou.
 2.  **Update Global Brain (Vault)**:
-    - Se um padrão genérico foi descoberto (ex: uma nova forma de lidar com OAuth), o agente deve criar ou atualizar a nota correspondente em `/mnt/c/Users/saoflfer/Documents/obsidian/flv_fit_vault/20_Permanent_Notes/`.
+    - Se um padrão genérico foi descoberto (ex: uma nova forma de lidar com OAuth), o agente deve criar ou atualizar a nota correspondente em `docs/second_brain/20_Permanent_Notes/`.
     - Usar o campo `provenance:` para citar o projeto de origem.
 3.  **Cross-Linking**: Garantir que a nota do projeto no vault principal aponta para as novas descobertas.
 

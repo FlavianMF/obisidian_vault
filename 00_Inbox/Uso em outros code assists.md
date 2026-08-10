@@ -3,7 +3,7 @@
 Ao iniciar uma sessão neste projeto, use o comando abaixo para carregar as instruções de trabalho e garantir a integridade do sistema:
 
 ```text
-Consulte o arquivo /mnt/c/Users/saoflfer/Documents/obsidian/flv_fit_vault/00_META/Agent-Instruction.md para entender meus padrões de engenharia e estrutura de conhecimento antes de começar.
+Consulte o arquivo docs/second_brain/00_META/Agent-Instruction.md para entender meus padrões de engenharia e estrutura de conhecimento antes de começar.
 
 Utilize as seguintes Skills para o seu workflow:
 - [[Skill - SE-Gated Development]]: Para validar arquitetura antes de codar.
