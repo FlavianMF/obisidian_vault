@@ -5,6 +5,7 @@
 | 20_Permanent_Notes/Apresentação de Modelos MBSE em Artigos.md | Apresentação de Modelos MBSE em Artigos | MBSE, SysML, academic-writing, systems-engineering, modeling | 2026-05-21 | manual |
 | 20_Permanent_Notes/Arquitetura de Diretórios para Pipelines de Validação.md | Arquitetura de Diretórios para Pipelines de Validação | architecture, organization, data-pipeline, best-practices | 2026-05-22 | 1.0 |
 | 20_Permanent_Notes/Caso de Uso - SEMP Birthday Counter.md | Caso de Uso - SEMP aplicado ao Birthday Counter | systems-engineering, semp, use-case, web-development, nasa-standard | 2026-05-21 | manual |
+| 20_Permanent_Notes/Empacotar App GUI Headless + Servidor MCP numa Única Imagem Docker.md | Empacotar App GUI Headless + Servidor MCP numa Única Imagem Docker | docker, mcp, xvfb, headless, packaging | 2026-08-11 | capella_mcp |
 | 20_Permanent_Notes/Engenharia de Sistemas Agêntica.md | Engenharia de Sistemas Agêntica (Agentic Systems Engineering) | agentic-ai, systems-engineering, automation, architecture | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Escrita Acadêmica de Alto Impacto.md | Escrita Acadêmica de Alto Impacto | academic-writing, engineering, excellence, research | 2026-05-21 | manual |
 | 20_Permanent_Notes/Estratégia de Publicação e Ética Científica.md | Estratégia de Publicação e Ética Científica | publication, ethics, journals, academic-career | 2026-05-21 | manual |
