@@ -76,17 +76,42 @@ específico e menos óbvio, normalmente nomeado por convenção
 (`get_owned_<algo_no_plural>`) mas variando por tipo — não dá pra
 assumir que existe um único container genérico pra todos os tipos.
 
+## Variante: dois wrappers Python, uma classe EMF só
+
+Achado adicional modelando a camada Operational Analysis (2026-08-13):
+nem toda distinção de `type_name` corresponde a uma classe EMF
+diferente. `OperationalActor` e `OperationalEntity` no
+`simplified_api` são duas classes Python **sobre a mesma classe EMF
+subjacente** (`Entity`), diferenciadas só por uma flag booleana
+(`actor=True/False`) setada no construtor — `OperationalEntity` é
+inclusive subclasse Python de `OperationalActor`, mas semanticamente
+representam papéis opostos (ator = "geralmente humano, não pode ser
+decomposto"; entidade = "pode ser decomposto"). Consequência prática:
+**as duas compartilham o mesmo accessor de container raiz**
+(`EntityPkg.get_owned_entities()`), mas só `OperationalEntity` expõe
+`get_owned_entities()` própria pra aninhamento — um `OperationalActor`
+pai não tem esse método (por design, não bug), então tentar aninhar
+sob um ator deve falhar explicitamente, não silenciosamente. Vale
+conferir isso (visão dupla de uma única classe EMF, via flag) sempre
+que uma API de binding EMF/Java-Python expõe duas classes com nomes
+parecidos e um dos dois é subclasse Python do outro — não assumir que
+são tipos EMF distintos sem checar.
+
 ## Implementação de referência
 
 `bridge.create_element` em `src/capella_mcp/bridge.py` (projeto
-`capella_mcp`) — branch validada pra `LogicalComponent`/camada `la`,
-`SystemFunction`/camada `sa`, e `LogicalFunction`/camada `la`
-(adicionada 2026-08-13, espelhando `SystemFunction` — mesma classe
-base `Function`, mesmo padrão `get_<x>_pkg().get_owned_<x>()` na raiz
-e `get_owned_functions()` compartilhado pro caso aninhado). Qualquer
-outro `type_name` ainda cai no fallback quebrado
+`capella_mcp`) — branches validadas pra `LogicalComponent`/`la`,
+`SystemFunction`/`sa`, `LogicalFunction`/`la` (2026-08-13, espelhando
+`SystemFunction`), e `OperationalActivity`/`OperationalActor`/
+`OperationalEntity`/`OperationalCapability`, todas em `oa` (2026-08-13,
+mesma sessão da camada OA completa). `OperationalCapability` é o único
+caso **sem nenhum accessor de aninhamento** — capacidades são sempre
+flat no Arcadia, então a branch rejeita `parent_id` com erro explícito
+em vez de tentar adivinhar um accessor que não existe. Qualquer outro
+`type_name` ainda cai no fallback quebrado
 (`get_contents().append()`) até ganhar sua própria branch —
-interfaces/exchanges e alocação funcional continuam sem branch.
+interfaces/exchanges e alocação funcional/operacional continuam sem
+branch.
 
 ## 🔗 Conexões
 - [[Eclipse RCP Headless - workspace URLs Exigem Projeto Importado via -import]]
