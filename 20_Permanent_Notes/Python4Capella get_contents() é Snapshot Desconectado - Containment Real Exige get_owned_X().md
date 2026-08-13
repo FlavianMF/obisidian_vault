@@ -79,11 +79,16 @@ assumir que existe um único container genérico pra todos os tipos.
 ## Implementação de referência
 
 `bridge.create_element` em `src/capella_mcp/bridge.py` (projeto
-`capella_mcp`) — branch validada pra `LogicalComponent`/camada `la` e
-`SystemFunction`/camada `sa`; qualquer outro `type_name` ainda cai no
-fallback quebrado (`get_contents().append()`) até ganhar sua própria
-branch.
+`capella_mcp`) — branch validada pra `LogicalComponent`/camada `la`,
+`SystemFunction`/camada `sa`, e `LogicalFunction`/camada `la`
+(adicionada 2026-08-13, espelhando `SystemFunction` — mesma classe
+base `Function`, mesmo padrão `get_<x>_pkg().get_owned_<x>()` na raiz
+e `get_owned_functions()` compartilhado pro caso aninhado). Qualquer
+outro `type_name` ainda cai no fallback quebrado
+(`get_contents().append()`) até ganhar sua própria branch —
+interfaces/exchanges e alocação funcional continuam sem branch.
 
 ## 🔗 Conexões
 - [[Eclipse RCP Headless - workspace URLs Exigem Projeto Importado via -import]]
 - [[Capella MBSE]]
+- [[Capella Breakdown Diagram - root_id Infere Tipo Concreto, Não o Declarado]]
