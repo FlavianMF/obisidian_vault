@@ -148,17 +148,45 @@ diferença fica clara na notação GMF (`notation:Node`):
 ```
 
 Falta o filho `type="3003"` (compartimento visual) que todo nó dos outros
-6 mapeamentos tem. **Não confirmado a fundo** (decisão consciente de não
-forçar mais escavação em GMF/Sirius sem retorno garantido), mas hipótese
-mais provável: esse `nodeMappings` usa
+6 mapeamentos tem.
+
+**Tentativa de fix (2026-08-13, sessão seguinte) — testada e descartada**:
+hipótese era que esse `nodeMappings` usa
 `semanticCandidatesExpression="service:getOEBScopeBreakdown()"` (chamada
-de serviço Java customizada — ver
-`OAServices.getOEBScopeBreakdown(EObject)`), diferente dos outros 6
-mapeamentos que resolvem candidatos por navegação direta de metamodelo. O
-`apply_mapping()` que `bridge.create_diagram` chama (pass 2, ~linha 863)
-pra criar o `DNode` manualmente pode não disparar o refresh completo do
-Sirius que monta esse compartimento pra mapeamentos com
-`semanticCandidatesExpression` baseada em serviço.
+de serviço Java customizada — ver `OAServices.getOEBScopeBreakdown(EObject)`),
+diferente dos outros 6 mapeamentos (navegação direta de metamodelo), e que
+`apply_mapping()` (usado em `create_diagram` pass 2) não disparava o
+refresh completo do Sirius que monta esse compartimento. Li
+`simplified_api/diagram.py` inteiro (extraído do addon) — confirmado: não
+existe **nenhuma** chamada de refresh/canonical-sync/arrange em lugar
+nenhum do `Python4Capella` (`diagram.py`, `capella.py`, `Sirius_API.py`,
+`EMF_API.py`, `Capella_API.py` — grep completo, zero ocorrência fora de um
+`refresh()` de recurso Eclipse não relacionado a diagrama). `diagram.py`
+já referencia `org.eclipse.sirius.business.api.dialect.DialectManager.
+INSTANCE` (em `create_representation`); essa mesma classe expõe
+`.refresh(DRepresentation, boolean, IProgressMonitor)` — testei adicionar
+essa chamada no início da transação do pass 2 de `create_diagram`
+(bridge.py), antes do loop de criação de nós. **Rodou sem erro nenhum**
+(prova de que executou de verdade — se tivesse falhado, a chamada MCP
+inteira teria retornado `{"error": ...}`), mas o XML resultante ficou
+**byte-a-byte idêntico** ao caso sem o refresh — `type="3003"` continuou
+faltando, PNG continuou em branco. Revertido, sem deixar rastro no
+bridge.py.
+
+Isso **descarta** "falta uma chamada de refresh/sync" como causa raiz — o
+canonical synchronizer real do Sirius (o que de fato monta o
+compartimento pros outros 6 tipos) dispara sozinho em
+`commit_transaction()`, de forma idêntica pros 9 tipos de diagrama (nada
+no nível Python4Capella diferencia por tipo); forçar mais um `refresh()`
+manual não muda o resultado porque o sync automático já rodou e já
+decidiu não criar o compartimento pra esse mapeamento específico. Causa
+raiz mais provável agora: a própria definição de **estilo** (`<styles>`)
+do `nodeMappings name="OEB_OperationalEntities"` no `oa.odesign` é
+genuinamente diferente/mais simples da de `OAB_OperationalActivity` — não
+investigado a esse nível (precisaria comparar as sub-tags `<styles>`/
+`conditionnalStyles`/`subNodeMappings` dos dois mapeamentos lado a lado
+no XML). Não tentado mais nada além disso por decisão consciente — ver
+próxima seção.
 
 **Lição**: "a tool não deu erro" continua não sendo prova de sucesso
 completo, nem depois de já ter aprendido isso duas vezes nesta mesma
@@ -166,7 +194,10 @@ sessão (containment silencioso, `export_diagram` `files: []`) — dessa
 vez o dado (`node_count`) estava certo, mas a *representação visual*
 saiu quebrada mesmo assim. Sempre que possível, abrir o artefato final
 de verdade (aqui, o PNG) em vez de confiar só no JSON de retorno da
-tool, mesmo quando ele não reporta erro nenhum.
+tool, mesmo quando ele não reporta erro nenhum. E uma segunda lição:
+"a chamada Java rodou sem exceção" também não é prova de que ela teve
+o efeito pretendido — só prova que ela é sintaticamente/semanticamente
+válida no ponto onde foi chamada.
 
 ## Generalização
 
