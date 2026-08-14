@@ -19,6 +19,8 @@ provenance: manual
 - [[Ekundayo 2024]] - Decision Intelligence para SE.
 - [[Geyer et al 2024]] - Explainable AI para Engineering Design.
 - [[Systems Engineering Handbook|NASA Systems Engineering Handbook]] - O padrão de referência da NASA.
+- [[Soria Parra & Spahr-Summers 2024]] - Anúncio oficial do Model Context Protocol (Anthropic).
+- [[Model Context Protocol 2025]] - Especificação normativa do MCP (2025-11-25).
 
 ## 📥 Próximas Leituras (Links)
 - [NASA SE Handbook](https://www.nasa.gov/reference/systems-engineering-handbook/)
