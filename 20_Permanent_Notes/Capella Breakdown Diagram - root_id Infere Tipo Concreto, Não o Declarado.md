@@ -199,6 +199,60 @@ tool, mesmo quando ele não reporta erro nenhum. E uma segunda lição:
 o efeito pretendido — só prova que ela é sintaticamente/semanticamente
 válida no ponto onde foi chamada.
 
+**Continuação (2026-08-14, terceira sessão) — hipótese "raiz vira nó" testada e também descartada**
+
+Comparando `oa.odesign` (`OEB_OperationalEntities`) lado a lado com
+`logical.odesign`/`physical.odesign`/`EPBS.odesign` (`LCB_LogicalComponent`,
+`PCB_PhysicalComponent`, `CIBD_ConfigurationItem`) — os 4 mapeamentos que
+têm `conditionnalStyles predicateExpression="aql:self = container"` entre
+os 9 tipos de `BREAKDOWN_DIAGRAMS` — achado: **todos os 4** têm essa
+condicional (não é exclusiva do OEB), mas só o OEB está quebrado. Os
+outros 3 exportam PNG normal (confirmado abrindo o arquivo, ex. 1224
+bytes com caixas+ícone+label visíveis pra "Estrutura IHM de Velocidade").
+Então "a raiz devia aparecer como nó, e `create_diagram` sempre pula a
+raiz" (a hipótese óbvia lendo essa condicional) não explica sozinha o bug
+— senão LCB/PCB/CIBD também estariam quebrados.
+
+Testado ao vivo mesmo assim, contra `car_hmi.aird`: `apply_mapping`
+manual da própria raiz ("Veículo") como nó extra no diagrama OES quebrado.
+Funcionou sem erro (nó criado, `getOwnedDiagramElements()` confirmou 2
+`DNode`s depois) — mas o nó da raiz saiu com o **mesmo** `type="2001"`
+sem `type="3003"`, idêntico ao nó já existente. **Hipótese descartada.**
+Testado também `hide()` + `reveal()` (helpers de
+`simplified_api/diagram.py`, via `HideFilterHelper`) pra forçar o GMF a
+recriar a view do zero — mesmo resultado, sem `3003`.
+
+O que de fato distingue `OEB_OperationalEntities` dos outros 8 mapeamentos
+(incluindo os outros 3 que compartilham a condicional `self = container`):
+`semanticCandidatesExpression="service:getOEBScopeBreakdown()"` — chamada
+de serviço **não recursiva/sem `self.`**, diferente do padrão
+`service:self.<getter>()` que todos os outros 8 usam (inclusive
+LCB/PCB/CIBD, que usam `service:self.getCBComponentSemanticCandidates()`)
+— e `domainClass="Component"` (interface genérica) em vez do nome de
+classe concreta. Esse é o suspeito mais forte hoje pra causa raiz, mas
+**não confirmado** no nível de exceção Java — só um debugger anexado à
+JVM headless conseguiria confirmar de verdade, fora de escopo pro nível
+de abstração deste bridge. Conclusão prática: **é um limite genuíno do
+Sirius headless pra esse mapeamento específico**, não um bug no
+`create_diagram`/`bridge.py` em si — documentado como tal direto no
+código (`BREAKDOWN_DIAGRAMS[("oa","OperationalEntity")]`, comentário
+extenso) em vez de continuar tentando "consertar" no nível Python.
+
+## `delete_diagram` — tool nova (2026-08-14)
+
+Pra permitir limpar diagramas quebrados/de teste sem editar `.aird` na
+mão: `bridge.delete_diagram(model_path, diagram_uid)`, chama
+`org.eclipse.sirius.business.api.dialect.DialectManager.INSTANCE.
+deleteRepresentation(descriptor, session)` diretamente (mesma classe que
+`create_representation` do `simplified_api/diagram.py` já usa pra criar —
+só não tem wrapper pra deletar). `descriptor` é o
+`.get_java_object()` do wrapper `Diagram` (retorna o
+`DRepresentationDescriptor`, não a `DRepresentation` — atenção pra não
+confundir com `.get_java_object().getRepresentation()`, usado em
+`create_diagram` pra pegar a `DDiagram` de dentro do descriptor).
+Confirmado ao vivo: deletou as duas "Estrutura do Veículo (OES)" de teste
+do `car_hmi.aird`.
+
 ## Generalização
 
 Três lições reaproveitáveis: (1) quando uma API de diagrama/geração
@@ -217,8 +271,8 @@ verificação visual extra antes de considerar "funcionando".
 
 ## Implementação de referência
 
-`bridge.create_diagram` e `bridge.export_diagram` em
-`src/capella_mcp/bridge.py` (projeto `capella_mcp`).
+`bridge.create_diagram`, `bridge.export_diagram` e `bridge.delete_diagram`
+em `src/capella_mcp/bridge.py` (projeto `capella_mcp`).
 `BREAKDOWN_DIAGRAMS` (~linha 138) tem 9 combinações hoje, incluindo
 `("oa", "OperationalEntity")`/`("oa", "OperationalActor")` (adicionadas
 2026-08-13, ver Sintoma 3 pra limitação conhecida de renderização).
