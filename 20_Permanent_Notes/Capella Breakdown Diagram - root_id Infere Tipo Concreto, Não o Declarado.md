@@ -238,6 +238,104 @@ Sirius headless pra esse mapeamento específico**, não um bug no
 código (`BREAKDOWN_DIAGRAMS[("oa","OperationalEntity")]`, comentário
 extenso) em vez de continuar tentando "consertar" no nível Python.
 
+## Continuação (2026-08-15) — catálogo completo de alternativas + 3 novas alavancas testadas
+
+Pedido: investigar mais fundo docs oficiais Capella + python4capella pra
+mapear **todas** as formas de desenhar diagramas de Operational
+Entity/Actor, não só insistir no mesmo mapping quebrado. Três agentes de
+pesquisa paralelos (read-only): (1) catálogo completo dos `.odesign` reais
+da camada OA, (2) API interna do python4capella não usada ainda, (3)
+documentação oficial Eclipse Capella (`eclipse-capella/capella`,
+`diagrams.mediawiki`) + issues do python4capella no GitHub
+(`labs4capella/python4capella`).
+
+### Catálogo — 10 representações na Operational Analysis
+
+Confirmado via `oa.odesign` + `common.odesign`: além de "Operational Entity
+Breakdown" (a quebrada), existem "Operational Entity Blank" (mais rica —
+entidades, atores, meios de comunicação, roles alocados, atividades
+alocadas), "Operational Role Blank", "Operational Capabilities Blank",
+"Contextual Operational Capability", "Operational Activity Breakdown"
+(funciona), "Operational Activity Interaction Blank", "Operational Process
+Description", e **"Operational Interaction Scenario"** — que é a real "OES"
+oficial (`label="%oa.oes"`, asset de exemplo
+`OES_Operational%20Entity%20Scenario.jpg`, confirmado por 3 fontes
+independentes: doc oficial, fórum Capella, issue #220 do python4capella).
+
+**Achado de nomenclatura importante**: a sigla oficial Capella "OES" =
+**Operational Entity Scenario**, um diagrama de **sequência/interação**
+(`SequenceDiagramDescription`, lifelines via `InstanceRoleMapping`), **não**
+a "Operational Entity Breakdown" que o usuário apelidou informalmente de
+"(OES)" nos testes desta sessão. São diagramas totalmente diferentes — a
+Scenario nunca foi testada por nós (não é substituto estrutural do
+breakdown, responde uma pergunta de modelagem diferente: "em que ordem essas
+entidades trocam interações" vs "qual é a hierarquia de containment").
+Confirmado também: "Operational Entity Breakdown", "Operational Entity
+Blank" e "Operational Role Blank" são 3 `ownedRepresentations` **genuinamente
+diferentes** (hrefs distintos no `common.odesign`), não 3 ferramentas pra
+uma representação só.
+
+### Três alavancas novas testadas ao vivo contra `car_hmi.aird` — todas descartadas
+
+**(d) `CanonicalSynchronizer.synchronize()`** — a sincronização real de
+nível GMF/notation (diferente do `DialectManager.refresh()` já descartado,
+que opera em nível Sirius/DDiagram):
+```python
+gmf_diagram = org.eclipse.sirius.diagram.ui.business.api.view.SiriusGMFHelper.getGmfDiagram(java_diag)
+synchronizer = org.eclipse.sirius.diagram.business.api.refresh.CanonicalSynchronizerFactory.INSTANCE.createCanonicalSynchronizer(gmf_diagram)
+synchronizer.synchronize()
+```
+Classes confirmadas reais lendo o `.source_*.jar` do Sirius instalado
+(`org.eclipse.sirius.diagram_7.4.14...jar` /
+`org.eclipse.sirius.diagram.ui_7.4.14...jar`), não inferidas de um Gist.
+Rodou sem erro, dentro de uma transaction, salvou — XML resultante
+**byte-a-byte idêntico**, `type="3003"` continua ausente.
+
+**(e) `Sirius.open_representation()`** — chamada nativa real do
+python4capella (`org.eclipse.python4capella.modules.SiriusModule`, existe
+em `java_api/Sirius_API.py`, **nunca** chamada por `capella.py`/`diagram.py`,
+**nunca** exposta pela classe `Diagram`). Ideia: simula "abrir o editor",
+que é o que dispara a materialização GMF completa na UI interativa. Rodou
+sem erro, retornou `None`, sem efeito nenhum — RCP headless não tem
+workbench/PartService real pra abrir editor dentro.
+
+**(f) Trocar pra "Operational Entity Blank"** (mapping `OAB_Entity1`,
+`containerMappings`, `domainClass="Entity"` — uma mapping só cobre as duas
+ferramentas "Create Operational Entity" e "Create Operational Actor",
+confirmado no XML). Tecnologia de nó igual à dos 8 tipos que funcionam
+(`ContainerMapping`/`FlatContainerStyleDescription`), e **sem sincronização
+nenhuma** (`semanticCandidatesExpression=""`, `createElements="false"`) —
+elimina de vez o risco de duplicar nó auto-populado. Testado com receita de
+3 passes igual à do `create_diagram` atual (`create_representation` →
+`apply_mapping` do container → `set_bounds`), contra `car_hmi.aird` real (a
+entidade "Painel de Instrumentos").
+
+Resultado: **progrediu mais que qualquer tentativa anterior, mas ainda não
+funciona**. O PNG exportado teve dimensões de pixel corretas batendo com o
+bounds setado (`set_bounds([100,100,220,120])` → PNG 240x140, contra o
+~30x60 degenerado do caso NodeMapping quebrado) — prova que a geometria GMF
+materializou de verdade dessa vez. Mas inspeção de pixel (upscale 4x +
+`Image.getcolors()` via `uv run --with pillow`) revelou só uma sombra
+cinza de 3 tons — sem preenchimento, sem borda, sem ícone, sem texto do
+label. A Figure real do container nunca pinta — mesma *família* de gap do
+caso NodeMapping, só que uma camada mais adiante (geometria materializa,
+decoração/pintura ainda não). **Não adotado** — trocaria uma representação
+quebrada por outra quebrada de um jeito diferente; a decisão do usuário foi
+substituir a Breakdown só se a Blank realmente funcionasse.
+
+### Conclusão geral (2026-08-15)
+
+6 fixes independentes testados e descartados agora, cobrindo 2 tecnologias
+de nó Sirius diferentes (`NodeMapping` e `ContainerMapping`). Isso deixa de
+ser "peculiaridade do mapping `OEB_OperationalEntities`" e passa a ser
+**limitação genuína de materialização de Figure do Sirius/GMF em modo
+headless**, que o nível de abstração deste bridge (templates EASE fixos
+sobre a `simplified_api` do python4capella) não alcança — precisaria de
+acesso a internals de refresh de Figure Draw2D/GEF que não são
+documentados nem exercitados em lugar nenhum do próprio python4capella.
+Documentado por extenso direto no `bridge.py`
+(`BREAKDOWN_DIAGRAMS[("oa","OperationalEntity")]`).
+
 ## `delete_diagram` — tool nova (2026-08-14)
 
 Pra permitir limpar diagramas quebrados/de teste sem editar `.aird` na
