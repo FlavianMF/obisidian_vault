@@ -26,6 +26,7 @@
 | 20_Permanent_Notes/Matriz de V&V - Birthday Counter.md | Matriz de Verificação e Validação (V&V) - Birthday Counter | systems-engineering, verification, validation, birthday_counter, semp | 2026-05-21 | manual |
 | 20_Permanent_Notes/Model Context Protocol (MCP).md | Model Context Protocol (MCP) | mcp, llm, protocol, tool-use | 2026-08-14 | capella_mcp |
 | 20_Permanent_Notes/NASA SE Engine.md | NASA Systems Engineering Engine | systems-engineering, nasa, processes, engine | 2026-05-21 | manual |
+| 20_Permanent_Notes/Paisagem de MCP Servers para MBSE e CAD.md | Paisagem de MCP Servers para MBSE e CAD | mcp, mbse, sysml, capella, cad, competitive-landscape | 2026-08-15 | capella_mcp |
 | 20_Permanent_Notes/Plano de Gerenciamento de Engenharia de Sistemas (SEMP).md | Plano de Gerenciamento de Engenharia de Sistemas (SEMP) | systems-engineering, management, nasa, incose, documentation, planning | 2026-05-21 | manual |
 | 20_Permanent_Notes/Pré-Fase A - Análise de Conceito.md | Pré-Fase A - Análise de Conceito |  | 2026-05-21 | manual |
 | 20_Permanent_Notes/Registro de Riscos - Birthday Counter.md | Registro de Riscos Técnicos - Birthday Counter | systems-engineering, risk-management, birthday_counter, semp | 2026-05-21 | manual |
