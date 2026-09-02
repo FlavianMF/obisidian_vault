@@ -21,6 +21,7 @@
 | 20_Permanent_Notes/Padrão de Documentação Agêntica Local.md | Padrão de Documentação Agêntica Local | agentic-ai, documentation, automation, second-brain | 2026-05-21 | manual |
 | 20_Permanent_Notes/Pitfalls Comuns em Automação Python.md | Pitfalls Comuns em Automação Python | python, programming, bug-trap | 2026-05-22 | hermes_validator |
 | 20_Permanent_Notes/Processo de Definição Pré-Desenvolvimento (Elite SE Workflow).md | Processo de Definição Pré-Desenvolvimento (Elite SE Workflow) | systems-engineering, mbse, sysml-v2, agentic-ai, workflow | 2026-05-21 | Academic Research 2024-2025 + 3 Pilares Framework |
+| 20_Permanent_Notes/Push Pra Branch Ocupada Via Branch Temporária.md | Push Pra Branch Ocupada Via Branch Temporária | git, worktree, agentic-ai, dev-workflow | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Reproduzibilidade e Open Science (2025).md | Reproduzibilidade e Open Science (2025) | academic-writing, reproducibility, open-science, data-sharing, IEEE | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Fluxo de Trabalho de Feature Branch.md | Skill: Fluxo de Trabalho de Feature Branch | agentic-ai, git, workflow, automation | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Ingestão de Notas de Literatura.md | Skill: Ingestão de Notas de Literatura | agentic-ai, knowledge-management, citation, academic | 2026-05-21 | manual |

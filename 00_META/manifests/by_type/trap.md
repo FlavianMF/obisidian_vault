@@ -9,3 +9,4 @@
 | 20_Permanent_Notes/Otimização de Recursos para LLMs em CPU.md | Otimização de Recursos para LLMs em CPU | ollama, cpu, performance, llm | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Python4Capella get_contents() é Snapshot Desconectado - Containment Real Exige get_owned_X().md | Python4Capella get_contents() é Snapshot Desconectado — Containment Real Exige get_owned_<X>() | python4capella, capella, emf, eclipse, ease, containment, py4j | 2026-08-13 | capella_mcp |
 | 20_Permanent_Notes/Submodule HTTPS Remote Herda Conta gh Errada.md | Submodule HTTPS Remote Herda Conta gh Errada | git, submodule, ssh, github-cli, second-brain-sync | 2026-08-09 | projetos_claude |
+| 20_Permanent_Notes/Tag de Release Não Volta Pra Develop Sozinha.md | Tag de Release Não Volta Pra Develop Sozinha | git, release, versioning, ci-cd, tags, dev-workflow | 2026-09-02 | capella_llm_window |
