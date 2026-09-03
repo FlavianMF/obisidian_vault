@@ -1,7 +1,7 @@
 ---
 title: Project Model Canvas vs ARCADIA — Mapeamento
 type: pattern
-tags: [mbse, arcadia, project-model-canvas, systems-engineering, product-definition]
+tags: [mbse, arcadia, project-model-canvas, systems-engineering, product-definition, verification-validation]
 created: 2026-09-03
 provenance: residencia_00
 ---
@@ -12,7 +12,9 @@ Quando um projeto de definição de produto usa o **Project Model Canvas** (PM C
 José Finocchio Jr., 13 blocos em 5 colunas: Por quê/O quê/Quem/Como/Quando-Quanto)
 como ferramenta de kickoff, e existe intenção de aplicar MBSE, **ARCADIA cobre 9 dos
 13 blocos com ganho de rastreabilidade** — mas não substitui os 4 blocos de gestão
-de projeto pura.
+de projeto pura. Abordagem validada em campo (residência técnica, 8 empresas): rodar
+os dois **em paralelo**, não como substituição — PM Canvas define o **negócio**,
+ARCADIA define o **produto**.
 
 ## 🗺️ Mapeamento
 
@@ -32,13 +34,42 @@ de projeto pura.
 Equipe, Grupos de Entregas, Linha do Tempo, Custos. Os gates OA→SA→LA→PA dão marcos
 naturais para ancorar um cronograma, mas não o substituem.
 
-## 💡 Quando vale a substituição
+## 💡 Quando vale rodar os dois em paralelo (não substituir)
 
 - Múltiplos times/empresas em paralelo precisando de estrutura comparável entre si
   (mesmo metamodelo ARCADIA > canvas heterogêneo por time).
 - Produto evolui ao longo do projeto e precisa de rastreabilidade
   necessidade→requisito→função→componente, que o Canvas (documento estático) não tem.
 - Equipe tem tempo/mentoria para ao menos Operational Analysis + System Analysis.
+
+Os blocos onde os dois se sobrepõem (Justificativas, Objetivos, Stakeholders
+Externos, Restrições) não são redundância — servem de **checagem cruzada
+proposital**: se o "Objetivo" do PM Canvas (linguagem de negócio) não corresponde a
+nenhuma Capability modelada em OA (linguagem operacional), é sinal de alerta
+precoce de necessidade mal capturada ou discurso de negócio desalinhado da
+realidade.
+
+## ✅ V&V por perspectiva ARCADIA
+
+Critério de aceitação por perspectiva, ancorado em [[V-Model (Vee Model)]]
+(verificação = "build the system right", validação = "build the right system"):
+
+| Perspectiva | Tipo | Critério |
+| --- | --- | --- |
+| OA | Validação | Cenário operacional bate com a realidade confirmada pelo stakeholder |
+| SA | Verificação | Requisitos completos/consistentes/testáveis, rastreados a uma Capability |
+| LA | Verificação | Trade-off explícito documentado, não escolha arbitrária |
+| PA | Verificação | Componente atende à restrição industrial levantada em campo |
+
+Matriz reutilizável adaptada de [[Matriz de V&V - Birthday Counter]] (ID, Descrição,
+Tipo Ver./Val., Perspectiva ARCADIA, Método I/A/D/T, Critério de sucesso
+mensurável). Todo VAL-xx referencia a OA de origem; todo RQ-xx referencia a
+Capability de origem — sem isso a matriz não fecha rastreabilidade.
+
+Ponto-chave de ARCADIA para V&V: o IVVQ do método é conduzido a partir de
+Capabilities/Functional Chains/Cenários do próprio modelo, não de requisitos em
+texto solto — o cenário que gera o requisito já serve de roteiro de verificação
+(fonte: [ARCADIA Q&A](https://mbse-capella.org/arcadia-qna.html)).
 
 ## ⚠️ Adaptação pragmática — "ARCADIA enxuto"
 
@@ -53,3 +84,5 @@ requisito registrado deve apontar de volta para um ator/dor de origem.
 - [[Processo de Definição Pré-Desenvolvimento (Elite SE Workflow)]]
 - [[MBSE]]
 - [[Plano de Gerenciamento de Engenharia de Sistemas (SEMP)]]
+- [[V-Model (Vee Model)]]
+- [[Matriz de V&V - Birthday Counter]]
