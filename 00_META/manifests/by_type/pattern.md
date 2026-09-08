@@ -19,15 +19,18 @@
 | 20_Permanent_Notes/Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar.md | Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar | ci-cd, testing, code-coverage, quality-gates | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Orquestração Híbrida de Agentes.md | Orquestração Híbrida de Agentes | agentic-ai, architecture, performance, optimization | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Padrão de Documentação Agêntica Local.md | Padrão de Documentação Agêntica Local | agentic-ai, documentation, automation, second-brain | 2026-05-21 | manual |
+| 20_Permanent_Notes/Permission-as-Deferred-Promise para Approval Gates de Agente.md | Permission-as-Deferred-Promise para Approval Gates de Agente | agentic-ai, permissions, approval-gate, async-architecture, tool-use | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Pitfalls Comuns em Automação Python.md | Pitfalls Comuns em Automação Python | python, programming, bug-trap | 2026-05-22 | hermes_validator |
 | 20_Permanent_Notes/Processo de Definição Pré-Desenvolvimento (Elite SE Workflow).md | Processo de Definição Pré-Desenvolvimento (Elite SE Workflow) | systems-engineering, mbse, sysml-v2, agentic-ai, workflow | 2026-05-21 | Academic Research 2024-2025 + 3 Pilares Framework |
 | 20_Permanent_Notes/Project Model Canvas vs ARCADIA - Mapeamento.md | Project Model Canvas vs ARCADIA — Mapeamento | mbse, arcadia, project-model-canvas, systems-engineering, product-definition, verification-validation | 2026-09-03 | residencia_00 |
 | 20_Permanent_Notes/Push Pra Branch Ocupada Via Branch Temporária.md | Push Pra Branch Ocupada Via Branch Temporária | git, worktree, agentic-ai, dev-workflow | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Reproduzibilidade e Open Science (2025).md | Reproduzibilidade e Open Science (2025) | academic-writing, reproducibility, open-science, data-sharing, IEEE | 2026-05-21 | manual |
+| 20_Permanent_Notes/Separar Protocol de Route em Abstração Multi-Provider de LLM.md | Separar Protocol de Route em Abstração Multi-Provider de LLM | llm, multi-provider, adapter-pattern, api-design, architecture | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Skill - Fluxo de Trabalho de Feature Branch.md | Skill: Fluxo de Trabalho de Feature Branch | agentic-ai, git, workflow, automation | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Ingestão de Notas de Literatura.md | Skill: Ingestão de Notas de Literatura | agentic-ai, knowledge-management, citation, academic | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Pesquisa Acadêmica Rigorosa.md | Skill: Pesquisa Acadêmica Rigorosa | agentic-ai, research, academic, literature-review | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Sincronização de Conhecimento Recursiva.md | Skill: Sincronização de Conhecimento Recursiva | agentic-ai, knowledge-management, second-brain | 2026-05-21 | manual |
+| 20_Permanent_Notes/Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real.md | Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real | architecture, client-server, transport, api-design, embedding | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Validação Acadêmica Automatizada.md | Validação Acadêmica Automatizada | education, automation, grading, rubric | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Visualização Científica e Resumos Gráficos.md | Visualização Científica e Resumos Gráficos | academic-writing, visualization, graphical-abstract, design | 2026-05-21 | manual |
 | 90_Assets/Skill - Academic-Evidence-Mapper.md | Skill: Academic-Evidence-Mapper | agentic-ai, research, academic | 2026-05-21 | manual |
