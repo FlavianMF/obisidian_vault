@@ -68,13 +68,15 @@ ativamente desenvolvida antes de construir dependência em cima dela.
 
 ## Pesquisa completa
 
-Pesquisa detalhada (17 arquivos: stack, agent loop, client-server,
-providers, tools, permissões, MCP, plugins, config, persistência,
-headless/SDK/API, subagentes, auth, fontes) vive no projeto `projetos_ita`,
-fora do vault: `notes/research/opencode/00_indice.md`.
+Pesquisa detalhada (17 notas: stack, agent loop, client-server, providers,
+tools, permissões, MCP, plugins, config, persistência, headless/SDK/API,
+subagentes, auth, fontes) — [índice completo em 40_Projects/opencode](../40_Projects/opencode/00_indice.md).
+Cópia espelhada também no projeto de origem `projetos_ita`, fora do vault:
+`notes/research/opencode/00_indice.md`.
 
 ## 🔗 Conexões
 - [[Model Context Protocol (MCP)]]
 - [[Permission-as-Deferred-Promise para Approval Gates de Agente]]
 - [[Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real]]
 - [[Separar Protocol de Route em Abstração Multi-Provider de LLM]]
+- [Índice completo da pesquisa (40_Projects/opencode)](../40_Projects/opencode/00_indice.md)
