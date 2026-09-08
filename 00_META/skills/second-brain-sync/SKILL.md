@@ -9,12 +9,19 @@ description: >
   note or relying on Dataview blocks, which are inert outside the Obsidian
   app, (2) autonomously distill and push new patterns/decisions/traps to the
   vault at the end of any dev task, in any project — no confirmation needed,
-  no submodule, no pointer to bump. A legacy per-project submodule mode
-  (docs/second_brain/) remains available for the rare case a repo needs an
-  isolated pinned snapshot. Use when: user says "connect the second brain /
-  vault", "sync my notes", "update the vault"; mentions "obsidian vault"; OR —
-  auto-trigger — you need prior context/patterns before starting a task, or
-  you are about to finish a coding task, in any project.
+  no submodule, no pointer to bump. A third behavior detects the active
+  harness's convention file (CLAUDE.md, AGENTS.md, .cursorrules, etc.) and
+  offers to bootstrap it with a proven dev-workflow methodology (worktrees,
+  test scoping, CI/CD reporting, versioning/release automation) distilled
+  from the vault — always asking before writing, never autonomous. A legacy
+  per-project submodule mode (docs/second_brain/) remains available for the
+  rare case a repo needs an isolated pinned snapshot. Use when: user says
+  "connect the second brain / vault", "sync my notes", "update the vault",
+  "bootstrap this project's workflow", "add dev methodology to CLAUDE.md";
+  mentions "obsidian vault"; OR — auto-trigger — you need prior
+  context/patterns before starting a task, you are about to finish a coding
+  task, or you're starting work in a project with no recognizable
+  workflow-methodology section yet, in any project.
 ---
 
 Connects to a personal Obsidian vault (a single global clone, not a
@@ -86,6 +93,45 @@ Because every project reads and writes the same `~/obsidian_vault`, the
 result is visible everywhere immediately, not just in the project the sync
 ran from.
 
+## Behavior 3 — Project Workflow Bootstrap (Ask-First)
+
+Plants proven dev-workflow discipline (worktrees, test scoping, CI/CD reporting,
+versioning/release automation) into a project's harness convention file. Unlike
+Behavior 2, **this never writes without asking first** — even when the trigger was
+automatic.
+
+1. **Detect harness convention file(s).** This skill only runs inside Claude Code, so
+   the default target is always `CLAUDE.md`. Also scan the project root for any other
+   file from this table already present — if one exists, it's in scope too, since a
+   project can serve more than one harness:
+
+   | harness | convention file |
+   |---|---|
+   | Claude Code | `CLAUDE.md` |
+   | Codex / generic agents | `AGENTS.md` |
+   | Cursor | `.cursor/rules/` or `.cursorrules` |
+   | Windsurf | `.windsurfrules` |
+   | Cline | `.clinerules` |
+   | Gemini CLI | `GEMINI.md` |
+
+2. **Trigger**: starting work in a project where no workflow-methodology section has
+   been detected yet this session, OR an explicit user request. Check whether the
+   target file(s) already have a recognizable workflow section (a stable heading, e.g.
+   `## Dev workflow`) that looks current — if so, do nothing.
+3. **If missing or stale**: read
+   `~/obsidian_vault/20_Permanent_Notes/Checklist de Bootstrap de Workflow de
+   Desenvolvimento.md` (via Behavior 1's manifest-first lookup, then `Read` the note in
+   full) and inspect the project's actual stack (build/version-manifest file) to adapt
+   the checklist's six axes to this specific project. Never copy the note's
+   Java/Tycho-specific instance literally into a project on a different stack.
+4. **Always ask before writing** — show the drafted section, ask
+   create/append/skip. No exceptions, regardless of how the trigger fired.
+5. **Write**: create the file if missing; if it exists, insert/update only the
+   delimited workflow section, preserving everything else in the file untouched.
+
+No new script — this behavior is entirely prose/read-driven, like Behavior 1. There's
+no git mechanics to guard (a single local file edit, no automatic commit/push).
+
 ## Frontmatter Schema
 
 Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
@@ -108,6 +154,10 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 - Never `git add -A` inside the vault — only explicit paths.
 - One concern per commit.
 - Never delete or overwrite an existing note without a clearly superseding reason.
+- Behavior 3 never writes without explicit user confirmation, even when the trigger
+  was automatic.
+- Behavior 3 never overwrites a target file's existing content outside its own
+  delimited workflow section.
 
 ## Examples
 
@@ -164,8 +214,10 @@ Global mode does not touch the parent project at all — it only reads and
 writes `~/obsidian_vault`. Legacy mode does not touch the parent project's
 own branch/PR flow — that's governed by whatever conventions already apply
 there; it only adds one local commit for the pointer bump, and never pushes
-the parent project. Neither mode modifies vault content the agent didn't
-author this session, except via the one-time `backfill_frontmatter.py`
-migration pass, which is idempotent and never overwrites an existing
-populated field. "stop caveman" / mode changes elsewhere don't affect this
-skill's behavior — it has no persona of its own.
+the parent project. Behavior 3 only touches the harness convention file(s)
+at the project root, never commits or pushes on its own — that stays part
+of the project's normal flow, same as the legacy pointer-bump. Neither mode
+modifies vault content the agent didn't author this session, except via the
+one-time `backfill_frontmatter.py` migration pass, which is idempotent and
+never overwrites an existing populated field. "stop caveman" / mode changes
+elsewhere don't affect this skill's behavior — it has no persona of its own.
