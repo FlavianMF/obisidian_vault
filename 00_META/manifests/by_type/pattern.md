@@ -31,6 +31,7 @@
 | 20_Permanent_Notes/Skill - Ingestão de Notas de Literatura.md | Skill: Ingestão de Notas de Literatura | agentic-ai, knowledge-management, citation, academic | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Pesquisa Acadêmica Rigorosa.md | Skill: Pesquisa Acadêmica Rigorosa | agentic-ai, research, academic, literature-review | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Sincronização de Conhecimento Recursiva.md | Skill: Sincronização de Conhecimento Recursiva | agentic-ai, knowledge-management, second-brain | 2026-05-21 | manual |
+| 20_Permanent_Notes/TDD em Firmware ESP-IDF via test_apps.md | TDD em Firmware ESP-IDF via test_apps | esp-idf, tdd, embedded, unity, testing, agentic-ai | 2026-09-09 | webnar_iot_genai |
 | 20_Permanent_Notes/Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real.md | Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real | architecture, client-server, transport, api-design, embedding | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Validação Acadêmica Automatizada.md | Validação Acadêmica Automatizada | education, automation, grading, rubric | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Visualização Científica e Resumos Gráficos.md | Visualização Científica e Resumos Gráficos | academic-writing, visualization, graphical-abstract, design | 2026-05-21 | manual |
