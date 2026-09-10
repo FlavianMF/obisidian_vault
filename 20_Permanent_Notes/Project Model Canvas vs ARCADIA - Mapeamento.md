@@ -1,7 +1,7 @@
 ---
 title: Project Model Canvas vs ARCADIA — Mapeamento
 type: pattern
-tags: [mbse, arcadia, project-model-canvas, systems-engineering, product-definition, verification-validation]
+tags: [mbse, arcadia, project-model-canvas, systems-engineering, product-definition, verification-validation, llm-council, research-design]
 created: 2026-09-03
 provenance: residencia_00
 ---
@@ -79,6 +79,28 @@ fronteira do sistema, restrições, critérios de sucesso) na visita; transcreve
 Capella depois; LA/PA entram só quando o produto amadurecer. Regra mínima: todo
 requisito registrado deve apontar de volta para um ator/dor de origem.
 
+## 🧭 Pressure-test via llm-council — veredito e correções
+
+Rodar essa abordagem paralela (8 empresas, 4 alunos leigos por empresa, 1 visita de
+campo) por um conselho de 5 personas de IA + revisão por pares (skill
+`llm-council`) confirmou "eficaz com ressalvas" — nenhuma persona recomendou contra
+— mas convergiu em risco operacional real: carga alta (13 blocos PMC + OA/SA + V&V
+num único dia) com equipe sem treino prévio degrada silenciosamente antes de quebrar
+de forma óbvia. Três correções concretas, de baixo custo, condicionam o "eficaz":
+
+1. **Papéis fixos por aluno antes da viagem** — 1 conduz, 1 anota PMC, 1 anota
+   ARCADIA/OA, 1 cronometra e sinaliza divergência. Sem isso a checagem cruzada
+   proposital (ver acima) vira bagunça — ninguém captura os dois lados ao mesmo
+   tempo.
+2. **Dry-run obrigatório** — role-play com uma "empresa" fictícia usando o roteiro
+   real, injetando uma contradição PMC/ARCADIA deliberada, antes da primeira visita
+   de verdade. Calibra "divergência real" vs. ambiguidade normal de linguagem — sem
+   isso, um novato não distingue as duas coisas na hora.
+3. **Reformular a alegação de pesquisa** — ver [[Sem Log de Atribuição Por Trilha, Desenho Paralelo Não Prova Eficácia Causal]].
+
+Ver também o blind spot de governança de dados capturado só na revisão por pares:
+[[Corpus Multiempresa Só Vira Dataset Reaproveitável Com Consentimento Explícito]].
+
 ## 🔗 Conexões
 - [[Capella no Processo de Definição de Produto]]
 - [[Processo de Definição Pré-Desenvolvimento (Elite SE Workflow)]]
@@ -86,3 +108,5 @@ requisito registrado deve apontar de volta para um ator/dor de origem.
 - [[Plano de Gerenciamento de Engenharia de Sistemas (SEMP)]]
 - [[V-Model (Vee Model)]]
 - [[Matriz de V&V - Birthday Counter]]
+- [[Sem Log de Atribuição Por Trilha, Desenho Paralelo Não Prova Eficácia Causal]]
+- [[Corpus Multiempresa Só Vira Dataset Reaproveitável Com Consentimento Explícito]]
