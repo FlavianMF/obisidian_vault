@@ -5,6 +5,7 @@ tags: [agentic-ai, documentation, git, dev-workflow, presentation, verification]
 created: 2026-09-11
 provenance: projetos_ita
 project: projetos_ita
+verified: 2026-09-11 via git log em capella_mcp e capella_llm_window
 ---
 
 # Notas de Análise Envelhecem em Dias — Reverificar no Código Antes de Apresentar

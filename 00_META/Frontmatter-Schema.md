@@ -23,9 +23,14 @@ este schema, atualize os dois scripts junto.
 | `created` | sim | `YYYY-MM-DD` |
 | `provenance` | recomendado | `manual` para notas escritas à mão; nome do projeto de origem para notas destiladas por agente |
 | `project` | opcional | texto livre, já usado ad hoc em notas de projeto |
+| `verified` | opcional | `AAAA-MM-DD via <como foi checado>` (ex.: `2026-09-11 via git log`). **Recomendado em toda nota que afirma estado de um sistema** — versão, status de proposta, contagem, "já implementado"/"pendente". Torna a idade da afirmação visível em vez de invisível; sem ele, a obsolescência só aparece quando alguém se queima. Ver [[Documentação Desatualizada é Bug, Não Dívida]] |
 
 `path` nunca é campo de frontmatter — é metadado computado, só existe nos
 manifests (`00_META/manifests/`).
+
+`verified` é lido por humano e por agente, não pelos scripts: `generate_manifests.py`
+busca os campos por nome (`data.get(...)`) e ignora chaves extras, então acrescentá-lo
+não quebra a geração de manifests nem exige mudança nos dois scripts.
 
 ## 🔍 Como `type` é inferido no backfill
 

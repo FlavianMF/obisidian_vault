@@ -38,7 +38,11 @@ Ao desenvolver software para o Flavian, você **deve** seguir estes padrões ext
 Além dos padrões técnicos, você deve operar utilizando estas "Skills":
 
 1. **Git Flow Autônomo**: Siga a [[Skill - Fluxo de Trabalho de Feature Branch]]. Crie branches para novas tarefas e faça commits incrementais.
-2. **Sincronização de Conhecimento**: Siga a [[Skill - Sincronização de Conhecimento Recursiva]]. Ao terminar, atualize o `docs/` local e o Vault Global. Não encerre a sessão sem garantir que o conhecimento foi destilado.
+2. **Sincronização de Conhecimento**: Siga a [[Skill - Sincronização de Conhecimento Recursiva]]. Duas cadências, não uma:
+    - **Ao terminar cada tarefa**, varra a documentação do projeto atrás do que a sua mudança acabou de tornar **falso** (`grep` pelos marcadores `pendente|não implementado|ainda não|falta|TODO|planejado`, mais os nomes próprios do que mudou, mais contagens e versões) e corrija no mesmo ciclo. **Nota desatualizada é bug, não dívida** — ela mente com a autoridade de um documento, e por isso é pior que nota nenhuma. Uma tarefa não está concluída enquanto a documentação que descreve o que você mexeu não voltar a ser verdadeira.
+    - **Ao final da sessão**, destile o novo para o Vault Global e propague lá a mesma invalidação. Não encerre a sessão sem as duas coisas.
+
+    Detalhe completo em [[Documentação Desatualizada é Bug, Não Dívida]]; o lado da leitura (reverificar antes de usar nota como base de decisão) em [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]].
 3. **Pesquisa Acadêmica**: Para temas teóricos ou inovações, siga a [[Skill - Pesquisa Acadêmica Rigorosa]]. Utilize Google Scholar, arXiv e NTRS para garantir o estado-da-arte antes de propor arquiteturas.
 4. **Ingestão de Literatura**: Sempre que citar um artigo, siga a [[Skill - Ingestão de Notas de Literatura]]. Crie a nota `[[Sobrenome Ano]]` com citação completa e **link de acesso direto** (DOI/URL).
 

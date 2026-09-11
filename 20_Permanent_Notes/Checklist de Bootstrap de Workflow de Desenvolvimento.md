@@ -86,13 +86,55 @@ Adaptar por stack: `--version` de CLI, endpoint de healthcheck de serviço, foot
 build de app web — o mecanismo importa menos que garantir que sempre existe *algum*
 jeito de perguntar isso sem abrir o histórico de commits à mão.
 
+## 7. Documentação viva — nota desatualizada é bug, não dívida
+
+Nota velha não é ausência de informação: é **informação errada com aparência de
+autoridade**, e por isso pior que nota nenhuma. Quem encontra uma pasta vazia vai
+procurar a verdade no código; quem encontra um documento detalhado e recente confia
+nele. Incidente que originou este eixo: três apresentações construídas sobre notas de
+seis dias antes, afirmando "8 de 11 propostas resolvidas" quando o `git log` mostrava
+10 de 11 — duas propostas implementadas e uma release lançada no intervalo.
+
+**Critério de conclusão** (não é zelo, é definição de pronto): a nota é parte do
+entregável, não um artefato posterior. Uma tarefa não está concluída enquanto a
+documentação que descreve o que você mexeu não voltar a ser verdadeira. Trabalho *extra*
+é a primeira coisa cortada sob pressão; trabalho *inacabado* é terminado.
+
+**Ao terminar cada tarefa**, antes de dizer "pronto":
+
+1. Liste o que tocou — módulo, ferramenta, arquivo, versão, status, decisão. Essa lista
+   é a entrada dos greps seguintes, e não exige julgamento nenhum.
+2. Varra a documentação do projeto pelos **marcadores de afirmação de estado** — caçar as
+   palavras que envelhecem, não o assunto, é o que transforma julgamento em busca:
+   ```bash
+   grep -rniE "pendente|não implementado|ainda não|falta|TODO|planejado|aguardando|previsto" \
+     docs/ notes/ README.md CLAUDE.md
+   ```
+   Mais um grep pelos nomes próprios do que mudou, e atenção a contagens e versões
+   ("13 tools", "v0.1.0") — essas apodrecem sem nenhuma palavra-marcador por perto.
+3. Cada acerto: ainda é verdade? Se não, corrija **no mesmo ciclo** — não vira backlog.
+4. Em afirmação de estado, carimbe a verificação: data + como foi checada.
+5. Relate ao usuário o que foi atualizado.
+
+**Ao final da sessão**, sincronizar com o vault global: destilar o que foi aprendido *e*
+propagar lá o que a mudança invalidou.
+
+Adaptar por stack: os caminhos do grep mudam conforme onde o projeto guarda documentação
+(`docs/`, `notes/`, `adr/`, `rfcs/`, wiki no repo, docstrings de módulo). O que não muda é
+a dupla "listar o que tocou → procurar quem afirma algo sobre isso". Em projeto com ADRs,
+incluir o diretório de decisões — ADR que virou mentira é o caso mais caro de todos.
+
+Ver [[Documentação Desatualizada é Bug, Não Dívida]] (princípio completo) e
+[[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]]
+(o lado da leitura: reverificar antes de usar nota como base de decisão).
+
 ## Como aplicar (Behavior 3)
 
 1. Detectar arquivo(s) de convenção do harness já presentes no projeto (`CLAUDE.md`,
    `AGENTS.md`, `.cursorrules`, `.windsurfrules`, `.clinerules`, `GEMINI.md`).
 2. Se já tiver seção de workflow reconhecível e atual, não fazer nada.
 3. Senão, inspecionar o stack real do projeto (arquivo de build/manifest de versão) e
-   adaptar os 6 eixos acima — nunca copiar literalmente as partes específicas do
+   adaptar os 7 eixos acima — nunca copiar literalmente as partes específicas do
    llm_window pra um projeto de outra stack.
 4. Rascunhar a seção, **perguntar ao usuário antes de escrever** (criar/adicionar/pular),
    nunca escrever sem confirmação.
@@ -104,3 +146,5 @@ jeito de perguntar isso sem abrir o histórico de commits à mão.
 - [[Push Pra Branch Ocupada Via Branch Temporária]]
 - [[Automação de Release - Tag e Build Têm Que Estar no Mesmo Job]]
 - [[Tag de Release Não Volta Pra Develop Sozinha]]
+- [[Documentação Desatualizada é Bug, Não Dívida]]
+- [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]]

@@ -67,16 +67,50 @@ Before reading vault content:
    preferred per the vault's own `Agent-Instruction.md` — this behavior is the
    concrete fallback for agents that don't have them.
 
-## Behavior 2 — Autonomous End-of-Task Sync
+## Behavior 2 — Autonomous Doc Freshness + Vault Sync
 
-Trigger: you are finishing a dev task in any project.
-**Do this without asking for confirmation** — that's an explicit user decision,
-not an oversight.
+**Two cadences, not one. Do both without asking for confirmation** — that's an
+explicit user decision, not an oversight.
 
-1. If you learned a generalizable pattern, decision, or trap, draft/update a note
-   (typically under `20_Permanent_Notes/`) with the standardized frontmatter
-   (see below), `provenance: <this-project-name>`.
-2. Run:
+> **A nota é parte do entregável, não um artefato posterior.** Uma tarefa não está
+> concluída enquanto a documentação que descreve o que você mexeu não voltar a ser
+> verdadeira. Nota desatualizada não é dívida: é **bug**, porque mente com a
+> autoridade de um documento — pior que nota nenhuma.
+
+### 2a — Ao terminar CADA tarefa: varrer as notas do projeto
+
+Trigger: você está prestes a declarar uma tarefa concluída, em qualquer projeto.
+Antes de dizer "pronto":
+
+1. **Liste o que tocou** — módulo, ferramenta, arquivo, versão, status de proposta,
+   decisão. Essa lista é a entrada dos greps abaixo; não exige julgamento nenhum.
+2. **Procure quem afirma algo sobre isso.** Caçar os *marcadores de estado*, não o
+   assunto — é o que transforma julgamento em busca:
+   ```bash
+   grep -rniE "pendente|não implementado|ainda não|falta|TODO|planejado|aguardando|previsto" \
+     docs/ notes/ README.md CLAUDE.md 2>/dev/null
+   ```
+   Mais um grep pelos nomes próprios do que mudou. Atenção a **contagens e versões**
+   ("13 tools", "v0.1.0", "8 de 11") — apodrecem sem nenhuma palavra-marcador perto.
+3. **Cada acerto: ainda é verdade?** Se não, corrija **no mesmo ciclo de trabalho** —
+   não vira item de backlog, não vira "depois eu arrumo".
+4. **Carimbe a verificação** em afirmação de estado: data + como foi checada
+   (`verified: AAAA-MM-DD via git log`). Sem carimbo, a obsolescência é invisível.
+5. **Relate ao usuário o que foi atualizado** — e o que foi checado e continuava certo.
+
+Isto cobre a documentação **do projeto**, que é onde a mentira nasce, porque anda colada
+ao código. O vault sozinho não pegaria: o incidente que originou esta regra foi em
+`notes/analysis/` de um projeto, não aqui dentro.
+
+### 2b — Ao final da SESSÃO: sincronizar com o vault
+
+1. Se você aprendeu um padrão, decisão ou armadilha generalizável, redija/atualize uma
+   nota (tipicamente em `20_Permanent_Notes/`) com o frontmatter padrão (ver abaixo),
+   `provenance: <este-projeto>`.
+2. **Propague a invalidação também aqui**: `grep` nos manifests
+   (`00_META/manifests/by_type/*.md`) pelos termos que você tocou e corrija as notas do
+   vault que a mudança tornou falsas — o passo é simétrico ao 2a, não só aditivo.
+3. Rode:
    ```
    python3 ~/.claude/skills/second-brain-sync/scripts/vault_sync.py \
      --vault-path ~/obsidian_vault \
@@ -84,14 +118,18 @@ not an oversight.
      --project-name <this-project-name> \
      --message "<concise commit message>"
    ```
-   This pulls `--ff-only`, regenerates manifests, stages only the note + any
-   manifest files that actually changed, commits, and pushes to the vault's
-   `master`. It refuses to run if the vault has unrelated dirty files.
+   Isso faz `pull --ff-only`, regenera manifests, stageia só as notas passadas + os
+   manifests que mudaram, commita e dá push no `master` do vault. Recusa rodar se o
+   vault tiver arquivos sujos não declarados — então passe **todas** as notas novas na
+   mesma chamada (`--note` é repetível).
 
-That's it — no pointer to bump, nothing to change in the current project.
-Because every project reads and writes the same `~/obsidian_vault`, the
-result is visible everywhere immediately, not just in the project the sync
-ran from.
+   Caminhos com espaço/acento: monte a lista em Python e chame `subprocess.run([...])`.
+   `git status --porcelain` envolve caminhos com espaço em aspas **mesmo** com
+   `core.quotePath=false` — ver a nota
+   `git status --porcelain Quota Caminhos com Espaço Mesmo com quotePath=false`.
+
+Nada a fazer no projeto atual além disso — sem ponteiro pra bumpar. Como todo projeto lê
+e escreve o mesmo `~/obsidian_vault`, o resultado fica visível em todo lugar na hora.
 
 ## Behavior 3 — Project Workflow Bootstrap (Ask-First)
 
