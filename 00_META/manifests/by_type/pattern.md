@@ -1,6 +1,7 @@
 | Path | Title | Tags | Created | Provenance |
 | --- | --- | --- | --- | --- |
 | 20_Permanent_Notes/Ambiente de Desenvolvimento de Agentes em Containers.md | Ambiente de Desenvolvimento de Agentes em Containers | docker, agentic-ai, isolation, dev-environment | 2026-05-21 | 1.0 |
+| 20_Permanent_Notes/Anatomia de uma Landing de Agente - Posicionar Ferramenta de Pesquisa como Produto.md | Anatomia de uma Landing de Agente — Posicionar Ferramenta de Pesquisa como Produto | product, positioning, marketing, agentic-ai, research-to-product, mbse | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Análise de Trade-off (Trade Study).md | Análise de Trade-off (Trade Study) | decision-making, trade-off, systems-engineering, optimization | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Apresentação de Modelos MBSE em Artigos.md | Apresentação de Modelos MBSE em Artigos | MBSE, SysML, academic-writing, systems-engineering, modeling | 2026-05-21 | manual |
 | 20_Permanent_Notes/Arquitetura de Diretórios para Pipelines de Validação.md | Arquitetura de Diretórios para Pipelines de Validação | architecture, organization, data-pipeline, best-practices | 2026-05-22 | 1.0 |
@@ -9,6 +10,7 @@
 | 20_Permanent_Notes/Caso de Uso - SEMP Birthday Counter.md | Caso de Uso - SEMP aplicado ao Birthday Counter | systems-engineering, semp, use-case, web-development, nasa-standard | 2026-05-21 | manual |
 | 20_Permanent_Notes/Checklist de Bootstrap de Workflow de Desenvolvimento.md | Checklist de Bootstrap de Workflow de Desenvolvimento | dev-workflow, ci-cd, git, worktree, versioning, testing, project-bootstrap | 2026-09-08 | capella_llm_window |
 | 20_Permanent_Notes/Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar.md | Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar | agentic-ai, git, worktree, debugging, dev-workflow | 2026-09-02 | capella_llm_window |
+| 20_Permanent_Notes/Deck HTML Precisa Escalonar por Altura de Viewport, Não Só por Largura.md | Deck HTML Precisa Escalonar por Altura de Viewport, Não Só por Largura | css, frontend, responsive, presentation, artifact, layout | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Detecção Ao Vivo de Janela de Contexto do Ollama via api-ps e api-show.md | Detecção Ao Vivo de Janela de Contexto do Ollama via api-ps e api-show | ollama, llm, context-window, openai-compatible, api-design | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Empacotar App GUI Headless + Servidor MCP numa Única Imagem Docker.md | Empacotar App GUI Headless + Servidor MCP numa Única Imagem Docker | docker, mcp, xvfb, headless, packaging | 2026-08-11 | capella_mcp |
 | 20_Permanent_Notes/Engenharia de Sistemas Agêntica.md | Engenharia de Sistemas Agêntica (Agentic Systems Engineering) | agentic-ai, systems-engineering, automation, architecture | 2026-05-21 | 1.0 |
@@ -18,6 +20,7 @@
 | 20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md | Estrutura de Artigos Científicos (IMRaD) | academic-writing, methodology, imrad, structure | 2026-05-21 | manual |
 | 20_Permanent_Notes/Fluxo de Autenticação OAuth em Containers.md | Fluxo de Autenticação OAuth em Containers | oauth, security, docker, networking | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar.md | Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar | ci-cd, testing, code-coverage, quality-gates | 2026-09-02 | capella_llm_window |
+| 20_Permanent_Notes/Migrar Vários Documentos para um Design System Preservando Nomes de Token e Classe.md | Migrar Vários Documentos para um Design System Preservando Nomes de Token e Classe | css, refactoring, design-system, html, agentic-ai | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Orquestração Híbrida de Agentes.md | Orquestração Híbrida de Agentes | agentic-ai, architecture, performance, optimization | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Padrão de Documentação Agêntica Local.md | Padrão de Documentação Agêntica Local | agentic-ai, documentation, automation, second-brain | 2026-05-21 | manual |
 | 20_Permanent_Notes/Permission-as-Deferred-Promise para Approval Gates de Agente.md | Permission-as-Deferred-Promise para Approval Gates de Agente | agentic-ai, permissions, approval-gate, async-architecture, tool-use | 2026-09-08 | projetos_ita |
@@ -26,12 +29,15 @@
 | 20_Permanent_Notes/Project Model Canvas vs ARCADIA - Mapeamento.md | Project Model Canvas vs ARCADIA — Mapeamento | mbse, arcadia, project-model-canvas, systems-engineering, product-definition, verification-validation, llm-council, research-design | 2026-09-03 | residencia_00 |
 | 20_Permanent_Notes/Push Pra Branch Ocupada Via Branch Temporária.md | Push Pra Branch Ocupada Via Branch Temporária | git, worktree, agentic-ai, dev-workflow | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Reproduzibilidade e Open Science (2025).md | Reproduzibilidade e Open Science (2025) | academic-writing, reproducibility, open-science, data-sharing, IEEE | 2026-05-21 | manual |
+| 20_Permanent_Notes/Reproduzir a UI com o CSS Real do Produto Quando Não Há Screenshot.md | Reproduzir a UI com o CSS Real do Produto Quando Não Há Screenshot | presentation, ui, css, honesty, documentation, demo | 2026-09-11 | projetos_ita |
+| 20_Permanent_Notes/Screenshot de UI Comprime Melhor com Quantização de Cores que com JPEG.md | Screenshot de UI Comprime Melhor com Quantização de Cores que com JPEG | imagemagick, images, optimization, screenshots, artifact, data-uri | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Sem Log de Atribuição Por Trilha, Desenho Paralelo Não Prova Eficácia Causal.md | Sem Log de Atribuição Por Trilha, Desenho Paralelo Não Prova Eficácia Causal | research-design, methodology, mbse, llm-council, verification-validation | 2026-09-10 | residencia_00 |
 | 20_Permanent_Notes/Separar Protocol de Route em Abstração Multi-Provider de LLM.md | Separar Protocol de Route em Abstração Multi-Provider de LLM | llm, multi-provider, adapter-pattern, api-design, architecture | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Skill - Fluxo de Trabalho de Feature Branch.md | Skill: Fluxo de Trabalho de Feature Branch | agentic-ai, git, workflow, automation | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Ingestão de Notas de Literatura.md | Skill: Ingestão de Notas de Literatura | agentic-ai, knowledge-management, citation, academic | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Pesquisa Acadêmica Rigorosa.md | Skill: Pesquisa Acadêmica Rigorosa | agentic-ai, research, academic, literature-review | 2026-05-21 | manual |
 | 20_Permanent_Notes/Skill - Sincronização de Conhecimento Recursiva.md | Skill: Sincronização de Conhecimento Recursiva | agentic-ai, knowledge-management, second-brain | 2026-05-21 | manual |
+| 20_Permanent_Notes/Substituir Imagem por Placeholder no Template e Injetar Data URI no Build.md | Substituir Imagem por Placeholder no Template e Injetar Data URI no Build | agentic-ai, build, data-uri, artifact, context-window, html | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/TDD em Firmware ESP-IDF via test_apps.md | TDD em Firmware ESP-IDF via test_apps | esp-idf, tdd, embedded, unity, testing, agentic-ai | 2026-09-09 | webnar_iot_genai |
 | 20_Permanent_Notes/Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real.md | Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real | architecture, client-server, transport, api-design, embedding | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Validação Acadêmica Automatizada.md | Validação Acadêmica Automatizada | education, automation, grading, rubric | 2026-05-21 | 1.0 |
