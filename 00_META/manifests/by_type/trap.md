@@ -13,3 +13,4 @@
 | 20_Permanent_Notes/Página com Screenshots de Um Tema Não Deve Suportar o Tema Oposto.md | Página com Screenshots de Um Tema Não Deve Suportar o Tema Oposto | css, frontend, dark-mode, artifact, presentation, screenshots | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Submodule HTTPS Remote Herda Conta gh Errada.md | Submodule HTTPS Remote Herda Conta gh Errada | git, submodule, ssh, github-cli, second-brain-sync | 2026-08-09 | projetos_claude |
 | 20_Permanent_Notes/Tag de Release Não Volta Pra Develop Sozinha.md | Tag de Release Não Volta Pra Develop Sozinha | git, release, versioning, ci-cd, tags, dev-workflow | 2026-09-02 | capella_llm_window |
+| 20_Permanent_Notes/git status --porcelain Quota Caminhos com Espaço Mesmo com quotePath=false.md | git status --porcelain Quota Caminhos com Espaço Mesmo com quotePath=false | git, shell, scripting, unicode, second-brain-sync, automation | 2026-09-11 | projetos_ita |
