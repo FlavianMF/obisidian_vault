@@ -5,6 +5,7 @@ tags: [dev-workflow, ci-cd, git, worktree, versioning, testing, project-bootstra
 created: 2026-09-08
 provenance: capella_llm_window
 project: capella_llm_window
+verified: 2026-09-11 via leitura de docs/ do orbita-platform (RFCs, plano de fase, playbook)
 ---
 
 # Checklist de Bootstrap de Workflow de Desenvolvimento
@@ -46,6 +47,17 @@ Adaptar por stack: qualquer test runner com relatório de cobertura (`pytest --c
 excluir arquivos/diretórios do cálculo — usar isso, documentado, em vez de baixar o
 threshold silenciosamente.
 
+**Refinamento medido (`orbita-platform`, Etapa 12a — origem numa worktree ainda não
+mesclada)**: um piso simbólico (80%) é um número que ninguém defende e que a primeira
+pressão derruba. A forma que resiste é **catraca**: o piso é o **último valor medido**, e só
+sobe. Cada etapa pode acrescentar um incremento fixo (ex.: +2pp em ramificações até 90/90);
+**baixar o piso exige uma nota justificando**, não uma edição de configuração. Os números
+moram num arquivo de baseline versionado (`quality-baseline.json`) declarado como fonte única
+— os documentos de qualidade citam o arquivo em vez de repetirem o número, que é como um
+número documentado apodrece. Mesma catraca serve para duplicação de código, limites de
+tamanho de arquivo e contagem de vulnerabilidades: o valor de hoje é o teto de amanhã.
+Gate que não bloqueia merge ainda vale como catraca, desde que o relatório apareça no PR.
+
 ## 3. Relatórios de CI/CD dentro do próprio pipeline
 
 Sem depender de SaaS externo (Codecov etc.) pra ver resultado de build:
@@ -62,6 +74,14 @@ Sem depender de SaaS externo (Codecov etc.) pra ver resultado de build:
 → branch de release só via PR, com gate de CI verde obrigatório (proteção de branch
 configurada na plataforma, não é convenção de workflow). Sem push direto em nenhuma das
 duas branches protegidas.
+
+Variante de checkout compartilhado (`orbita-platform`): a branch de trabalho nasce junto com
+a worktree e se chama `worktree-<escopo>`, uma por etapa do plano de fase; o **escopo do
+commit é a etapa** (`feat(fase2-e10):`, `docs(fase2-e9b):`, `fix(etapa11):`), com sufixo
+`(Qn)` quando o commit implementa a resposta da pergunta numerada `n` feita ao usuário
+naquela sessão. **PR e merge ficam com o usuário**, depois de ele validar o código da
+worktree rodando ao vivo. Ver [[Skill - Fluxo de Trabalho de Feature Branch]] e
+[[Plano de Fase em Etapas Mescláveis]].
 
 ## 5. Versionamento + release automatizada
 
@@ -142,6 +162,8 @@ Ver [[Documentação Desatualizada é Bug, Não Dívida]] (princípio completo) 
    preservando o resto.
 
 ## 🔗 Conexões
+- [[Cadeia de Artefatos de Projeto - Intenção, RFC, Plano de Fase]] (o par complementar: o que construir e em que ordem)
+- [[Plano de Fase em Etapas Mescláveis]]
 - [[Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar]]
 - [[Push Pra Branch Ocupada Via Branch Temporária]]
 - [[Automação de Release - Tag e Build Têm Que Estar no Mesmo Job]]

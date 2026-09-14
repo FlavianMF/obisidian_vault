@@ -13,15 +13,19 @@ description: >
   harness's convention file (CLAUDE.md, AGENTS.md, .cursorrules, etc.) and
   offers to bootstrap it with a proven dev-workflow methodology (worktrees,
   test scoping, CI/CD reporting, versioning/release automation) distilled
-  from the vault — always asking before writing, never autonomous. A legacy
-  per-project submodule mode (docs/second_brain/) remains available for the
-  rare case a repo needs an isolated pinned snapshot. Use when: user says
-  "connect the second brain / vault", "sync my notes", "update the vault",
-  "bootstrap this project's workflow", "add dev methodology to CLAUDE.md";
-  mentions "obsidian vault"; OR — auto-trigger — you need prior
-  context/patterns before starting a task, you are about to finish a coding
-  task, or you're starting work in a project with no recognizable
-  workflow-methodology section yet, in any project.
+  from the vault — always asking before writing, never autonomous. A fourth
+  behavior plants the project-definition chain (PRD, RFC, phase plan with
+  merge-sized stages, per-stage completion note, playbook), scaled to one of
+  three project levels — also ask-first. A legacy per-project submodule mode
+  (docs/second_brain/) remains available for the rare case a repo needs an
+  isolated pinned snapshot. Use when: user says "connect the second brain /
+  vault", "sync my notes", "update the vault", "bootstrap this project's
+  workflow", "add dev methodology to CLAUDE.md", "write a PRD", "open an RFC",
+  "plan this phase/feature"; mentions "obsidian vault"; OR — auto-trigger —
+  you need prior context/patterns before starting a task, you are about to
+  finish a coding task, you're starting work in a project with no recognizable
+  workflow-methodology section yet, or a project has no docs/ and no PRD, in
+  any project.
 ---
 
 Connects to a personal Obsidian vault (a single global clone, not a
@@ -170,6 +174,50 @@ automatic.
 No new script — this behavior is entirely prose/read-driven, like Behavior 1. There's
 no git mechanics to guard (a single local file edit, no automatic commit/push).
 
+## Behavior 4 — Project Definition Bootstrap (Ask-First)
+
+Plants the **project-definition chain** — what to build, in what order, and how "done" is
+proven. Sibling of Behavior 3, which plants *how to build*. Like Behavior 3 and unlike
+Behavior 2, **this never writes without asking first**, even when the trigger was automatic.
+
+Source notes (read them manifest-first, Behavior 1 — don't work from this summary):
+`20_Permanent_Notes/Cadeia de Artefatos de Projeto - Intenção, RFC, Plano de Fase.md`
+(the mother note), plus `PRD.md`, `RFC de Produto - Anatomia e Ciclo de Status.md`,
+`Plano de Fase em Etapas Mescláveis.md`,
+`Nota de Conclusão de Etapa é Entregável, Não Relatório.md` and
+`Playbook de Projeto - Erros Já Cometidos Como Artefato.md`. Skeletons live in
+`90_Assets/Template_*.md`.
+
+1. **Trigger**: a project with no `docs/` or no PRD; a request to plan a phase, a release or
+   a large feature; or the user arriving with a raw intent document in prose.
+2. **Classify the level and say it out loud** before drafting anything:
+   - *Level 3 — multi-phase product*: full chain. Trigger: more than one actor/area, a
+     database holding real user data, work spread across several sessions/worktrees, or a
+     phase that already has more than ~5 independent deliverables.
+   - *Level 2 — service or large feature*: short `docs/PRD.md` + **one** RFC (the vision fits
+     at its top, no RFC-000) + phase plan + playbook + `index.md`.
+   - *Level 1 — script or tool*: half-page `docs/PRD.md` (problem, in/out of scope,
+     acceptance) + a playbook starting empty. No RFC, no phase plan.
+   Moving up a level mid-project is normal and cheap; moving down never happens.
+3. **If the input is raw prose, ask the curation questions BEFORE writing any RFC.** Offer
+   2–3 concrete options per ambiguous decision rather than guessing — in `orbita-platform`
+   the user's own intent document ended with "ask me questions to define the RFCs". Guessing
+   there costs a whole phase.
+4. **Draft from the templates**, adapting to the project's real stack — inspect the
+   build/version manifest first.
+5. **Show the draft and ask create/append/skip. No exceptions.** Never overwrite an existing
+   document; append or propose a sibling.
+6. **Write** into the project's `docs/`, organized by document nature (`escopo/`, `projeto/`,
+   `qualidade/`, `dados/`), and record the chosen level in `docs/index.md`.
+
+**Guardrails**: never write without confirmation; never copy the `orbita-platform` instance
+(Next.js/Prisma/Docker specifics) into a project on another stack — what replicates is the
+**structure and the traceability**, never the content; numbered decisions (`D1..Dn`) and RFC
+numbers are immutable once written.
+
+No new script — prose/read-driven, like Behaviors 1 and 3. Documents it creates are part of
+the project's own repo and follow that repo's commit/PR discipline, not the vault's.
+
 ## Frontmatter Schema
 
 Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
@@ -192,8 +240,10 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 - Never `git add -A` inside the vault — only explicit paths.
 - One concern per commit.
 - Never delete or overwrite an existing note without a clearly superseding reason.
-- Behavior 3 never writes without explicit user confirmation, even when the trigger
-  was automatic.
+- Behaviors 3 and 4 never write without explicit user confirmation, even when the
+  trigger was automatic.
+- Behavior 4 never overwrites an existing project document, and never renumbers a
+  decision (`Dn`) or an RFC already written.
 - Behavior 3 never overwrites a target file's existing content outside its own
   delimited workflow section.
 
@@ -253,7 +303,8 @@ writes `~/obsidian_vault`. Legacy mode does not touch the parent project's
 own branch/PR flow — that's governed by whatever conventions already apply
 there; it only adds one local commit for the pointer bump, and never pushes
 the parent project. Behavior 3 only touches the harness convention file(s)
-at the project root, never commits or pushes on its own — that stays part
+at the project root, and Behavior 4 only the project's own `docs/` tree; neither commits or
+pushes on its own — that stays part
 of the project's normal flow, same as the legacy pointer-bump. Neither mode
 modifies vault content the agent didn't author this session, except via the
 one-time `backfill_frontmatter.py` migration pass, which is idempotent and

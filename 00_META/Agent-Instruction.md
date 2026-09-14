@@ -32,7 +32,8 @@ Ao desenvolver software para o Flavian, você **deve** seguir estes padrões ext
 1. **DooD (Docker-out-of-Docker)**: Sempre que precisar de sandboxing para ferramentas, use [[Docker-out-of-Docker (DooD)]].
 2. **Ciclo de Vida SE**: Siga o [[Engenharia de Sistemas Agêntica|Padrão Agêntico de SE]] (Pré-Fase A até Fase B) antes de codar.
 3. **Orquestração Híbrida**: Se o projeto for de larga escala, prefira [[Orquestração Híbrida de Agentes]] (Scripts + LLM).
-4. **Local Project Brain (MANDATÓRIO)**: Se a pasta `docs/` não existir no diretório raiz do projeto, você **deve criá-la imediatamente**. Popule-a com os arquivos iniciais (`PROMPT.md`, `index.md`, `PRD.md`, `architecture.md`) utilizando o conteúdo que você leu do código/README original. Siga o [[Padrão de Documentação Agêntica Local]] e utilize o template em `90_Assets/Template_Project_Prompt.md` para o `PROMPT.md`.
+4. **Local Project Brain (MANDATÓRIO)**: Se a pasta `docs/` não existir no diretório raiz do projeto, você **deve criá-la** — perguntando antes de escrever. Popule-a com `PROMPT.md` (template em `90_Assets/Template_Project_Prompt.md`), `index.md`, `PRD.md` e o playbook, seguindo o [[Padrão de Documentação Agêntica Local]].
+5. **Cadeia de Artefatos (definição de produto)**: para qualquer projeto que passe de um script, siga a [[Cadeia de Artefatos de Projeto - Intenção, RFC, Plano de Fase]] — intenção do usuário → escopo/[[PRD]] → RFC-000 e RFCs ([[RFC de Produto - Anatomia e Ciclo de Status]]) → [[Plano de Fase em Etapas Mescláveis]] → [[Nota de Conclusão de Etapa é Entregável, Não Relatório]] → [[Playbook de Projeto - Erros Já Cometidos Como Artefato]]. O nível (1, 2 ou 3) é escolhido e declarado antes do primeiro documento. Esqueletos em `90_Assets/Template_*.md`. Decisão técnica vai numa RFC com alternativa rejeitada, **não** num `architecture.md` guarda-chuva.
 
 ## 🏗️ Skills de Automação (COMPORTAMENTOS)
 Além dos padrões técnicos, você deve operar utilizando estas "Skills":
@@ -56,7 +57,7 @@ Além dos padrões técnicos, você deve operar utilizando estas "Skills":
     - **`grep` — nunca `Read` completo** — os arquivos `00_META/manifests/by_type/<type>*.md` pela sua palavra-chave. O glob cobre shards automaticamente se um `type` crescer além do limite de linhas por arquivo.
     - Abra (leitura completa) só as notas específicas retornadas pelo grep.
     - Nunca leia `20_Permanent_Notes/` (ou outra pasta) inteira por varredura — isso custa tokens proporcionais ao tamanho do vault, não ao que você precisa.
-3. **Traceability**: Sempre verifique o [[PRD]] e os [[stakeholders]] do projeto atual para garantir que o código atenda aos requisitos originais.
+3. **Traceability**: Sempre verifique o [[PRD]] e as RFCs do projeto atual para garantir que o código atenda aos requisitos originais e não contrarie decisão já registrada.
 
 ---
 *Nota para o Agente: Se você encontrar um novo padrão útil no projeto atual, destile-o e adicione uma nova nota em `20_Permanent_Notes/` seguindo o template padrão.*
