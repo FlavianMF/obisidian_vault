@@ -1,6 +1,7 @@
 | Path | Title | Tags | Created | Provenance |
 | --- | --- | --- | --- | --- |
 | 20_Permanent_Notes/Addons de Scripting Eclipse (EASE) Não São Pip-Instaláveis.md | Addons de Scripting Eclipse (EASE) Não São Pip-Instaláveis | eclipse, ease, py4j, python, rcp | 2026-08-11 | capella_mcp |
+| 20_Permanent_Notes/Benchmark Sem Baseline Degenerado Não Diz Quanto do Score é Capacidade.md | Benchmark Sem Baseline Degenerado Não Diz Quanto do Score é Capacidade | benchmark, metrics, evaluation, llm, methodology, research | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/Capella Breakdown Diagram - root_id Infere Tipo Concreto, Não o Declarado.md | Capella Breakdown Diagram — root_id Infere Tipo Concreto, Não o Declarado | python4capella, capella, sirius, gmf, headless, eclipse | 2026-08-13 | capella_mcp |
 | 20_Permanent_Notes/Corpus Multiempresa Só Vira Dataset Reaproveitável Com Consentimento Explícito.md | Corpus Multiempresa Só Vira Dataset Reaproveitável Com Consentimento Explícito | data-governance, confidentiality, research-design, multi-case-study, llm-council | 2026-09-10 | residencia_00 |
 | 20_Permanent_Notes/Decoder JSON em Go Trata Chave Ausente e Null Como Idêntico.md | Decoder JSON em Go Trata Chave Ausente e Null Como Idêntico | go, golang, json, api-compatibility, openai-compatible | 2026-09-02 | capella_llm_window |

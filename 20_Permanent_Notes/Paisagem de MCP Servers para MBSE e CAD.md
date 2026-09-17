@@ -52,6 +52,35 @@ MBSE/CAD adjacentes já resolveram que a gente ainda não".
   (c) granularidade bem mais fina de tools — 100+ tools estreitas, contra
   as 8 (mais amplas) do `capella-mcp`.
 
+## Atualização 2026-09-17 — MecAgent, o player comercial de CAD que recusa MCP
+
+[[Gerar Código da API Nativa em Vez de Manipular o Modelo Direto|MecAgent]]
+(copiloto de IA para CAD mecânico, seed de US$3M em set/2026, SOLIDWORKS +
+Inventor) integra **deliberadamente por API proprietária (SolidWorks COM,
+Inventor .NET) em vez de MCP**, e publicou o argumento: *"MCP delegates
+verification to the human, without a native mechanism to ensure that executed
+actions match intent."* Também alegam custo de contexto em workflow multi-passo
+(MCPMark: 16,2 passos e 17,4 tool calls em média) e má qualidade de descrição de
+tool (estudo de 103 servers: 89,8% com limitação não declarada, 84,3% com
+parâmetro opaco — **sem fonte citada no post**).
+
+Duas leituras:
+
+- **A crítica de verificação procede** e converge com o que esta nota já tinha
+  achado empiricamente pelo lado dos servers de AutoCAD/FreeCAD: **validação de
+  domínio precisa ser tool de primeira classe**, não efeito colateral. Reforça o
+  item 3 do roadmap abaixo e sugere uma tool `validate_model` explícita, que
+  permita ao próprio agente se autocorrigir.
+- **Mas MCP vs API especializada é falso dilema.** MCP é transporte; API de
+  domínio é conteúdo. O que eles descrevem como alternativa ao MCP é a descrição
+  de um bom servidor MCP. O ganho real deles é comercial (controle de cliente e
+  preço), não técnico; a perda é interoperabilidade horizontal.
+
+A escolha arquitetural central deles é idêntica à do `capella-mcp` — gerar código
+da API nativa (macro VBA/C#) em vez de manipular o modelo direto — o que é
+validação externa da decisão. Pesquisa completa em
+`projetos_ita/notes/research/mecagent/`.
+
 ## Cobertura do spec MCP 2025-11-25
 
 `capella-mcp` usa 2 das 7 primitivas: `tools` + `resources` (sem
