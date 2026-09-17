@@ -33,5 +33,6 @@
 | 20_Permanent_Notes/SysML.md | SysML (Systems Modeling Language) |  | 2026-05-21 | manual |
 | 20_Permanent_Notes/V-Model (Vee Model).md | V-Model (Vee Model) | systems-engineering, lifecycle, verification, validation, incose | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/XAI.md | XAI | ai, explainability, systems-engineering | 2026-05-21 | manual |
+| 20_Permanent_Notes/claude-code.md | claude-code | ai-agent, cli, harness, agent-architecture, plugin-api, llm | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/opencode.md | opencode | ai-agent, cli, harness, agent-architecture, tui, llm | 2026-09-08 | projetos_ita |
 | Systems Engineering Handbook.md | NASA Systems Engineering Handbook | systems-engineering, nasa, standard | 2026-05-21 | manual |

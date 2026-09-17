@@ -74,8 +74,19 @@ subagentes, auth, fontes) — [índice completo em 40_Projects/opencode](../40_P
 Cópia espelhada também no projeto de origem `projetos_ita`, fora do vault:
 `notes/research/opencode/00_indice.md`.
 
+## Comparação com o outro harness estudado
+
+[[claude-code]] resolve os mesmos problemas com um desenho bem diferente: em vez de API
+HTTP + lista fixa de hooks, **toda chamada na API é ela própria um evento** numa cadeia de
+cinco tiers de autoridade. Onde o opencode é mais forte: acesso externo de primeira classe
+(REST+SSE+SDK+mDNS), abstração multi-provider explícita, e source legível sob MIT. Onde o
+claude-code é mais forte: um modelo só para tudo, política organizacional inburlável por
+assento, e testabilidade. Comparativo completo em
+`40_Projects/claude_code/19_comparativo_opencode.md`.
+
 ## 🔗 Conexões
 - [[Model Context Protocol (MCP)]]
+- [[claude-code]]
 - [[Permission-as-Deferred-Promise para Approval Gates de Agente]]
 - [[Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real]]
 - [[Separar Protocol de Route em Abstração Multi-Provider de LLM]]
