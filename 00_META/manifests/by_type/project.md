@@ -4,6 +4,7 @@
 | 40_Projects/Mestrado_ITA/Proposta_Pesquisa_MBSE_AI.md | Proposta_Pesquisa_MBSE_AI |  | 2026-05-21 | manual |
 | 40_Projects/Palestra_SE_Business.md | Palestra: O Método NASA para Desenvolvimento de Produtos de Elite |  | 2026-05-21 | manual |
 | 40_Projects/birthday_counter.md | birthday_counter Engineering & Architecture |  | 2026-05-21 | manual |
+| 40_Projects/correcoes_docs_tcc.md | Projeto correcoes_docs_tcc | project, agentic-ai, education, grading, rubric, documentation | 2026-09-17 | correcoes_docs_tcc |
 | 40_Projects/hermes_docker.md | Projeto hermes_docker | project, agentic-ai, docker, infrastructure | 2026-05-21 | manual |
 | 40_Projects/hermes_validator.md | Projeto hermes_validator | project, agentic-ai, crewai, automation, education | 2026-05-21 | manual |
 | 40_Projects/opencode/01_visao_geral_historia.md | Visão geral e história | opencode, ai-agent, history, oss | 2026-09-08 | projetos_ita |

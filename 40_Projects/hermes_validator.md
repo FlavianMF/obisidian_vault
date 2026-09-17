@@ -38,9 +38,10 @@ disco**. O pipeline vivo que sucede este projeto é `/home/flv/projetos_pnaat/va
 (mesma arquitetura: `00_run_all.py`, `scripts/`, `data/`, `reports/`, rubrica em
 `docs/rubrica_iot.md` com correção manual em estrelas 0-3). A correção conversacional de um repo
 por vez, derivada daqui, vive em `/home/flv/projetos_pnaat/correcoes_docs_tcc` — ver
-[[Rubrica em Prosa Vira Gabarito de Evidência]].
+[[correcoes_docs_tcc]] e [[Rubrica em Prosa Vira Gabarito de Evidência]].
 
 ## Links
+- [[correcoes_docs_tcc]] (o sucessor conversacional, com primeiro lote concluído)
 - [[hermes_docker]] (Infraestrutura base)
 - [[Agentic AI]] (Conceitos de autonomia)
 - [[Engenharia de Sistemas]] (MOC)

@@ -25,6 +25,7 @@
 | 20_Permanent_Notes/Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar.md | Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar | ci-cd, testing, code-coverage, quality-gates | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Migrar Vários Documentos para um Design System Preservando Nomes de Token e Classe.md | Migrar Vários Documentos para um Design System Preservando Nomes de Token e Classe | css, refactoring, design-system, html, agentic-ai | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Nota de Conclusão de Etapa é Entregável, Não Relatório.md | Nota de Conclusão de Etapa é Entregável, Não Relatório | documentation, definition-of-done, dev-workflow, traceability, project-methodology | 2026-09-11 | orbita-platform |
+| 20_Permanent_Notes/Nível Intermediário Vira Vale Quando o Topo Pede Tudo do Anterior Mais X.md | Nível Intermediário Vira Vale Quando o Topo Pede Tudo do Anterior Mais X | rubric, grading, education, measurement, rubric-design | 2026-09-17 | correcoes_docs_tcc |
 | 20_Permanent_Notes/Orquestração Híbrida de Agentes.md | Orquestração Híbrida de Agentes | agentic-ai, architecture, performance, optimization | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/PRD.md | PRD — Documento de Requisitos de Produto | prd, requirements, product, systems-engineering, project-methodology, scope | 2026-09-11 | orbita-platform |
 | 20_Permanent_Notes/Padrão de Documentação Agêntica Local.md | Padrão de Documentação Agêntica Local | agentic-ai, documentation, automation, second-brain | 2026-05-21 | manual |
@@ -48,6 +49,7 @@
 | 20_Permanent_Notes/Skill - Sincronização de Conhecimento Recursiva.md | Skill: Sincronização de Conhecimento Recursiva | agentic-ai, knowledge-management, second-brain | 2026-05-21 | manual |
 | 20_Permanent_Notes/Substituir Imagem por Placeholder no Template e Injetar Data URI no Build.md | Substituir Imagem por Placeholder no Template e Injetar Data URI no Build | agentic-ai, build, data-uri, artifact, context-window, html | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/TDD em Firmware ESP-IDF via test_apps.md | TDD em Firmware ESP-IDF via test_apps | esp-idf, tdd, embedded, unity, testing, agentic-ai | 2026-09-09 | webnar_iot_genai |
+| 20_Permanent_Notes/Toda Checagem Barata Passa - Documentação Falha na Ligação, Não na Presença.md | Toda Checagem Barata Passa - Documentação Falha na Ligação, Não na Presença | documentation, verification, code-review, grading, agentic-ai | 2026-09-17 | correcoes_docs_tcc |
 | 20_Permanent_Notes/Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real.md | Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real | architecture, client-server, transport, api-design, embedding | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Validação Acadêmica Automatizada.md | Validação Acadêmica Automatizada | education, automation, grading, rubric | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Visualização Científica e Resumos Gráficos.md | Visualização Científica e Resumos Gráficos | academic-writing, visualization, graphical-abstract, design | 2026-05-21 | manual |

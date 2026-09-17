@@ -25,8 +25,14 @@ Uma inovação importante é permitir a **intervenção humana**:
 - O professor revisa e pode inserir uma **nota manual** e comentários via `adicionar_notas_manuais.py`.
 - A nota final prioriza o julgamento humano, mas mantém o rastro da [[Validação Acadêmica Automatizada|avaliação automática]].
 
+**Ressalva de campo (2026-09-17).** A metade humana é a que não acontece sozinha. No projeto irmão
+[[correcoes_docs_tcc]], 16 de 16 notas ficaram em `PROPOSTA` — a revisão do professor nunca foi
+feita, e com isso toda a maquinaria de divergência automático × manual continua sem um único caso
+para ler. O gargalo do modo híbrido não é gerar a nota; é o carimbo humano voltar.
+
 ## Links
 - [[hermes_validator]]
+- [[correcoes_docs_tcc]] (a aplicação conversacional, com primeiro lote medido)
 - [[Orquestração Híbrida de Agentes]]
 - [[Rubrica em Prosa Vira Gabarito de Evidência]] (a variante de repo único, com gate humano explícito)
 

@@ -90,8 +90,12 @@ pronto; não confie só na suíte".
   um erro que já está documentado lá"*.
 - O que for **generalizável para além deste projeto** sobe para o vault como nota `trap` ou
   `pattern` no fim da sessão — é a mesma cadência de destilação da skill `second-brain-sync`.
+- **Essa manutenção falha em silêncio quando não está amarrada no procedimento.** Medido em campo:
+  o catálogo para de ser escrito antes de o aprendizado parar, e passa a não ser lido — ver
+  [[O Catálogo de Armadilhas Para de Crescer Antes do Aprendizado Parar]].
 
 ## 🔗 Conexões
+- [[O Catálogo de Armadilhas Para de Crescer Antes do Aprendizado Parar]] (como ele falha na prática)
 - [[Cadeia de Artefatos de Projeto - Intenção, RFC, Plano de Fase]]
 - [[Nota de Conclusão de Etapa é Entregável, Não Relatório]]
 - [[Plano de Fase em Etapas Mescláveis]]
