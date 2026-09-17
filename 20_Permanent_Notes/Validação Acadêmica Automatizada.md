@@ -28,7 +28,9 @@ Uma inovação importante é permitir a **intervenção humana**:
 ## Links
 - [[hermes_validator]]
 - [[Orquestração Híbrida de Agentes]]
+- [[Rubrica em Prosa Vira Gabarito de Evidência]] (a variante de repo único, com gate humano explícito)
 
 ## Fontes
 - Projeto: `hermes_validator`
-- Documentação: `FLUXOGRAMA.md`, `resultado_validacao/rubrica.md`
+- Documentação: `FLUXOGRAMA.md`; rubrica atual em `validacoes_iot/docs/rubrica_iot.md`
+  (verificado 2026-09-17 — o antigo `resultado_validacao/rubrica.md` não é mais o caminho vivo)

@@ -4,8 +4,10 @@ type: project
 tags: [project, agentic-ai, crewai, automation, education]
 created: 2026-05-21
 provenance: manual
-status: completed
-path: /home/flv/projetos_crewai/hermes_validator/workspace
+status: archived
+path: (removido do disco)
+verified: 2026-09-17 via ls do sistema de arquivos
+successor: /home/flv/projetos_pnaat/validacoes_iot
 ---
 
 # Projeto hermes_validator
@@ -29,6 +31,14 @@ Este projeto utiliza a infraestrutura do [[hermes_docker]] para executar um pipe
 - `iot_validator/AGENTS.md`: Referência de padrões modernos de CrewAI.
 - `resultado_validacao/RELATORIO_FINAL.md`: Estatísticas de execução e comparação de performance.
 - `resultado_validacao/FLUXOGRAMA.md`: Detalhamento do sistema híbrido (Auto + Manual).
+
+## ⚠️ Estado (verificado em 2026-09-17)
+O caminho original `/home/flv/projetos_crewai/hermes_validator/workspace` **não existe mais no
+disco**. O pipeline vivo que sucede este projeto é `/home/flv/projetos_pnaat/validacoes_iot`
+(mesma arquitetura: `00_run_all.py`, `scripts/`, `data/`, `reports/`, rubrica em
+`docs/rubrica_iot.md` com correção manual em estrelas 0-3). A correção conversacional de um repo
+por vez, derivada daqui, vive em `/home/flv/projetos_pnaat/correcoes_docs_tcc` — ver
+[[Rubrica em Prosa Vira Gabarito de Evidência]].
 
 ## Links
 - [[hermes_docker]] (Infraestrutura base)
