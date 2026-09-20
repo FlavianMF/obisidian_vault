@@ -71,3 +71,15 @@ estava certo.
 Relacionado: [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]]
 — nos dois casos, a checagem barata é reverificar contra o estado real antes
 de concluir.
+
+## Posfácio: a armadilha já estava documentada
+
+No projeto que originou esta nota, o Playbook local **já avisava** sobre a env
+embutida — num bullet no último terço de uma seção longa, a ~40 linhas dos
+comandos `docker run` que ele mandava corrigir. A sessão rediscobriu tudo do
+zero, incluindo reproduzir contra a branch principal para provar que não era
+regressão.
+
+A correção que ficou não foi outro aviso: foi **consertar os próprios comandos
+de exemplo**. Ver [[Aviso Longe do Comando Não é Lido - Corrija o Comando]] e
+[[O Catálogo de Armadilhas Para de Crescer Antes do Aprendizado Parar]].
