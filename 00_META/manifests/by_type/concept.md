@@ -19,6 +19,7 @@
 | 20_Permanent_Notes/Flavian Fernandes.md | Flavian Melquiades Fernandes |  | 2026-05-21 | manual |
 | 20_Permanent_Notes/Framework 3 Pilares SE.md | Detalhamento do Framework: Os 3 Pilares do Produto de Elite |  | 2026-05-21 | manual |
 | 20_Permanent_Notes/IA Generativa na Engenharia de Sistemas.md | IA Generativa na Engenharia de Sistemas |  | 2026-05-21 | manual |
+| 20_Permanent_Notes/Impeccable.md | Impeccable | impeccable, design, frontend, claude-code, skills, agentic-ai | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Integração NVIDIA NIM.md | Integração NVIDIA NIM | nvidia, nim, ai-inference, api | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/MBSE com Agentic AI.md | MBSE com Agentic AI |  | 2026-05-21 | manual |
 | 20_Permanent_Notes/MBSE e o Pensamento de Ciclo de Vida Completo (Left-Shift).md | MBSE e o Pensamento de Ciclo de Vida Completo (Left-Shift) | mbse, systems-engineering, lifecycle, ideation, risk-management | 2026-05-21 | 1.0 |

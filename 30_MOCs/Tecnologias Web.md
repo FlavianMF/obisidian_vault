@@ -19,3 +19,4 @@ provenance: manual
 
 ## 🔗 Relacionado
 - [[Engenharia de Sistemas]]
+- [[Design de Interface com Agente]] — craft de interface e como fazer um agente produzi-lo

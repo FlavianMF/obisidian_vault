@@ -15,7 +15,9 @@
 | 20_Permanent_Notes/Checklist de Bootstrap de Workflow de Desenvolvimento.md | Checklist de Bootstrap de Workflow de Desenvolvimento | dev-workflow, ci-cd, git, worktree, versioning, testing, project-bootstrap | 2026-09-08 | capella_llm_window |
 | 20_Permanent_Notes/Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar.md | Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar | agentic-ai, git, worktree, debugging, dev-workflow | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Contrato de API que Documenta Comportamento e Custo.md | Contrato de API que Documenta Comportamento e Custo | api-design, documentation, contract, typescript, llm | 2026-09-17 | projetos_ita |
+| 20_Permanent_Notes/Contrato de Direção Antes do Código.md | Contrato de Direção Antes do Código | design, agentic-ai, project-methodology, documentation, brief | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Deck HTML Precisa Escalonar por Altura de Viewport, Não Só por Largura.md | Deck HTML Precisa Escalonar por Altura de Viewport, Não Só por Largura | css, frontend, responsive, presentation, artifact, layout | 2026-09-11 | projetos_ita |
+| 20_Permanent_Notes/Detector Determinístico Fora do LLM como Piso de Qualidade.md | Detector Determinístico Fora do LLM como Piso de Qualidade | agentic-ai, quality, hooks, linter, design, claude-code, ci | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Detecção Ao Vivo de Janela de Contexto do Ollama via api-ps e api-show.md | Detecção Ao Vivo de Janela de Contexto do Ollama via api-ps e api-show | ollama, llm, context-window, openai-compatible, api-design | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Documentação Desatualizada é Bug, Não Dívida.md | Documentação Desatualizada é Bug, Não Dívida | documentation, dev-workflow, agentic-ai, second-brain, definition-of-done | 2026-09-11 | projetos_ita |
 | 20_Permanent_Notes/Empacotar App GUI Headless + Servidor MCP numa Única Imagem Docker.md | Empacotar App GUI Headless + Servidor MCP numa Única Imagem Docker | docker, mcp, xvfb, headless, packaging | 2026-08-11 | capella_mcp |
@@ -30,6 +32,7 @@
 | 20_Permanent_Notes/Gerar Código da API Nativa em Vez de Manipular o Modelo Direto.md | Gerar Código da API Nativa em Vez de Manipular o Modelo Direto | llm, code-generation, cad, mbse, capella, architecture, agentic-ai | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/Hook Escreve Estado, Renderizador Lê Tudo Num Passe.md | Hook Escreve Estado, Renderizador Lê Tudo Num Passe | tmux, claude-code, hooks, status-line, shell | 2026-09-18 | tmux-claude-monitor |
 | 20_Permanent_Notes/Migrar Vários Documentos para um Design System Preservando Nomes de Token e Classe.md | Migrar Vários Documentos para um Design System Preservando Nomes de Token e Classe | css, refactoring, design-system, html, agentic-ai | 2026-09-11 | projetos_ita |
+| 20_Permanent_Notes/Modo do Visitante Escolhe o Conjunto de Regras.md | Modo do Visitante Escolhe o Conjunto de Regras | design, ux, product-design, frontend, agentic-ai | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Nota de Conclusão de Etapa é Entregável, Não Relatório.md | Nota de Conclusão de Etapa é Entregável, Não Relatório | documentation, definition-of-done, dev-workflow, traceability, project-methodology | 2026-09-11 | orbita-platform |
 | 20_Permanent_Notes/Nível Intermediário Vira Vale Quando o Topo Pede Tudo do Anterior Mais X.md | Nível Intermediário Vira Vale Quando o Topo Pede Tudo do Anterior Mais X | rubric, grading, education, measurement, rubric-design | 2026-09-17 | correcoes_docs_tcc |
 | 20_Permanent_Notes/Orquestração Híbrida de Agentes.md | Orquestração Híbrida de Agentes | agentic-ai, architecture, performance, optimization | 2026-05-21 | 1.0 |
@@ -61,7 +64,9 @@
 | 20_Permanent_Notes/Toda Chamada na API é um Evento Interceptável.md | Toda Chamada na API é um Evento Interceptável | agent-architecture, api-design, plugin-api, middleware, harness | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/Toda Checagem Barata Passa - Documentação Falha na Ligação, Não na Presença.md | Toda Checagem Barata Passa - Documentação Falha na Ligação, Não na Presença | documentation, verification, code-review, grading, agentic-ai | 2026-09-17 | correcoes_docs_tcc |
 | 20_Permanent_Notes/Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real.md | Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real | architecture, client-server, transport, api-design, embedding | 2026-09-08 | projetos_ita |
+| 20_Permanent_Notes/Uma Fonte de Regra, N Harnesses Compilados.md | Uma Fonte de Regra, N Harnesses Compilados | agentic-ai, prompt-engineering, claude-code, distribution, hooks, skills | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Validação Acadêmica Automatizada.md | Validação Acadêmica Automatizada | education, automation, grading, rubric | 2026-05-21 | 1.0 |
+| 20_Permanent_Notes/Verificação em Passes Limitados, Não em Loop.md | Verificação em Passes Limitados, Não em Loop | agentic-ai, quality, verification, cost, claude-code, workflow | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Visualização Científica e Resumos Gráficos.md | Visualização Científica e Resumos Gráficos | academic-writing, visualization, graphical-abstract, design | 2026-05-21 | manual |
 | 90_Assets/Skill - Academic-Evidence-Mapper.md | Skill: Academic-Evidence-Mapper | agentic-ai, research, academic | 2026-05-21 | manual |
 | 90_Assets/Skill - Graph-Gardener.md | Skill: Graph-Gardener | agentic-ai, obsidian, knowledge-graph | 2026-05-21 | manual |
