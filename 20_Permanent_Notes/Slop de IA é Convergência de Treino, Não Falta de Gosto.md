@@ -85,6 +85,9 @@ para não travar automação.
 ## Conexões
 
 O brief vence sempre: redirecionar um brief claro para o gosto do agente é falha, não
-curadoria. Ver [[Modo do Visitante Escolhe o Conjunto de Regras]],
+curadoria. Este catálogo não é neutro entre ferramentas: a [[Taste Skill]] prescreve `Geist`
+como substituto de `Inter`, e aqui `Geist` é tell — ver
+[[Skills de Design se Contradizem Entre Si, Dentro e Fora do Pacote]].
+Ver também [[Modo do Visitante Escolhe o Conjunto de Regras]],
 [[Anatomia de uma Landing de Agente - Posicionar Ferramenta de Pesquisa como Produto]] e
 [[Design System Documentado Depois do Build, Não Antes]].

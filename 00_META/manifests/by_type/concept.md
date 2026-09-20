@@ -33,6 +33,7 @@
 | 20_Permanent_Notes/Pré-Fase A - Análise de Conceito.md | Pré-Fase A - Análise de Conceito |  | 2026-05-21 | manual |
 | 20_Permanent_Notes/Registro de Riscos - Birthday Counter.md | Registro de Riscos Técnicos - Birthday Counter | systems-engineering, risk-management, birthday_counter, semp | 2026-05-21 | manual |
 | 20_Permanent_Notes/SysML.md | SysML (Systems Modeling Language) |  | 2026-05-21 | manual |
+| 20_Permanent_Notes/Taste Skill.md | Taste Skill | taste-skill, design, frontend, claude-code, skills, agentic-ai | 2026-09-20 | taste-skill |
 | 20_Permanent_Notes/V-Model (Vee Model).md | V-Model (Vee Model) | systems-engineering, lifecycle, verification, validation, incose | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/XAI.md | XAI | ai, explainability, systems-engineering | 2026-05-21 | manual |
 | 20_Permanent_Notes/claude-code.md | claude-code | ai-agent, cli, harness, agent-architecture, plugin-api, llm | 2026-09-17 | projetos_ita |

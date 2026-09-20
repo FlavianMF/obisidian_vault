@@ -76,4 +76,6 @@ Pergunta de projeto: *o que da minha rubrica um programa consegue checar?* Ver
 a mesma ideia de pôr o critério num lugar executável em vez de num lugar persuasivo.
 O acoplamento hook/renderizador é o de
 [[Hook Escreve Estado, Renderizador Lê Tudo Num Passe]]; a interceptação por evento é a de
-[[Toda Chamada na API é um Evento Interceptável]].
+[[Toda Chamada na API é um Evento Interceptável]]. Quando não há binário disponível e a
+regra tem mesmo que ficar no prompt, o melhor que sobra é escrevê-la como limiar ou
+contagem: [[Regra Gradual é Ignorada pelo Agente, Regra Binária é Obedecida]].
