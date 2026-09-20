@@ -27,6 +27,7 @@
 | 20_Permanent_Notes/Escrita Acadêmica de Alto Impacto.md | Escrita Acadêmica de Alto Impacto | academic-writing, engineering, excellence, research | 2026-05-21 | manual |
 | 20_Permanent_Notes/Estratégia de Publicação e Ética Científica.md | Estratégia de Publicação e Ética Científica | publication, ethics, journals, academic-career | 2026-05-21 | manual |
 | 20_Permanent_Notes/Estrutura de Artigos Científicos (IMRaD).md | Estrutura de Artigos Científicos (IMRaD) | academic-writing, methodology, imrad, structure | 2026-05-21 | manual |
+| 20_Permanent_Notes/Etapa que Introduz Tenant Estreita a Leitura Antes de Ampliar.md | Etapa que Introduz Tenant Estreita a Leitura Antes de Ampliar | multi-tenant, security, migration, dev-workflow, project-planning, incremental-delivery | 2026-09-20 | orbita-platform |
 | 20_Permanent_Notes/Fachada Nomeada do Mundo em vez de Passar o Engine.md | Fachada Nomeada do Mundo em vez de Passar o Engine | architecture, facade-pattern, testing, plugin-api, capability | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/Fluxo de Autenticação OAuth em Containers.md | Fluxo de Autenticação OAuth em Containers | oauth, security, docker, networking | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar.md | Gate de Cobertura Tem Que Excluir do Numerador E do Denominador, Não Só Relaxar o Limiar | ci-cd, testing, code-coverage, quality-gates | 2026-09-02 | capella_llm_window |
@@ -39,6 +40,7 @@
 | 20_Permanent_Notes/Orquestração Híbrida de Agentes.md | Orquestração Híbrida de Agentes | agentic-ai, architecture, performance, optimization | 2026-05-21 | 1.0 |
 | 20_Permanent_Notes/PRD.md | PRD — Documento de Requisitos de Produto | prd, requirements, product, systems-engineering, project-methodology, scope | 2026-09-11 | orbita-platform |
 | 20_Permanent_Notes/Padrão de Documentação Agêntica Local.md | Padrão de Documentação Agêntica Local | agentic-ai, documentation, automation, second-brain | 2026-05-21 | manual |
+| 20_Permanent_Notes/Pedido de Sistema Novo Costuma Ser Delta de Sistema Existente.md | Pedido de Sistema Novo Costuma Ser Delta de Sistema Existente | requirements, scope, agentic-ai, project-methodology, grilling, dev-workflow | 2026-09-20 | orbita-platform |
 | 20_Permanent_Notes/Permission-as-Deferred-Promise para Approval Gates de Agente.md | Permission-as-Deferred-Promise para Approval Gates de Agente | agentic-ai, permissions, approval-gate, async-architecture, tool-use | 2026-09-08 | projetos_ita |
 | 20_Permanent_Notes/Pitfalls Comuns em Automação Python.md | Pitfalls Comuns em Automação Python | python, programming, bug-trap | 2026-05-22 | hermes_validator |
 | 20_Permanent_Notes/Plano de Fase em Etapas Mescláveis.md | Plano de Fase em Etapas Mescláveis | project-planning, dev-workflow, worktree, acceptance-criteria, project-methodology | 2026-09-11 | orbita-platform |
