@@ -83,3 +83,18 @@ Procure por `where` montado a partir de um campo que o tipo declara como
 opcional, e por gates que checam **papel** sem checar **presença do campo
 de tenant**. Um teste que prove a negação precisa forjar o token exatamente
 como o servidor o emitiria no caso problemático — não como o caminho feliz.
+
+## Corolário: elegibilidade e escopo são perguntas diferentes
+
+Ao aplicar o escopo discriminado, não colapse **"pode entrar?"** com **"vê o
+quê?"**. No caso real, um cliente vinculado a um consultor **sem** organização
+é elegível ao produto, mas seu conjunto de tenants é **vazio** — ele enxerga
+só o catálogo público.
+
+Tratar conjunto vazio como "sem acesso" puniria o usuário por uma
+característica de terceiro (o consultor dele não pertencer a uma organização).
+Tratar como "sem filtro" seria o vazamento original. O correto é reconhecer
+que são duas decisões: um gate responde a primeira, o escopo responde a
+segunda — e `{ in: [] }` é a tradução certa de "nenhum tenant privado", não um
+caso degenerado a evitar.
+
