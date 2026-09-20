@@ -77,6 +77,64 @@ souber de antemão)
    `/proc/$pid` no renderizador a cada passe é o que faz a entrada sumir da
    UI mesmo quando o processo morre sem avisar ninguém.
 
+## v2: escopo por "quem tá pedindo" e um daemon que já sabia mais que eu
+
+Depois de rodando, pedido novo: a barra devia mostrar só o que pertence à
+sessão tmux atual, não o servidor inteiro — acesso a outras sessões vira
+interação explícita (clique/tecla), não poluição constante.
+
+6. **`status-format[]` é opção global, mas dá pra escopar por sessão sem
+   nenhum estado compartilhado — só embutindo o token no comando do job.**
+   `#(bash render.sh '#{session_name}')` faz o tmux expandir
+   `#{session_name}` **por cliente conectado, antes** de disparar o job; como
+   o cache de job do tmux é chaveado pela string exata do comando, duas
+   sessões produzem duas strings diferentes → dois jobs cacheados/rodando
+   independentes, cada um só vendo o argumento da sua própria sessão. Nenhum
+   IPC, nenhum arquivo de "quem sou eu" — o próprio mecanismo de expansão de
+   formato do tmux já resolve isso.
+
+7. **Poda e filtro de exibição são dois passos diferentes, e só um dos dois
+   pode ser escopado.** Se a poda (`list-panes -a` + checagem de PID) também
+   fosse filtrada pela sessão de quem chamou, um pane cuja sessão tmux
+   morreu vira órfão pra sempre: nenhuma sessão sobrevivente jamais "seria
+   dona" dele pra podar. A poda tem que continuar olhando o servidor
+   inteiro sempre; só o passo de "isso entra no `out`" é que recebe o filtro
+   de sessão.
+
+8. **`break` num loop de renderização com múltiplas categorias acumulando em
+   paralelo é uma armadilha.** Ao dividir "meus panes" (contados/desenhados)
+   de "panes de outra sessão" (só contados, pra um badge tipo `+N
+   elsewhere`), um `break` no overflow do MEU lado corta a iteração antes de
+   passar pelos arquivos de OUTRAS sessões que ainda viriam depois na ordem
+   do glob — o contador do badge sai errado, silenciosamente, sem erro
+   nenhum. Trocar por `continue` (com uma flag pra não re-fazer o recount
+   caro em toda iteração seguinte) resolve; a lição generaliza: **um loop
+   que acumula mais de uma coisa não pode `break` só porque UMA das coisas
+   já satisfez sua condição de parada.**
+
+9. **Um daemon que já existe pode estar mantendo o estado que você tá
+   reinventando.** Achei (não documentado, achado por investigação direta em
+   `~/.claude/jobs/<8-hex-do-session_id>/state.json`) que o daemon do Claude
+   Code já mantém, ao vivo, um nome gerado pra sessão (`name`, com
+   `nameSource: auto|user`) e um estado próprio mais rico que o meu modelo de
+   4 estados (`working|done|blocked|failed|stopped`, mais `tempo:
+   active|idle|blocked`). Antes de construir uma segunda fonte de verdade
+   (ex.: inferir "falhou" a partir de padrões no transcript), vale procurar
+   se o processo que você tá monitorando já expõe isso barato em algum
+   arquivo — `jobs/<id>/state.json` é um `cat` só, e virou overlay
+   (`blocked`/`failed`) por cima do estado primário orientado a hook, que
+   continua sendo a fonte que funciona mesmo sem o daemon.
+
+10. **Migrar formato de arquivo de estado por causa de UM campo novo
+    também corrige bugs latentes em campos antigos, de graça.** O `name` do
+    Claude rotineiramente tem espaço (`"knowledge base synchronization"`) —
+    incompatível com o parser antigo (1 linha, split por espaço,
+    `word-split` + match de prefixo `key=`). Migrar pra 1 `key=value` por
+    linha (split só no primeiro `=`) resolveu o campo novo E um bug que já
+    existia silenciosamente: um `cwd` com espaço (`~/My Documents/proj`)
+    corrompia o parser do mesmo jeito, só nunca tinha disparado porque
+    nenhum caminho real na máquina tinha espaço ainda.
+
 ## Generaliza pra além de tmux
 
 O par "hook grava fato pontual → arquivo texto simples, um por
