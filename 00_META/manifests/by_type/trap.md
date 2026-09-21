@@ -26,4 +26,5 @@
 | 20_Permanent_Notes/Slop de IA é Convergência de Treino, Não Falta de Gosto.md | Slop de IA é Convergência de Treino, Não Falta de Gosto | design, frontend, agentic-ai, css, typography, armadilha | 2026-09-20 | impeccable |
 | 20_Permanent_Notes/Submodule HTTPS Remote Herda Conta gh Errada.md | Submodule HTTPS Remote Herda Conta gh Errada | git, submodule, ssh, github-cli, second-brain-sync | 2026-08-09 | projetos_claude |
 | 20_Permanent_Notes/Tag de Release Não Volta Pra Develop Sozinha.md | Tag de Release Não Volta Pra Develop Sozinha | git, release, versioning, ci-cd, tags, dev-workflow | 2026-09-02 | capella_llm_window |
+| 20_Permanent_Notes/Trilha do Professor Pode Divergir da Trilha do Projeto na Planilha de Times.md | Trilha do Professor Pode Divergir da Trilha do Projeto na Planilha de Times | pnaat, residencia, planilha, alocação, mbse | 2026-09-21 | residencia_00 |
 | 20_Permanent_Notes/git status --porcelain Quota Caminhos com Espaço Mesmo com quotePath=false.md | git status --porcelain Quota Caminhos com Espaço Mesmo com quotePath=false | git, shell, scripting, unicode, second-brain-sync, automation | 2026-09-11 | projetos_ita |
