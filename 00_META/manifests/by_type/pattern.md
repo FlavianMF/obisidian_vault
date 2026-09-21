@@ -14,6 +14,7 @@
 | 20_Permanent_Notes/Campo de Settings Só Deve Ser Editável Se Aplicar de Verdade.md | Campo de Settings Só Deve Ser Editável Se Aplicar de Verdade | ux, settings, agentic-ai, product-design | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Caso de Uso - SEMP Birthday Counter.md | Caso de Uso - SEMP aplicado ao Birthday Counter | systems-engineering, semp, use-case, web-development, nasa-standard | 2026-05-21 | manual |
 | 20_Permanent_Notes/Checklist de Bootstrap de Workflow de Desenvolvimento.md | Checklist de Bootstrap de Workflow de Desenvolvimento | dev-workflow, ci-cd, git, worktree, versioning, testing, project-bootstrap | 2026-09-08 | capella_llm_window |
+| 20_Permanent_Notes/Chrome Headless em WSL2 - .deb Oficial, Não apt chromium.md | Chrome Headless em WSL2 - .deb Oficial, Não apt chromium | chrome, chromium, headless, wsl2, ubuntu, apt, snap | 2026-09-21 | residencia_00 |
 | 20_Permanent_Notes/Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar.md | Confirmar Qual Worktree Está Sendo Testada Antes de Diagnosticar | agentic-ai, git, worktree, debugging, dev-workflow | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/Contrato de API que Documenta Comportamento e Custo.md | Contrato de API que Documenta Comportamento e Custo | api-design, documentation, contract, typescript, llm | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/Contrato de Direção Antes do Código.md | Contrato de Direção Antes do Código | design, agentic-ai, project-methodology, documentation, brief | 2026-09-20 | impeccable |
