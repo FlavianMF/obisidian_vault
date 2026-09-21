@@ -101,6 +101,36 @@ de forma óbvia. Três correções concretas, de baixo custo, condicionam o "efi
 Ver também o blind spot de governança de dados capturado só na revisão por pares:
 [[Corpus Multiempresa Só Vira Dataset Reaproveitável Com Consentimento Explícito]].
 
+## 📋 Compartilhar o preenchimento do PM Canvas com os alunos (FigJam)
+
+Lacuna real até 2026-09-21: a metodologia acima definia **o quê** preencher (13
+blocos) mas não **como** os 4 alunos por empresa preenchiam isso juntos, ao vivo,
+sem treino prévio em nenhuma ferramenta nova. Resolvido criando um **template
+mestre num board FigJam colaborativo** (via Figma MCP) — grid visual dos 13
+blocos/5 colunas, tint de cor por coluna, cada bloco com a pergunta-guia já
+extraída do roteiro de entrevista (não uma pergunta nova), mais uma seção "Como
+usar" fixa no próprio board.
+
+Decisões que valem para qualquer residência multiempresa parecida:
+
+- **Um template mestre, nunca um board único com as N empresas juntas** —
+  duplicar por empresa antes de preencher, e compartilhar a cópia só com o
+  time+mentores daquela empresa. Aplica direto a
+  [[Corpus Multiempresa Só Vira Dataset Reaproveitável Com Consentimento Explícito]]:
+  a fronteira de confidencialidade é por cópia do artefato, não um acordo geral do
+  programa.
+- **Canvas colaborativo (FigJam/Miro), não markdown estático, quando o
+  preenchimento acontece ao vivo em campo por várias pessoas ao mesmo tempo** — o
+  padrão markdown-no-repo (usado pro `template_visita_arcadia.md`) funciona bem
+  pra formulário linear preenchido por 1 pessoa; um canvas de 13 blocos
+  preenchido simultaneamente por 4 alunos pede um board de verdade.
+  Digitalização continua acontecendo depois: o conteúdo final é transcrito pro
+  markdown do repo como registro permanente em git — o board é a superfície de
+  trabalho ao vivo, não o arquivo de sistema de registro.
+- **Perguntas-guia em cada bloco vêm do roteiro de entrevista já validado**, não
+  de uma reformulação nova do framework — reduz a chance de o board virar uma
+  segunda fonte de verdade divergente do processo de entrevista.
+
 ## 🔗 Conexões
 - [[Capella no Processo de Definição de Produto]]
 - [[Processo de Definição Pré-Desenvolvimento (Elite SE Workflow)]]
