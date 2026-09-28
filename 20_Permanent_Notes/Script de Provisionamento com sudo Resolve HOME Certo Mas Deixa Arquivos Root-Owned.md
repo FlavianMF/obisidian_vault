@@ -37,5 +37,14 @@ prefix do npm fica dentro do próprio `$HOME`, sem exigir sudo e sem repetir o
 mesmo problema de ownership pra qualquer pacote global que o usuário instalar
 depois.
 
+## ✅ Resolvido em dotfiles (2026-09-28)
+
+`~/dotfiles/install.sh` aplica a opção "envolver por operação":
+
+- `run_as_user()` = `sudo -u "$SUDO_USER" -H env HOME="$HOME" PATH="$PATH" "$@"` (direto se não há `SUDO_USER`). Todo `mkdir`/`git clone`/`ln`/`cp`/`curl | sh` em `$HOME` passa por ele; apt, `/opt` e `/usr/local` continuam como root. `sudo` não chama função de shell, então helpers como `create_config_link` chamam `run_as_user` internamente, comando a comando.
+- **Reparo tem que rodar no COMEÇO**, não só no fim. Conta já contaminada faz o próprio `run_as_user mkdir` falhar com `Permission denied` e o script morre no meio (pegadinha achada no teste em container). `repair_ownership` = `find "$HOME" -xdev -user root -print0` + `chown -h`, idempotente; roda de novo no fim como varredura.
+- Claude Code via instalador nativo (`curl -fsSL https://claude.ai/install.sh | bash` como usuário real) grava em `~/.local/bin` e `~/.claude`, sem npm global e sem Node — some o corolário do nvm.
+- **Homebrew recusa rodar como root** e exige `/home/linuxbrew` gravável: criar o diretório como root, `chown` para `$SUDO_USER`, e rodar o instalador via `run_as_user` com `NONINTERACTIVE=1`. Root puro (sem `SUDO_USER`) deve pular com warn.
+
 ## 🔗 Conexões
 - [[Checklist de Bootstrap de Workflow de Desenvolvimento]]
