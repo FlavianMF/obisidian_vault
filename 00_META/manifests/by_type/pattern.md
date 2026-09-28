@@ -52,6 +52,7 @@
 | 20_Permanent_Notes/Proveniência como Dado de Primeira Classe.md | Proveniência como Dado de Primeira Classe | security, audit, agent-architecture, provenance, mbse | 2026-09-17 | projetos_ita |
 | 20_Permanent_Notes/Push Pra Branch Ocupada Via Branch Temporária.md | Push Pra Branch Ocupada Via Branch Temporária | git, worktree, agentic-ai, dev-workflow | 2026-09-02 | capella_llm_window |
 | 20_Permanent_Notes/RFC de Produto - Anatomia e Ciclo de Status.md | RFC de Produto - Anatomia e Ciclo de Status | rfc, adr, architecture-decision, documentation, traceability, project-methodology | 2026-09-11 | orbita-platform |
+| 20_Permanent_Notes/Reconstruir Template FigJam via use_figma a partir de Medidas de Print.md | Reconstruir Template FigJam via use_figma a partir de Medidas de Print | figma, figjam, use_figma, mcp, template, project-model-canvas, cdp | 2026-09-28 | residencia_00 |
 | 20_Permanent_Notes/Regra Gradual é Ignorada pelo Agente, Regra Binária é Obedecida.md | Regra Gradual é Ignorada pelo Agente, Regra Binária é Obedecida | prompt-engineering, agentic-ai, quality, skills, design, checklist | 2026-09-20 | taste-skill |
 | 20_Permanent_Notes/Renda Estável com Extraordinário Mascarando Déficit.md | Renda Estável com Extraordinário Mascarando Déficit | financas-pessoais, metrica, baseline, diagnostico, orcamento | 2026-09-19 | budget_report |
 | 20_Permanent_Notes/Reproduzibilidade e Open Science (2025).md | Reproduzibilidade e Open Science (2025) | academic-writing, reproducibility, open-science, data-sharing, IEEE | 2026-05-21 | manual |
