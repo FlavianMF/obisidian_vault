@@ -21,16 +21,24 @@ este schema, atualize os dois scripts junto.
 | `type` | sim | `meta, pattern, decision, concept, trap, project, literature, moc, inbox, template, unclassified` |
 | `tags` | sim | lista, pode ser `[]` |
 | `created` | sim | `YYYY-MM-DD` |
-| `provenance` | recomendado | `manual` para notas escritas à mão; nome do projeto de origem para notas destiladas por agente |
+| `provenance` | recomendado | `manual` para notas escritas à mão; nome do projeto de origem para notas destiladas por agente; `unknown` quando a origem não é recuperável (nem pelo `git log`, nem por `project:`) |
 | `project` | opcional | texto livre, já usado ad hoc em notas de projeto |
 | `verified` | opcional | `AAAA-MM-DD via <como foi checado>` (ex.: `2026-09-11 via git log`). **Recomendado em toda nota que afirma estado de um sistema** — versão, status de proposta, contagem, "já implementado"/"pendente". Torna a idade da afirmação visível em vez de invisível; sem ele, a obsolescência só aparece quando alguém se queima. Ver [[Documentação Desatualizada é Bug, Não Dívida]] |
+| `confidence` | opcional | `low` (visto uma vez, não reproduzido), `medium` (reproduzido ou documentado upstream), `high` (confirmado em 2+ projetos ou por teste) |
+| `seen_in` | opcional | lista de projetos que confirmaram a nota, ex.: `[capella_mcp, orbita-platform]`. Confirmar nota existente = acrescentar aqui, não criar nota duplicada |
+| `scope` | opcional | `global` (padrão) ou `project`. Nota `project` não é candidata a promoção |
 
 `path` nunca é campo de frontmatter — é metadado computado, só existe nos
 manifests (`00_META/manifests/`).
 
-`verified` é lido por humano e por agente, não pelos scripts: `generate_manifests.py`
-busca os campos por nome (`data.get(...)`) e ignora chaves extras, então acrescentá-lo
-não quebra a geração de manifests nem exige mudança nos dois scripts.
+`generate_manifests.py` busca os campos por nome (`data.get(...)`), então todo campo
+opcional ausente vira coluna vazia. `confidence` e `seen_in` viram colunas dos manifests
+(e `seen_in` alimenta o `session_hint.sh`); a data no início de `verified` alimenta
+`--stale-report`. `scope` é só lido por agente.
+
+**Promoção:** nota com 2+ projetos em `seen_in` é candidata a subir para a lista
+MANDATÓRIO de [[00_META/Agent-Instruction]] ou para o checklist de bootstrap. Manual,
+proposta ao usuário — nenhum processo faz isso sozinho.
 
 ## 🔍 Como `type` é inferido no backfill
 
