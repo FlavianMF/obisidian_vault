@@ -81,3 +81,7 @@ projeto `projetos_ita`. Repo pinado em `68ac8bbf0245b615b41517bf8f2b2f35af1ae31d
 - [[ECC - Adotar Ideias, Não o Runtime]] — o maior pacote de skills/hooks/rules da
   comunidade, e por que só ideias reescritas entraram no setup pessoal.
 - [[worldflowai everything-claude-code é Re-upload Sem Licença e Congelado]] — mirror a evitar.
+
+## Hooks com modelo externo
+
+- [[jev-workflow]] — hooks de Claude Code (UserPromptSubmit, PreToolUse) consultivos e fail-open com o modelo Jev; plano e prazo no repo.
