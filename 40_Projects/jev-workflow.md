@@ -33,6 +33,7 @@ O crédito de US$ 5 (dado do usuário) expira em **2026-10-20**. Coleta de dados
 - Ferramentas, em ordem: E, D, B, C, H1, I1.
 - Sombra primeiro; sempre fail-open; D no máximo `ask`, nunca `deny`; E só injeta uma linha de contexto.
 - TypeScript compilado para JS; hooks chamam `node dist/cli.js`; wiring só em `~/dotfiles`.
+- Teto de latência de D (PreToolUse Bash) sobe para **1,5 s** em modo sombra (2026-09-30): cold start de processo novo + TLS dá ~0,65 s (p90 0,73 s) contra ~0,29 s com conexão quente, então 0,8 s faria D falhar aberto com frequência. Sem allowlist local de comandos triviais nem processo residente por ora; reavaliar na etapa 5 com a latência real medida.
 
 ## Estado
 
