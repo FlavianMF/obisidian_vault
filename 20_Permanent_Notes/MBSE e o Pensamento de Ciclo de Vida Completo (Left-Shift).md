@@ -3,7 +3,7 @@ title: MBSE e o Pensamento de Ciclo de Vida Completo (Left-Shift)
 type: concept
 tags: [mbse, systems-engineering, lifecycle, ideation, risk-management]
 created: 2026-05-21
-provenance: 1.0
+provenance: unknown
 ---
 
 # 🔄 MBSE e o Pensamento de Ciclo de Vida Completo

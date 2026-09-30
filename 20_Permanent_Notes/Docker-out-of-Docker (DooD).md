@@ -4,7 +4,7 @@ type: decision
 project: hermes_docker
 tags: [docker, security, performance]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_docker
 ---
 
 # Docker-out-of-Docker (DooD)

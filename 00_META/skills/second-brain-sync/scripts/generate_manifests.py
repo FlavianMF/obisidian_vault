@@ -11,13 +11,22 @@ Read-only w.r.t. note content: a note still missing frontmatter is bucketed
 as `unclassified` for this run only — this script never writes back into a
 note (that's backfill_frontmatter.py's job).
 
+Optional fields `confidence` and `seen_in` become manifest columns (blank when
+absent). `--stale-report` lists pattern/trap notes whose `verified` date (or
+`created`, when `verified` is missing) is older than `--stale-days`; it only
+prints, never writes.
+
 Usage:
+    python3 generate_manifests.py                      # vault = repo containing this script
     python3 generate_manifests.py --vault-path docs/second_brain
     python3 generate_manifests.py --vault-path docs/second_brain --check
+    python3 generate_manifests.py --stale-report [--stale-days 180]
 """
 from __future__ import annotations
 
 import argparse
+import datetime as dt
+import re
 import sys
 from pathlib import Path
 
@@ -28,6 +37,16 @@ MANIFEST_DIR_NAME = "00_META/manifests"
 SKILL_DIR_NAME = "00_META/skills"
 SHARD_THRESHOLD = 150
 EXCLUDE_DIR_PARTS = {".obsidian", ".git"}
+DEFAULT_VAULT_ROOT = Path(__file__).resolve().parents[4]
+STALE_TYPES = ("pattern", "trap")
+DEFAULT_STALE_DAYS = 180
+DATE_PREFIX = re.compile(r"^\s*(\d{4}-\d{2}-\d{2})")
+
+
+def as_list_str(value) -> str:
+    if isinstance(value, list):
+        return ", ".join(v for v in value if v)
+    return str(value or "")
 
 
 def iter_notes(vault_root: Path):
@@ -48,8 +67,7 @@ def collect_rows(vault_root: Path) -> dict[str, list[dict[str, str]]]:
         data, _, _ = frontmatter.read_note(path)
         note_type = str(data.get("type") or "unclassified").strip() or "unclassified"
         title = str(data.get("title") or path.stem)
-        tags = data.get("tags") or []
-        tags_str = ", ".join(tags) if isinstance(tags, list) else str(tags)
+        tags_str = as_list_str(data.get("tags"))
         created = str(data.get("created") or "")
         provenance = str(data.get("provenance") or "")
         by_type.setdefault(note_type, []).append(
@@ -59,6 +77,9 @@ def collect_rows(vault_root: Path) -> dict[str, list[dict[str, str]]]:
                 "tags": tags_str,
                 "created": created,
                 "provenance": provenance,
+                "confidence": str(data.get("confidence") or ""),
+                "seen_in": as_list_str(data.get("seen_in")),
+                "verified": str(data.get("verified") or ""),
             }
         )
     for rows in by_type.values():
@@ -106,10 +127,14 @@ def shard_rows(rows: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
 
 
 def render_table(rows: list[dict[str, str]]) -> str:
-    lines = ["| Path | Title | Tags | Created | Provenance |", "| --- | --- | --- | --- | --- |"]
+    lines = [
+        "| Path | Title | Tags | Created | Provenance | Confidence | Seen in |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
     for row in rows:
         lines.append(
-            f"| {row['path']} | {row['title']} | {row['tags']} | {row['created']} | {row['provenance']} |"
+            f"| {row['path']} | {row['title']} | {row['tags']} | {row['created']} "
+            f"| {row['provenance']} | {row['confidence']} | {row['seen_in']} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -209,16 +234,61 @@ def check_manifests(vault_root: Path) -> bool:
     return on_disk == desired
 
 
+def parse_date(value: str) -> dt.date | None:
+    match = DATE_PREFIX.match(value or "")
+    if not match:
+        return None
+    try:
+        return dt.date.fromisoformat(match.group(1))
+    except ValueError:
+        return None
+
+
+def stale_report(vault_root: Path, stale_days: int, today: dt.date) -> str:
+    """Markdown table of pattern/trap notes whose verified (else created) date is older than stale_days."""
+    by_type = collect_rows(vault_root)
+    cutoff = today - dt.timedelta(days=stale_days)
+    stale = []
+    for note_type in STALE_TYPES:
+        for row in by_type.get(note_type, []):
+            source = "verified" if parse_date(row["verified"]) else "created"
+            date = parse_date(row[source])
+            if date is None or date < cutoff:
+                stale.append((date.isoformat() if date else "", source, note_type, row))
+    stale.sort(key=lambda item: (item[0], item[3]["path"]))
+    lines = [
+        f"# Stale report — {', '.join(STALE_TYPES)} older than {stale_days} days (cutoff {cutoff.isoformat()})",
+        "",
+        f"{len(stale)} note(s).",
+        "",
+        "| Date | Source | Type | Path | Seen in |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for date, source, note_type, row in stale:
+        lines.append(f"| {date or '?'} | {source} | {note_type} | {row['path']} | {row['seen_in']} |")
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--vault-path", required=True, type=Path)
+    parser.add_argument(
+        "--vault-path", type=Path, default=DEFAULT_VAULT_ROOT,
+        help="Vault root (default: the repo this script lives in).",
+    )
     parser.add_argument("--check", action="store_true", help="Exit 1 if manifests would change; never writes.")
+    parser.add_argument("--stale-report", action="store_true", help="Print stale pattern/trap notes; never writes.")
+    parser.add_argument("--stale-days", type=int, default=DEFAULT_STALE_DAYS)
+    parser.add_argument("--today", type=dt.date.fromisoformat, default=None, help="Override today (YYYY-MM-DD).")
     args = parser.parse_args()
 
     vault_root = args.vault_path.resolve()
     if not vault_root.is_dir():
         print(f"error: vault path not found: {vault_root}", file=sys.stderr)
         return 2
+
+    if args.stale_report:
+        print(stale_report(vault_root, args.stale_days, args.today or dt.date.today()), end="")
+        return 0
 
     if args.check:
         if check_manifests(vault_root):

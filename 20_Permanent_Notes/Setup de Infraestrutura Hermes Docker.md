@@ -4,7 +4,7 @@ type: decision
 project: hermes_docker
 tags: [docker, ubuntu, infrastructure]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_docker
 ---
 
 # Setup de Infraestrutura Hermes Docker

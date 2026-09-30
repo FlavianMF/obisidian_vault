@@ -4,7 +4,7 @@ type: concept
 project: hermes_docker
 tags: [nvidia, nim, ai-inference, api]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_docker
 ---
 
 # Integração NVIDIA NIM

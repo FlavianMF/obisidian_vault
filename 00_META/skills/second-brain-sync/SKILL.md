@@ -66,7 +66,10 @@ Before reading vault content:
 3. Open (Read tool) only the shortlisted full notes from the grep matches.
 4. Inside a note you may follow one hop of its `[[wikilinks]]` for traceability
    (existing vault convention) — don't re-scan manifests recursively for every link.
-5. If Gemini-CLI-style `obsidian_rag_query`/`obsidian_read_note`/`obsidian_link_audit`
+5. The dotfiles SessionStart hook may already have printed up to 5 titles for this
+   repo — that's `scripts/session_hint.sh <repo_basename>`; treat them as the first
+   shortlist, not as the whole answer.
+6. If Gemini-CLI-style `obsidian_rag_query`/`obsidian_read_note`/`obsidian_link_audit`
    tools happen to be available (they aren't in Claude Code), those remain
    preferred per the vault's own `Agent-Instruction.md` — this behavior is the
    concrete fallback for agents that don't have them.
@@ -108,9 +111,14 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
 
 ### 2b — Ao final da SESSÃO: sincronizar com o vault
 
-1. Se você aprendeu um padrão, decisão ou armadilha generalizável, redija/atualize uma
-   nota (tipicamente em `20_Permanent_Notes/`) com o frontmatter padrão (ver abaixo),
-   `provenance: <este-projeto>`.
+1. Se você aprendeu um padrão, decisão ou armadilha generalizável, **primeiro** `grep`
+   nos manifests pelo assunto. Duas saídas:
+   - **Já existe nota que diz isso** e este projeto a confirmou: acrescente o projeto em
+     `seen_in` e renove `verified` nela — sem nota nova. Se o projeto contradiz a
+     nota, corrija a nota (passo 2).
+   - **Não existe**: redija uma nota (tipicamente em `20_Permanent_Notes/`) com o
+     frontmatter padrão (ver abaixo), `provenance: <este-projeto>`,
+     `seen_in: [<este-projeto>]`, `verified: <hoje> via <como>` e `confidence`.
 2. **Propague a invalidação também aqui**: `grep` nos manifests
    (`00_META/manifests/by_type/*.md`) pelos termos que você tocou e corrija as notas do
    vault que a mudança tornou falsas — o passo é simétrico ao 2a, não só aditivo.
@@ -131,6 +139,12 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
    `git status --porcelain` envolve caminhos com espaço em aspas **mesmo** com
    `core.quotePath=false` — ver a nota
    `git status --porcelain Quota Caminhos com Espaço Mesmo com quotePath=false`.
+
+**Promoção (manual, sem daemon):** nota com 2+ projetos em `seen_in` virou regra, não
+episódio — ao tocá-la, proponha ao usuário levá-la para a lista MANDATÓRIO de
+`00_META/Agent-Instruction.md` ou para o checklist de bootstrap (Behavior 3). Nota
+`scope: project` nunca é promovida. `generate_manifests.py --stale-report` lista
+pattern/trap com `verified` (ou `created`) acima de 180 dias: candidatas a reverificar.
 
 Nada a fazer no projeto atual além disso — sem ponteiro pra bumpar. Como todo projeto lê
 e escreve o mesmo `~/obsidian_vault`, o resultado fica visível em todo lugar na hora.
@@ -229,8 +243,12 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 | `type` | yes | `meta, pattern, decision, concept, trap, project, literature, moc, inbox, template, unclassified` |
 | `tags` | yes | list, may be `[]` |
 | `created` | yes | `YYYY-MM-DD` |
-| `provenance` | recommended | `manual` for hand-authored notes; originating project name for agent-distilled notes |
+| `provenance` | recommended | `manual` for hand-authored notes; originating project name for agent-distilled notes; `unknown` when the origin can't be recovered |
 | `project` | optional | freeform, already used ad hoc |
+| `verified` | optional | `YYYY-MM-DD via <how>`; the date prefix feeds `--stale-report` |
+| `confidence` | optional | `low` (seen once, not reproduced), `medium` (reproduced or documented upstream), `high` (confirmed in 2+ projects or by a test) |
+| `seen_in` | optional | list of projects that confirmed the note, e.g. `[capella_mcp, orbita-platform]` |
+| `scope` | optional | `global` (default) or `project` — `project` notes stay out of promotion |
 
 `path` is never a frontmatter field — it's manifest-only, computed metadata.
 

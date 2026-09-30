@@ -75,3 +75,9 @@ somam mais que o núcleo.
 
 `40_Projects/claude_code/` (22 capítulos) — espelho de `notes/research/claude_code/` no
 projeto `projetos_ita`. Repo pinado em `68ac8bbf0245b615b41517bf8f2b2f35af1ae31d`.
+
+## Ecossistema de terceiros
+
+- [[ECC - Adotar Ideias, Não o Runtime]] — o maior pacote de skills/hooks/rules da
+  comunidade, e por que só ideias reescritas entraram no setup pessoal.
+- [[worldflowai everything-claude-code é Re-upload Sem Licença e Congelado]] — mirror a evitar.

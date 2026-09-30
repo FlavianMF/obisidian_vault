@@ -4,7 +4,7 @@ type: pattern
 project: hermes_docker
 tags: [oauth, security, docker, networking]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_docker
 ---
 
 # Fluxo de Autenticação OAuth em Containers
