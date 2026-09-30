@@ -3,7 +3,7 @@ title: Análise de Trade-off (Trade Study)
 type: pattern
 tags: [decision-making, trade-off, systems-engineering, optimization]
 created: 2026-05-21
-provenance: 1.0
+provenance: unknown
 ---
 
 # Análise de Trade-off (Trade Study)

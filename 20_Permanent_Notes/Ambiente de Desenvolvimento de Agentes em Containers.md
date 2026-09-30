@@ -4,7 +4,7 @@ type: pattern
 project: hermes_docker
 tags: [docker, agentic-ai, isolation, dev-environment]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_docker
 ---
 
 # Ambiente de Desenvolvimento de Agentes em Containers

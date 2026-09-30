@@ -4,7 +4,7 @@ type: concept
 project: birthday_counter
 tags: [systems-engineering, lifecycle, nasa-se, agents]
 created: 2026-05-21
-provenance: 1.0
+provenance: birthday_counter
 ---
 
 # Aplicação das Fases SE em Software Agêntico

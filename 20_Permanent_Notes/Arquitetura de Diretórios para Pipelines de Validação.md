@@ -4,7 +4,7 @@ type: pattern
 project: hermes_validator
 tags: [architecture, organization, data-pipeline, best-practices]
 created: 2026-05-22
-provenance: 1.0
+provenance: hermes_validator
 ---
 
 # 📂 Arquitetura de Diretórios para Pipelines de Validação

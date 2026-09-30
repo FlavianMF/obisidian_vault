@@ -4,7 +4,7 @@ type: pattern
 project: birthday_counter
 tags: [agentic-ai, systems-engineering, automation, architecture]
 created: 2026-05-21
-provenance: 1.0
+provenance: birthday_counter
 ---
 
 # Engenharia de Sistemas Agêntica (Agentic Systems Engineering)

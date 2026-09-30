@@ -4,7 +4,7 @@ type: trap
 project: hermes_docker
 tags: [ollama, cpu, performance, llm]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_docker
 ---
 
 # Otimização de Recursos para LLMs em CPU

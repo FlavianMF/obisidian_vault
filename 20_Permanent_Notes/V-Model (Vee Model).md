@@ -3,7 +3,7 @@ title: V-Model (Vee Model)
 type: concept
 tags: [systems-engineering, lifecycle, verification, validation, incose]
 created: 2026-05-21
-provenance: 1.0
+provenance: unknown
 ---
 
 # V-Model (Vee Model)

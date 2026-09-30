@@ -4,7 +4,7 @@ type: pattern
 project: hermes_validator
 tags: [education, automation, grading, rubric]
 created: 2026-05-21
-provenance: 1.0
+provenance: hermes_validator
 ---
 
 # Validação Acadêmica Automatizada

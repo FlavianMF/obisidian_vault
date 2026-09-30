@@ -3,7 +3,7 @@ title: Fases de Implementação e Encerramento (C-F)
 type: concept
 tags: [nasa-se, lifecycle, implementation, operations]
 created: 2026-05-21
-provenance: 1.0
+provenance: unknown
 ---
 
 # Fases de Implementação e Encerramento (C-F)
