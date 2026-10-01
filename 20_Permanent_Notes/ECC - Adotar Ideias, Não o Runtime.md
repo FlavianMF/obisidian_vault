@@ -7,12 +7,29 @@ provenance: dotfiles
 seen_in: [dotfiles]
 confidence: medium
 scope: global
-verified: 2026-09-30 via leitura do repo affaan-m/ECC v2.2.2 na pesquisa do setup de harness
+verified: 2026-09-30 via claude plugin details ecc@ecc e teste de make ecc-on em repo descartável
 ---
 
 # ECC (affaan-m/ECC): adotar ideias, não o runtime
 
-**Decisão:** do [ECC](https://github.com/affaan-m/ECC) (v2.2.2, MIT) entram só peças
+> **Revisão (2026-09-30):** o runtime entrou, mas **só por projeto**. O plugin `ecc@ecc`
+> fica instalado e **desligado** no escopo de usuário (`"ecc@ecc": false` em
+> `claude/settings.json`), porque `claude plugin details ecc@ecc` mede **~45k tokens
+> always-on** (387 skills/commands + 68 agents). `make ecc-on DIR=…` liga em
+> `.claude/settings.local.json` do projeto e linka as rules upstream espelhadas
+> (`vendor/ecc/upstream/rules`, opção `NO_COMMON=1`). Hooks no perfil `minimal` +
+> `ECC_DISABLED_HOOKS=stop:evaluate-session,post:ecc-metrics-bridge`: sobra
+> block-no-verify, retomada de sessão, cost-tracker. GateGuard e config-protection
+> seguem fora. As peças vendorizadas abaixo continuam globais.
+>
+> Armadilhas vistas no caminho:
+> - hook do ECC sem `profiles` cai em `standard,strict` (`parseProfiles` em
+>   `scripts/lib/hook-flags.js`); confira os dispatchers, não só o `hooks.json`;
+> - o plugin sobe MCP `chrome-devtools-mcp` pelo `.mcp.json` da raiz, mesmo com
+>   `mcpServers: {}` no `plugin.json`;
+> - [[Claude Plugin CLI Reescreve o settings.json Symlinkado do Repo]].
+
+**Decisão original:** do [ECC](https://github.com/affaan-m/ECC) (v2.2.2, MIT) entram só peças
 escolhidas, **reescritas** no `~/dotfiles`. Não se instala plugin, hooks nem rules do
 ECC. O pacote é tomado como catálogo de ideias para [[claude-code]], não como runtime.
 
