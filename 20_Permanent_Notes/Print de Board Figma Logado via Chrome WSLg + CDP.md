@@ -47,3 +47,5 @@ sozinho se o texto transborda), e unifique pelo mínimo dentro de cada bloco.
 
 Relacionado: [[Chrome Headless em WSL2 - .deb Oficial, Não apt chromium]],
 [[Project Model Canvas vs ARCADIA - Mapeamento]].
+
+Ver também: [[Figma Plugin API via CDP no Chrome Logado - Contorna Cota do MCP]], [[Chrome Headed sem Display - Xvfb + x11vnc + CDP]].
