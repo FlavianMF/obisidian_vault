@@ -35,6 +35,7 @@
 | 20_Permanent_Notes/SysML.md | SysML (Systems Modeling Language) |  | 2026-05-21 | manual |  |  |
 | 20_Permanent_Notes/Taste Skill.md | Taste Skill | taste-skill, design, frontend, claude-code, skills, agentic-ai | 2026-09-20 | taste-skill |  |  |
 | 20_Permanent_Notes/V-Model (Vee Model).md | V-Model (Vee Model) | systems-engineering, lifecycle, verification, validation, incose | 2026-05-21 | unknown |  |  |
+| 20_Permanent_Notes/Verificar a Saída, Não Qualificar o LLM - Gate Determinístico como Argumento de Certificação.md | Verificar a Saída, Não Qualificar o LLM — Gate Determinístico como Argumento de Certificação | certificacao, do-330, arp4754a, agentic-ai, mbse, assurance, gate | 2026-10-09 | projetos_ita | low | projetos_ita |
 | 20_Permanent_Notes/XAI.md | XAI | ai, explainability, systems-engineering | 2026-05-21 | manual |  |  |
 | 20_Permanent_Notes/claude-code.md | claude-code | ai-agent, cli, harness, agent-architecture, plugin-api, llm | 2026-09-17 | projetos_ita |  |  |
 | 20_Permanent_Notes/opencode.md | opencode | ai-agent, cli, harness, agent-architecture, tui, llm | 2026-09-08 | projetos_ita |  |  |
