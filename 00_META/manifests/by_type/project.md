@@ -1,6 +1,7 @@
 | Path | Title | Tags | Created | Provenance | Confidence | Seen in |
 | --- | --- | --- | --- | --- | --- | --- |
 | 20_Permanent_Notes/birthday_counter.md | Projeto birthday_counter | project, web-development, systems-engineering, case-study | 2026-05-21 | manual |  |  |
+| 40_Projects/MB-249 - Guia de Estudo.md | MB-249 - Guia de Estudo | mb-249, logistica, suportabilidade, ils, ips, lcc, ciclo-de-vida, conops, fab | 2026-10-12 | MB-249 | medium |  |
 | 40_Projects/Mestrado_ITA/Direcao_Tese_e_Carreira.md | Direção da Tese e da Carreira — Consultoria Primeiro, Pesquisa como Credencial | mestrado, carreira, consultoria, mbse, agentic-ai, certificacao, capella | 2026-10-09 | projetos_ita | medium |  |
 | 40_Projects/Mestrado_ITA/Proposta_Pesquisa_MBSE_AI.md | Proposta_Pesquisa_MBSE_AI |  | 2026-05-21 | manual |  |  |
 | 40_Projects/Palestra_SE_Business.md | Palestra: O Método NASA para Desenvolvimento de Produtos de Elite |  | 2026-05-21 | manual |  |  |
