@@ -167,6 +167,40 @@ A diferença é de **uma query** em 19, dentro do intervalo de confiança: não 
 falhas `q008` (Taste vs impeccable) e `q016`. A decisão de manter ou reverter o `summary` continua dependendo dos 60 pares
 (RFC §8). O split `test` segue sem uso.
 
+## Atualização 2026-10-14: F1b (hook em sombra) e calibração do limiar
+
+**Golden set.** O usuário aprovou as 30 queries originais (`validated: true`, `source: llm-draft+user-approved`).
+Acrescentei 12 negativas no split `dev` (`q031`–`q042`, `validated: false`) só para calibrar o limiar de silêncio, porque
+o `dev` tinha uma única negativa. Várias são vizinhas de notas reais do vault (deploy, testes, datas), então o falso
+positivo medido é pessimista: mostrar uma nota adjacente pode ser útil.
+
+**Entregue.** `prompt_hint.sh` (corpo do hook), `vault_rank.sh` com os campos `coverage` e `confidence` e as opções
+`-c` (cobertura mínima) e `-t` (mínimo de termos úteis), harness com `--min-coverage`/`--min-terms`, 13 testes novos
+(sem rede, com manifest de teste). O wrapper `~/dotfiles/claude/hooks/second-brain-prompt-hint.sh` está registrado em
+`UserPromptSubmit` e **inerte** até `SECOND_BRAIN_PROMPT_HINT=shadow` ser definido. O `SessionStart` (L0) agora compara
+caminho exato (um irmão como `obsidian_vault2` não casa mais) e grava o que mostrou no arquivo de dedupe do L1.
+
+**Cobertura** é a fração do peso idf dos termos da query que a nota casa (termo ausente do vault conta como não casado).
+Separa melhor que a pontuação bruta, que cresce com o tamanho da query: uma negativa chegou a 22 e uma positiva certa
+a 10,7.
+
+| `rank`, dev, k=5 (19 positivas, 13 negativas) | success@5 | FP em negativas | tokens/acerto |
+|---|---|---|---|
+| sem limiar | 0,89 | 1,00 | ≈ 4,3 mil |
+| cobertura ≥ 0,25 | 0,79 | 0,46 | ≈ 2,7 mil |
+| cobertura ≥ 0,30 (padrão do hook) | 0,79 | 0,31 | ≈ 1,8 mil |
+| cobertura ≥ 0,35 | 0,74 | 0,23 | ≈ 1,3 mil |
+
+**Nenhum limiar cumpre os dois pisos ao mesmo tempo** (success@5 ≥ 0,80 e FP ≤ 0,20). Os pisos não foram afrouxados.
+Consequência: o L1 **não passa o gate** com um ranqueador lexical puro e permanece em sombra. O limiar 0,30 é provisório,
+escolhido sobre o próprio `dev` (32 pontos), logo otimista. O log de sombra guarda os cinco candidatos com pontuação e
+cobertura por prompt, o que permite reajustar o limiar sem rodar o hook de novo. Próximas alavancas, em ordem de custo:
+dados reais do log, depois bônus de frase/bigrama no ranqueador, depois a decisão sobre embeddings (F4) com dados em mãos.
+
+**Latência** do hook inteiro: 0,18–0,27 s (ranqueador ≈ 0,13 s), dentro do piso de 0,3 s mas sem folga; `timeout 0,3` no
+ranqueador faz o hook calar sob carga em vez de atrasar o prompt. **Privacidade:** o log de sombra guarda os primeiros 300
+caracteres de cada prompt em `~/.local/state/second-brain/shadow.jsonl` (arquivo 0600, diretório 0700, nada sai da máquina).
+
 ## Próximos passos
 
 1. **Você**: validar ou reescrever as 30 queries (principalmente as 21 `paraphrase`), e aprovar ou ajustar
