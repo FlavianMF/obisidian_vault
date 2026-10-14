@@ -140,6 +140,33 @@ decisão nova. Provável causa: [[Claude Plugin CLI Reescreve o settings.json Sy
 deve ser tratada como **restaurar** o estado decidido, e a F3 como **estender** o `make` existente com
 `status` e a linha de estado do `SessionStart`, sem criar comando paralelo.
 
+## Atualização 2026-10-14: F0b e F1a executadas
+
+**F0b (restaurar a decisão do ECC).** Com aprovação do usuário, `ecc@ecc` passou a `false` no escopo `user`
+(`~/dotfiles/claude/settings.json:159`, editado direto no arquivo do repo para não acionar a armadilha do plugin CLI) e o
+link `~/.claude/rules/ecc-common` foi removido. Ressalva: a ativação global **não foi acidente do CLI**; o commit
+`a40e8a7` (2026-10-05, no dotfiles) a fez de propósito ("enable ecc plugin ... now loaded globally"), depois da decisão do
+vault de 2026-09-30. A restauração segue a decisão registrada, mas vale o usuário confirmar que não quer o ECC global.
+O efeito vale numa sessão nova; o M1 pós-mudança ainda precisa ser medido com `usage_baseline.sh`. O arquivo do dotfiles
+tem outras alterações do usuário sem commit; nada foi commitado lá.
+
+**F1a (coluna `summary`).** `generate_manifests.py` ganhou a coluna `Summary` por último (≤ 160 caracteres, primeiro
+parágrafo em prosa do corpo, markdown removido, sem LLM), escape de `|` (trocado por `¦`, porque os consumidores em
+`awk -F'|'` quebrariam com `\|`) e escrita atômica. A saída do `session_hint.sh` ficou idêntica nos três repos testados.
+Os 290 manifests têm resumo; 11 testes novos passam.
+
+Desvio da RFC §4.1: usei **só o primeiro parágrafo**, não "primeira frase em negrito". Em amostra, o negrito costuma ser
+um fragmento ("não serve"), pior que o parágrafo. Registrar na RFC se o usuário aceitar.
+
+| `rank` no split dev, k=5 | success@5 | IC95 | MRR | nDCG@5 | tokens/acerto |
+|---|---|---|---|---|---|
+| sem `summary` (F0c) | 0,84 | 0,68–1,00 | 0,80 | 0,79 | ≈ 2,2 mil |
+| com `summary` (F1a) | 0,89 | 0,74–1,00 | 0,89 | 0,88 | ≈ 1,8 mil |
+
+A diferença é de **uma query** em 19, dentro do intervalo de confiança: não prova ganho, só não indica piora. Restam as
+falhas `q008` (Taste vs impeccable) e `q016`. A decisão de manter ou reverter o `summary` continua dependendo dos 60 pares
+(RFC §8). O split `test` segue sem uso.
+
 ## Próximos passos
 
 1. **Você**: validar ou reescrever as 30 queries (principalmente as 21 `paraphrase`), e aprovar ou ajustar
