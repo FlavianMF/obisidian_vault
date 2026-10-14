@@ -3,3 +3,5 @@
 .obsidian/plugins/*/main.js
 .obsidian/plugins/*/styles.css
 .obsidian/plugins/*/data.json
+00_META/eval/runs/
+__pycache__/
