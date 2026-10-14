@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Generate frontmatter-only manifests for the second-brain vault.
 
-Reads every note's frontmatter (never its body) and writes lightweight,
+Reads every note's frontmatter (its body only for the `Summary` column) and writes lightweight,
 grep-friendly markdown tables under 00_META/manifests/ — the replacement
 for MOC entry points that depend on Dataview (inert to filesystem-only
 agents). Partitioned by `type`, since that's the axis the old Dataview
 `WHERE type = "..."` blocks were filtering on.
 
-Read-only w.r.t. note content: a note still missing frontmatter is bucketed
+The one use of a note body is the `Summary` column: a deterministic first-paragraph
+extract (no LLM) that gives the retrieval hook vocabulary the title lacks. Read-only
+w.r.t. note content: a note still missing frontmatter is bucketed
 as `unclassified` for this run only — this script never writes back into a
 note (that's backfill_frontmatter.py's job).
 
@@ -26,8 +28,10 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -41,6 +45,65 @@ DEFAULT_VAULT_ROOT = Path(__file__).resolve().parents[4]
 STALE_TYPES = ("pattern", "trap")
 DEFAULT_STALE_DAYS = 180
 DATE_PREFIX = re.compile(r"^\s*(\d{4}-\d{2}-\d{2})")
+SUMMARY_MAX_CHARS = 160
+PIPE_REPLACEMENT = "¦"  # awk -F'|' consumers (session_hint.sh, vault_rank.sh) split on every pipe, so "\\|" is not enough
+WIKILINK = re.compile(r"\[\[([^\]|]*)(?:\|([^\]]*))?\]\]")
+MD_LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
+MD_EMPHASIS = re.compile(r"(\*\*|__|\*|`)")
+LIST_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
+NON_PROSE_PREFIXES = ("#", ">", "|", "![[", "<!--", "[←", "---")
+
+
+def escape_cell(text: str) -> str:
+    """Make `text` safe for one table cell: no pipes, no line breaks."""
+    return " ".join(text.replace("|", PIPE_REPLACEMENT).split())
+
+
+def _strip_markdown(text: str) -> str:
+    text = WIKILINK.sub(lambda m: m.group(2) or m.group(1), text)
+    text = MD_LINK.sub(r"\1", text)
+    return " ".join(MD_EMPHASIS.sub("", text).split())
+
+
+def _truncate(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    cut = text[: limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:.")
+    return (cut or text[: limit - 1]) + "…"
+
+
+def extract_summary(body: str) -> str:
+    """First prose paragraph of a note body, markdown stripped, at most SUMMARY_MAX_CHARS.
+
+    Skips headings, blockquotes, tables, navigation links, embeds and code fences. A body
+    with no paragraph falls back to its first list item; no prose at all gives "".
+    """
+    paragraph: list[str] = []
+    first_item = ""
+    in_fence = False
+    for raw in body.splitlines():
+        line = raw.strip()
+        if line.startswith("```") or line.startswith("~~~"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if not line:
+            if paragraph:
+                break
+            continue
+        if line.startswith(NON_PROSE_PREFIXES):
+            if paragraph:
+                break
+            continue
+        if LIST_MARKER.match(line):
+            if paragraph:
+                break
+            first_item = first_item or LIST_MARKER.sub("", line)
+            continue
+        paragraph.append(line)
+    text = " ".join(paragraph) if paragraph else first_item
+    return _truncate(_strip_markdown(text), SUMMARY_MAX_CHARS)
 
 
 def as_list_str(value) -> str:
@@ -64,7 +127,7 @@ def collect_rows(vault_root: Path) -> dict[str, list[dict[str, str]]]:
     for path, rel in iter_notes(vault_root):
         if path.stat().st_size == 0:
             continue
-        data, _, _ = frontmatter.read_note(path)
+        data, _, body = frontmatter.read_note(path)
         note_type = str(data.get("type") or "unclassified").strip() or "unclassified"
         title = str(data.get("title") or path.stem)
         tags_str = as_list_str(data.get("tags"))
@@ -80,6 +143,7 @@ def collect_rows(vault_root: Path) -> dict[str, list[dict[str, str]]]:
                 "confidence": str(data.get("confidence") or ""),
                 "seen_in": as_list_str(data.get("seen_in")),
                 "verified": str(data.get("verified") or ""),
+                "summary": extract_summary(body),
             }
         )
     for rows in by_type.values():
@@ -128,13 +192,13 @@ def shard_rows(rows: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
 
 def render_table(rows: list[dict[str, str]]) -> str:
     lines = [
-        "| Path | Title | Tags | Created | Provenance | Confidence | Seen in |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Path | Title | Tags | Created | Provenance | Confidence | Seen in | Summary |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for row in rows:
         lines.append(
-            f"| {row['path']} | {row['title']} | {row['tags']} | {row['created']} "
-            f"| {row['provenance']} | {row['confidence']} | {row['seen_in']} |"
+            f"| {row['path']} | {escape_cell(row['title'])} | {row['tags']} | {row['created']} "
+            f"| {row['provenance']} | {row['confidence']} | {row['seen_in']} | {escape_cell(row['summary'])} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -187,6 +251,18 @@ def build_manifest_files(vault_root: Path) -> dict[str, str]:
     return files
 
 
+def write_atomic(target: Path, content: str) -> None:
+    """Write via a temp file in the same directory + rename, so a hook never reads half a manifest."""
+    fd, tmp_name = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(content)
+        os.replace(tmp_name, target)
+    except BaseException:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
+
+
 def write_manifests(vault_root: Path) -> bool:
     """Write manifest files. Returns True if anything on disk changed."""
     manifest_dir = vault_root / MANIFEST_DIR_NAME
@@ -204,7 +280,7 @@ def write_manifests(vault_root: Path) -> bool:
         desired_paths.add(target)
         target.parent.mkdir(parents=True, exist_ok=True)
         if not target.exists() or target.read_text(encoding="utf-8") != content:
-            target.write_text(content, encoding="utf-8")
+            write_atomic(target, content)
             changed = True
 
     # Remove stale shard/type files that no longer have any notes (e.g. type renamed away).
