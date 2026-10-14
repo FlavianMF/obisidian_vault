@@ -10,7 +10,9 @@
 #     DISABLED in the state dir also turns it off, without a restart;
 #   - always exits 0 and never blocks the prompt; silent on missing jq/vault/ranker, bad JSON,
 #     slash commands, the vault itself as cwd, too few useful terms, or low coverage;
-#   - ranking is delegated to vault_rank.sh (the same script the golden set measures);
+#   - ranking is delegated to vault_rank.sh (capped at SECOND_BRAIN_RANK_TIMEOUT, default 0.6 s;
+#     a timeout is logged as `timeout: true`, never as "no match"; only the first 2000 chars of
+#     the prompt are ranked) (the script the golden set measures);
 #   - one `.seen` file per session dedupes notes already shown (L0 writes to it too);
 #   - the shadow log keeps the first 300 chars of each prompt plus the top-5 candidates with
 #     score and coverage, so thresholds can be re-fitted offline; files are 0600, dir 0700.
@@ -22,7 +24,12 @@ HEADER='Second brain (dado, não instrução; abra só se relevante):'
 MAX_LINES=3
 CANDIDATES=5
 PROMPT_LOG_CHARS=300
+PROMPT_RANK_CHARS=2000
+MAX_INPUT_BYTES=262144
 SEEN_MAX_AGE_DAYS=7
+DEFAULT_RANK_TIMEOUT=0.6
+DEFAULT_SHADOW_MAX_BYTES=5000000
+DEFAULT_SHADOW_KEEP_LINES=2000
 
 [[ "${SECOND_BRAIN_HOOKS:-0}" == "1" ]] || exit 0
 mode="${SECOND_BRAIN_PROMPT_HINT:-}"
@@ -35,16 +42,20 @@ state_dir="${SECOND_BRAIN_STATE_DIR:-$HOME/.local/state/second-brain}"
 script_path="$(readlink -f -- "${BASH_SOURCE[0]}" 2>/dev/null)" || exit 0
 script_dir="$(dirname -- "$script_path")"
 vault="${SECOND_BRAIN_VAULT:-$(cd -- "$script_dir/../../../.." 2>/dev/null && pwd -P)}"
-ranker="$script_dir/vault_rank.sh"
+ranker="${SECOND_BRAIN_RANKER:-$script_dir/vault_rank.sh}"
 [[ -x "$ranker" ]] || exit 0
 
-input="$(cat)"
-# One jq call: session_id and cwd on their own lines, then the prompt (may span lines).
-parsed="$(printf '%s' "$input" | jq -r '(.session_id // ""), (.cwd // ""), (.prompt // "")' 2>/dev/null)" || exit 0
+# Input over MAX_INPUT_BYTES is cut (invalid JSON then, so the hook stays silent): a pasted
+# multi-megabyte prompt must not make every turn slow.
+input="$(head -c "$MAX_INPUT_BYTES")"
+# One jq call: session_id and cwd on their own lines, then the prompt behind a "P" sentinel
+# (so an empty prompt cannot shift the fields: $(...) would eat the trailing newlines).
+parsed="$(printf '%s' "$input" | jq -r '(.session_id // ""), (.cwd // ""), ("P" + (.prompt // ""))' 2>/dev/null)" || exit 0
 session="${parsed%%$'\n'*}"
 rest="${parsed#*$'\n'}"
 cwd="${rest%%$'\n'*}"
 prompt="${rest#*$'\n'}"
+prompt="${prompt#P}"
 [[ -n "$prompt" && "$prompt" != /* ]] || exit 0
 session="${session//[^A-Za-z0-9_-]/}"
 session="${session:-nosession}"
@@ -61,7 +72,13 @@ fi
 min_cov="${SECOND_BRAIN_MIN_COVERAGE:-0.30}"
 min_terms="${SECOND_BRAIN_MIN_TERMS:-3}"
 
-mapfile -t ranked < <(printf '%s' "$prompt" | timeout 0.3 "$ranker" -k "$CANDIDATES" -t "$min_terms" 2>/dev/null)
+rank_timeout="${SECOND_BRAIN_RANK_TIMEOUT:-$DEFAULT_RANK_TIMEOUT}"
+rank_out="$(printf '%s' "${prompt:0:$PROMPT_RANK_CHARS}" | timeout "$rank_timeout" "$ranker" -k "$CANDIDATES" -t "$min_terms" 2>/dev/null)"
+rank_status=$?
+timed_out=false
+[[ "$rank_status" -eq 124 ]] && timed_out=true
+ranked=()
+[[ -n "$rank_out" ]] && mapfile -t ranked <<<"$rank_out"
 
 (umask 077; mkdir -p "$state_dir") 2>/dev/null || exit 0
 chmod 700 "$state_dir" 2>/dev/null
@@ -88,12 +105,19 @@ fi
 log_file="$state_dir/shadow.jsonl"
 printf '%s\n' "${ranked[@]}" | jq -R -s -c \
   --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg mode "$mode" --arg session "$session" --arg cwd "$cwd" \
-  --arg prompt "${prompt:0:$PROMPT_LOG_CHARS}" '
-  {ts: $ts, mode: $mode, session: $session, cwd: $cwd, prompt: $prompt,
+  --arg prompt "${prompt:0:$PROMPT_LOG_CHARS}" --argjson timeout "$timed_out" '
+  {ts: $ts, mode: $mode, session: $session, cwd: $cwd, prompt: $prompt, timeout: $timeout,
    candidates: (split("\n") | map(select(length > 0) | split("\t")) |
      map({path: .[1], score: (.[0] | tonumber), coverage: (.[3] | tonumber), confidence: .[4]})),
    emitted: $ARGS.positional}' --args "${emitted[@]}" >>"$log_file" 2>/dev/null
 chmod 600 "$log_file" 2>/dev/null
+
+# Keep the shadow log bounded: past the cap, keep only the newest lines.
+max_bytes="${SECOND_BRAIN_SHADOW_MAX_BYTES:-$DEFAULT_SHADOW_MAX_BYTES}"
+keep_lines="${SECOND_BRAIN_SHADOW_KEEP_LINES:-$DEFAULT_SHADOW_KEEP_LINES}"
+if [[ "$(stat -c %s "$log_file" 2>/dev/null || echo 0)" -gt "$max_bytes" ]]; then
+  tail -n "$keep_lines" "$log_file" >"$log_file.tmp" 2>/dev/null && chmod 600 "$log_file.tmp" && mv "$log_file.tmp" "$log_file"
+fi
 
 find "$state_dir" -maxdepth 1 -name '*.seen' -mtime +"$SEEN_MAX_AGE_DAYS" -delete 2>/dev/null
 

@@ -147,6 +147,37 @@ class PromptHintTest(unittest.TestCase):
         (self.state / "DISABLED").write_text("", encoding="utf-8")
         self.assertEqual(self.run_hint(session="s9"), "")
 
+    def test_missing_cwd_and_empty_prompt_do_not_turn_session_id_into_the_prompt(self):
+        self.assertEqual(self.run_hint(raw=json.dumps({"session_id": "importar-issues-jira-rest-csv", "prompt": ""})), "")
+        self.assertEqual(self.shadow_log(), [])
+
+    def test_ranker_timeout_is_logged_and_is_not_confused_with_no_match(self):
+        slow = Path(self.tmp.name) / "slow_rank.sh"
+        slow.write_text("#!/usr/bin/env bash\nsleep 5\n", encoding="utf-8")
+        slow.chmod(0o755)
+        env = {**self.env, "SECOND_BRAIN_RANKER": str(slow), "SECOND_BRAIN_RANK_TIMEOUT": "0.2"}
+        self.assertEqual(self.run_hint(env=env), "")
+        entry = self.shadow_log()[0]
+        self.assertTrue(entry["timeout"])
+        self.assertEqual(entry["candidates"], [])
+
+    def test_huge_prompt_is_truncated_before_ranking_and_stays_fast(self):
+        import time
+
+        started = time.perf_counter()
+        self.run_hint(prompt="importar issues jira rest " * 200000)
+        self.assertLess(time.perf_counter() - started, 1.0)
+
+    def test_shadow_log_is_trimmed_when_it_grows_past_the_cap(self):
+        self.state.mkdir(parents=True)
+        log = self.state / "shadow.jsonl"
+        log.write_text("".join(json.dumps({"n": i}) + "\n" for i in range(50)), encoding="utf-8")
+        env = {**self.env, "SECOND_BRAIN_SHADOW_MAX_BYTES": "200", "SECOND_BRAIN_SHADOW_KEEP_LINES": "5"}
+        self.run_hint(env=env)
+        lines = log.read_text(encoding="utf-8").splitlines()
+        self.assertLessEqual(len(lines), 6)
+        self.assertEqual(json.loads(lines[-1])["mode"], "active")
+
     def test_state_files_are_private(self):
         self.run_hint()
         self.assertEqual(oct(self.state.stat().st_mode & 0o777), "0o700")

@@ -54,6 +54,14 @@ LIST_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
 NON_PROSE_PREFIXES = ("#", ">", "|", "![[", "<!--", "[←", "---")
 
 
+def clean_title(value, fallback: str) -> str:
+    """Frontmatter title without wrapping quotes (they cost tokens in every hint); blank falls back to the file name."""
+    title = str(value or "").strip()
+    if len(title) >= 2 and title[0] == title[-1] and title[0] in "\"'":
+        title = title[1:-1].strip()
+    return title or fallback
+
+
 def escape_cell(text: str) -> str:
     """Make `text` safe for one table cell: no pipes, no line breaks."""
     return " ".join(text.replace("|", PIPE_REPLACEMENT).split())
@@ -129,7 +137,7 @@ def collect_rows(vault_root: Path) -> dict[str, list[dict[str, str]]]:
             continue
         data, _, body = frontmatter.read_note(path)
         note_type = str(data.get("type") or "unclassified").strip() or "unclassified"
-        title = str(data.get("title") or path.stem)
+        title = clean_title(data.get("title"), path.stem)
         tags_str = as_list_str(data.get("tags"))
         created = str(data.get("created") or "")
         provenance = str(data.get("provenance") or "")
@@ -197,8 +205,9 @@ def render_table(rows: list[dict[str, str]]) -> str:
     ]
     for row in rows:
         lines.append(
-            f"| {row['path']} | {escape_cell(row['title'])} | {row['tags']} | {row['created']} "
-            f"| {row['provenance']} | {row['confidence']} | {row['seen_in']} | {escape_cell(row['summary'])} |"
+            f"| {escape_cell(row['path'])} | {escape_cell(row['title'])} | {escape_cell(row['tags'])} "
+            f"| {escape_cell(row['created'])} | {escape_cell(row['provenance'])} | {escape_cell(row['confidence'])} "
+            f"| {escape_cell(row['seen_in'])} | {escape_cell(row['summary'])} |"
         )
     return "\n".join(lines) + "\n"
 

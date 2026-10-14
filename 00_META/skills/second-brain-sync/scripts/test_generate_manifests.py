@@ -79,6 +79,27 @@ class ManifestTableTest(unittest.TestCase):
         self.assertEqual(cells[8], "Resumo da nota.")
         self.assertEqual(len(cells), 10)
 
+    def test_every_column_is_escaped_so_a_row_always_has_ten_cells(self):
+        (self.vault / "20_Permanent_Notes" / "pipe|name.md").write_text(
+            "---\ntitle: x\ntype: trap\ntags: [a|b]\ncreated: 2026-01-02\nprovenance: p|q\n"
+            "confidence: low\nseen_in: [r|s]\n---\n\nCorpo.\n",
+            encoding="utf-8",
+        )
+        table = gm.build_manifest_files(self.vault)["by_type/trap.md"]
+        for row in table.splitlines()[2:]:
+            self.assertEqual(len(row.split("|")), 10, row)
+
+    def test_title_drops_surrounding_quotes_and_blank_titles_fall_back_to_the_file_name(self):
+        (self.vault / "20_Permanent_Notes" / "q.md").write_text(
+            '---\ntitle: "Com aspas"\ntype: trap\ntags: []\n---\n\nCorpo.\n', encoding="utf-8"
+        )
+        (self.vault / "20_Permanent_Notes" / "branco.md").write_text(
+            "---\ntitle:    \ntype: trap\ntags: []\n---\n\nCorpo.\n", encoding="utf-8"
+        )
+        table = gm.build_manifest_files(self.vault)["by_type/trap.md"]
+        self.assertIn("| Com aspas |", table)
+        self.assertIn("| branco |", table)
+
     def test_write_is_atomic_leaves_no_temp_files_and_is_idempotent(self):
         self.assertTrue(gm.write_manifests(self.vault))
         self.assertFalse(gm.write_manifests(self.vault))
