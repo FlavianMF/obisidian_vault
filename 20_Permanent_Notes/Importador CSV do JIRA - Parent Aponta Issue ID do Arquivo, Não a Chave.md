@@ -5,7 +5,7 @@ tags: [jira, csv, import, epic, initiative, hierarchy, atlassian]
 created: 2026-10-05
 provenance: residencia_cariri_projects
 seen_in: [residencia_cariri_projects]
-verified: 2026-10-05 via documentação Atlassian; 2026-10-14 reproduzido numa importação real (importador do projeto sem Issue ID)
+verified: 2026-10-05 via documentação Atlassian; 2026-10-14 reproduzido numa importação real (importador do projeto sem Issue ID; Component inexistente)
 confidence: medium
 ---
 
@@ -30,6 +30,15 @@ Saída sem admin: importar em **duas etapas**. Primeiro um CSV só com os Épico
 vazio, o k-ésimo vira `PROJ-k`); depois um CSV com as Stories e `Parent` = chave real
 (`PROJ-1`). O gerador aceita a chave real como argumento, para o caso de o projeto já ter
 itens.
+
+## O importador do projeto também não cria Components
+
+Verificado em 2026-10-14 na mesma importação: o Validate avisa `The component X doesn't
+exist in this project and can't be added`, e as Stories entram **sem** o component.
+Crie os components **antes** de importar, à mão (Project settings > Components) ou por
+`POST /rest/api/3/component` com `{"name", "project"}`, que exige só admin do projeto e
+token de API. Script: `_tools/jira-csv/criar_componentes.py` (lê a coluna Component, lista
+os existentes, cria os que faltam, idempotente, `--dry-run`).
 
 ## Como funciona (importador de sistema)
 
@@ -62,4 +71,5 @@ Gere o CSV por script e valide antes de subir: todo `Parent` existe numa linha a
 nenhuma Story fica sem pai e a contagem bate com a fonte. Importe primeiro **um** projeto
 de teste e confira a hierarquia antes de importar o resto.
 
-Relacionado: [[Backlog Markdown como Fonte e CSV como Ponte para o JIRA]].
+Relacionado: [[Backlog Markdown como Fonte e CSV como Ponte para o JIRA]],
+[[Importar Issues no JIRA por REST em vez do Assistente de CSV]].

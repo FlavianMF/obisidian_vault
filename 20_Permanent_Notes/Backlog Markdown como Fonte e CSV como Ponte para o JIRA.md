@@ -5,7 +5,7 @@ tags: [jira, csv, backlog, markdown, project-management, automation, scrum]
 created: 2026-10-05
 provenance: residencia_cariri_projects
 seen_in: [residencia_cariri_projects]
-verified: 2026-10-05 via _tools/jira-csv/gerar_csv.py (8 CSVs, 336 Stories, checagens passando)
+verified: 2026-10-14 via importação real de CSV (ver trap) e _tools/jira-csv/gerar_csv.py (8 CSVs, 336 Stories)
 confidence: medium
 ---
 
@@ -47,6 +47,18 @@ Stories em 8 CSVs, a partir de backlogs pensados para o Trello.
 
 O importador nativo cria um projeto Kanban por board e não cria épicos. A hierarquia,
 que é o objetivo da migração, se perde.
+
+## Ponte alternativa: a API REST
+
+Se o assistente de CSV atrapalha (sem Issue ID no importador do projeto, sem criação de
+Components), a mesma fonte em markdown pode alimentar a API:
+[[Importar Issues no JIRA por REST em vez do Assistente de CSV]].
+
+## Decisões de 2026-10-14
+
+- **Story Points ficam vazios na importação**; são preenchidos no Planning.
+- **O JIRA vira a fonte da verdade após a importação.** Reimportar duplica; os scripts
+  idempotentes pulam por `summary` exato, então renomear no JIRA quebra essa checagem.
 
 Armadilhas do formato: [[Importador CSV do JIRA - Parent Aponta Issue ID do Arquivo, Não a Chave]].
 Decisões de método: [[Scrum Enxuto para Residência com Alunos em Tempo Parcial]].
