@@ -98,9 +98,12 @@ class RankAdapter:
     name = "rank"
     stochastic = False
 
+    def __init__(self, min_coverage: float = 0.0, min_terms: int = 1) -> None:
+        self._flags = ["-c", str(min_coverage), "-t", str(min_terms)]
+
     def search(self, query: str, k: int) -> list[str]:
         result = subprocess.run(
-            [str(RANKER), "-k", str(k), query], capture_output=True, text=True, timeout=10, check=False
+            [str(RANKER), "-k", str(k), *self._flags, query], capture_output=True, text=True, timeout=10, check=False
         )
         return [line.split("\t")[1] for line in result.stdout.splitlines() if line.count("\t") >= 2]
 
@@ -210,9 +213,9 @@ def render(results: dict[str, dict], k: int) -> str:
     return "\n".join(lines)
 
 
-def build_adapters(names: list[str]) -> list:
+def build_adapters(names: list[str], min_coverage: float = 0.0, min_terms: int = 1) -> list:
     paths = manifest_paths()
-    available = {"rank": lambda: RankAdapter(), "random": lambda: RandomAdapter(paths), "fixed": lambda: FixedAdapter(paths)}
+    available = {"rank": lambda: RankAdapter(min_coverage, min_terms), "random": lambda: RandomAdapter(paths), "fixed": lambda: FixedAdapter(paths)}
     unknown = [n for n in names if n not in available]
     if unknown:
         raise SystemExit(f"método desconhecido: {unknown}; opções: {sorted(available)}")
@@ -225,6 +228,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--split", choices=["dev", "test", "all"], default="dev")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--draws", type=int, default=200, help="sorteios por query para métodos aleatórios")
+    parser.add_argument("--min-coverage", type=float, default=0.0, help="limiar de silêncio do rank (campo coverage)")
+    parser.add_argument("--min-terms", type=int, default=1, help="mínimo de termos úteis na query do rank")
     parser.add_argument("--no-save", action="store_true")
     args = parser.parse_args(argv)
 
@@ -232,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
     if not queries:
         raise SystemExit("nenhuma query ativa neste split")
     results: dict[str, dict] = {}
-    for adapter in build_adapters(args.methods.split(",")):
+    for adapter in build_adapters(args.methods.split(","), args.min_coverage, args.min_terms):
         started = time.perf_counter()
         results[adapter.name] = evaluate(adapter, queries, args.k, args.draws)
         results[adapter.name]["summary"]["seconds"] = round(time.perf_counter() - started, 2)

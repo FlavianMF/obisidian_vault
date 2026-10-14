@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vault_rank.sh [-k N] [-m MIN] <query...>      (sem argumentos, lê a query do stdin)
+# vault_rank.sh [-k N] [-m MIN] [-c COV] [-t TERMS] <query...>      (sem argumentos, lê a query do stdin)
 #
 # Ranqueador único do second brain (RFC-001 §4.2): o L1, o note_candidates.sh e o
 # adaptador `rank` do run_eval.py chamam este script, para o golden set medir o código
@@ -19,16 +19,22 @@
 
 k=5
 min=0
-while getopts "k:m:" opt; do
+cov=0
+terms_min=1
+while getopts "k:m:c:t:" opt; do
   case "$opt" in
     k) k="$OPTARG" ;;
     m) min="$OPTARG" ;;
+    c) cov="$OPTARG" ;;
+    t) terms_min="$OPTARG" ;;
     *) exit 0 ;;
   esac
 done
 shift $((OPTIND - 1))
 [[ "$k" =~ ^[0-9]+$ ]] || k=5
 [[ "$min" =~ ^[0-9]+([.][0-9]+)?$ ]] || min=0
+[[ "$cov" =~ ^[0-9]+([.][0-9]+)?$ ]] || cov=0
+[[ "$terms_min" =~ ^[0-9]+$ ]] || terms_min=1
 
 if [ "$#" -gt 0 ]; then
   query="$*"
@@ -46,7 +52,7 @@ shopt -s nullglob
 files=("$manifest_dir"/*.md)
 [ "${#files[@]}" -gt 0 ] || exit 0
 
-export VR_QUERY="$query" VR_MIN="$min"
+export VR_QUERY="$query" VR_MIN="$min" VR_COV="$cov" VR_TERMS="$terms_min"
 
 awk -F'|' '
   function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
@@ -67,7 +73,7 @@ awk -F'|' '
       t = raw[i]
       if (length(t) >= 4 && !(t in stop) && !(t in seen)) { seen[t] = 1; terms[++nt] = t }
     }
-    if (nt == 0) { skip = 1; exit }
+    if (nt == 0 || nt < ENVIRON["VR_TERMS"] + 0) { skip = 1; exit }
     nrows = 0
   }
   /^\| / {
@@ -76,6 +82,7 @@ awk -F'|' '
     nrows++
     row_path[nrows] = path
     row_title[nrows] = trim($3)
+    row_conf[nrows] = trim($7)
     ft[nrows] = fold(trim($3)); fg[nrows] = fold(trim($4)); fp[nrows] = fold(path)
     fs[nrows] = (NF >= 10) ? fold(trim($9)) : ""
     for (j = 1; j <= nt; j++) {
@@ -86,14 +93,18 @@ awk -F'|' '
   END {
     if (skip || nrows == 0) exit
     min = ENVIRON["VR_MIN"] + 0
+    mincov = ENVIRON["VR_COV"] + 0
+    total = 0
+    for (j = 1; j <= nt; j++) total += log((nrows + 1) / (df[terms[j]] + 0.5))
     for (r = 1; r <= nrows; r++) {
-      score = 0
+      score = 0; hit = 0
       for (j = 1; j <= nt; j++) {
         t = terms[j]
         w = index(ft[r], t) ? 3 : index(fg[r], t) ? 2 : (index(fp[r], t) || index(fs[r], t)) ? 1 : 0
-        if (w) score += w * log((nrows + 1) / (df[t] + 0.5))
+        if (w) { idf = log((nrows + 1) / (df[t] + 0.5)); score += w * idf; hit += idf }
       }
-      if (score > min) printf "%.3f\t%s\t%s\n", score, row_path[r], row_title[r]
+      coverage = total > 0 ? hit / total : 0
+      if (score > min && coverage >= mincov) printf "%.3f\t%s\t%s\t%.3f\t%s\n", score, row_path[r], row_title[r], coverage, row_conf[r]
     }
   }
 ' "${files[@]}" 2>/dev/null \
