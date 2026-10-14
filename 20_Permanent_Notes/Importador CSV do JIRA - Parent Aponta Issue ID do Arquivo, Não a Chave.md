@@ -5,7 +5,7 @@ tags: [jira, csv, import, epic, initiative, hierarchy, atlassian]
 created: 2026-10-05
 provenance: residencia_cariri_projects
 seen_in: [residencia_cariri_projects]
-verified: 2026-10-05 via documentação Atlassian (support.atlassian.com, developer.atlassian.com); ainda não reproduzido numa importação real
+verified: 2026-10-05 via documentação Atlassian; 2026-10-14 reproduzido numa importação real (importador do projeto sem Issue ID)
 confidence: medium
 ---
 
@@ -18,7 +18,20 @@ natural preencher `Parent` com a chave do pai (`PROJ-12`). Isso não funciona pa
 criados no **mesmo** arquivo, porque as chaves ainda não existem. Também não dá para
 prever a chave: Initiatives e Épicos consomem números antes das Stories.
 
-## Como funciona
+## Dois importadores, comportamentos diferentes
+
+Verificado em 2026-10-14 numa importação real: o importador CSV **do projeto**
+(Import work items, sem admin) **não tem** o campo `Issue ID` / `Work item ID` no
+mapeamento. Sem ele, toda Story com `Parent = 1` falha no Validate com
+`Issue '…' doesn't have a valid Parent selection`. Só o importador **de sistema**
+(engrenagem → System → External system import), que exige admin, tem esse campo.
+
+Saída sem admin: importar em **duas etapas**. Primeiro um CSV só com os Épicos (num projeto
+vazio, o k-ésimo vira `PROJ-k`); depois um CSV com as Stories e `Parent` = chave real
+(`PROJ-1`). O gerador aceita a chave real como argumento, para o caso de o projeto já ter
+itens.
+
+## Como funciona (importador de sistema)
 
 - A coluna **`Issue ID`** recebe um número arbitrário, sequencial **dentro do CSV**.
   **`Parent`** recebe esse número. Mapeie as duas colunas no assistente.
