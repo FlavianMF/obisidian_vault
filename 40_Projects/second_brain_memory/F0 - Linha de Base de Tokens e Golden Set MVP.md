@@ -201,6 +201,38 @@ dados reais do log, depois bônus de frase/bigrama no ranqueador, depois a decis
 ranqueador faz o hook calar sob carga em vez de atrasar o prompt. **Privacidade:** o log de sombra guarda os primeiros 300
 caracteres de cada prompt em `~/.local/state/second-brain/shadow.jsonl` (arquivo 0600, diretório 0700, nada sai da máquina).
 
+## Atualização 2026-10-14: validação independente da F1b e F2
+
+**Validação.** Um revisor independente (somente leitura) rodou os testes e tentou quebrar o hook. Não quebrou: JSON
+inválido, `jq` ausente, injeção por prompt (`$(...)`, crase, bytes inválidos), `session_id` com `../`, 40 hooks
+concorrentes e estado ilegível terminam sempre em saída vazia e `exit 0`, com log íntegro e permissões 0600/0700.
+Achados corrigidos (com teste de regressão cada):
+
+| Achado | Correção |
+|---|---|
+| Timeout do ranqueador (0,3 s) estourava sob carga e o log gravava `candidates: []`, indistinguível de "sem match" | Teto de 0,6 s e campo `timeout: true` no log |
+| Prompt de 5 MB deixava o hook em 1,9 s | Leitura de entrada limitada a 256 KB e só os 2.000 primeiros caracteres vão ao ranqueador |
+| Só título e resumo eram escapados no manifest; `\|` em path ou tags deslocava as colunas | Todas as colunas passam por `escape_cell` (hoje 0 linhas com número de colunas errado) |
+| Título só com espaços deslocava campos; títulos vinham com aspas literais (gastam token) | Título sem aspas externas e, se vazio, o nome do arquivo |
+| `cwd` ausente com prompt vazio virava `session_id` como prompt | Sentinela no `jq` |
+| `shadow.jsonl` sem rotação | Acima de 5 MB mantém só as 2.000 últimas linhas |
+
+Limitação conhecida, sem correção: o `sed` do L0 que grava o `.seen` é guloso; um path com ` — ` no nome ficaria truncado.
+Nenhum path do vault atual tem isso.
+
+**F2 entregue.** `note_candidates.sh "<título>" "<tags>"` lista até 3 notas que já cobrem o assunto (mesmo ranqueador,
+cobertura ≥ 0,25) e grava cada chamada em `note_candidates.jsonl`. O `vault_sync.py` agora impõe a regra em código:
+(1) `flock` em `.git/second-brain-sync.lock`, esperando até 120 s; (2) nota **nova** com cobertura ≥ 0,5 contra uma
+existente é recusada, a menos que venha `--new-because "<uma linha>"`; (3) nota nova de agente
+(`provenance` diferente de `manual`) precisa de `confidence: low`; (4) cada execução grava uma linha em `sync.jsonl`
+(`created`, `updated`, `new_because`, `outcome`). `SKILL.md` e `Frontmatter-Schema.md` foram alinhados. 12 testes
+novos usam vault git real e remoto bare temporários.
+
+**Calibração do 0,5** (nada validado): das 170 notas permanentes, 53 (31%) têm outra nota com cobertura ≥ 0,5 usando
+título e tags como query, e 42 com ≥ 0,6. Isso mede vizinhança temática, não duplicata, então o bloqueio pode incomodar
+mais que o necessário; o custo é uma linha `--new-because`. O critério de saída da F2 ("nenhuma criação com candidato
+ignorado") passa a ser verificável em `sync.jsonl` e `note_candidates.jsonl`, mas só terá número depois de uso real.
+
 ## Próximos passos
 
 1. **Você**: validar ou reescrever as 30 queries (principalmente as 21 `paraphrase`), e aprovar ou ajustar
