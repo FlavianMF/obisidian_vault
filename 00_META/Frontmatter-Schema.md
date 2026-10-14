@@ -24,7 +24,7 @@ este schema, atualize os dois scripts junto.
 | `provenance` | recomendado | `manual` para notas escritas à mão; nome do projeto de origem para notas destiladas por agente; `unknown` quando a origem não é recuperável (nem pelo `git log`, nem por `project:`) |
 | `project` | opcional | texto livre, já usado ad hoc em notas de projeto |
 | `verified` | opcional | `AAAA-MM-DD via <como foi checado>` (ex.: `2026-09-11 via git log`). **Recomendado em toda nota que afirma estado de um sistema** — versão, status de proposta, contagem, "já implementado"/"pendente". Torna a idade da afirmação visível em vez de invisível; sem ele, a obsolescência só aparece quando alguém se queima. Ver [[Documentação Desatualizada é Bug, Não Dívida]] |
-| `confidence` | opcional | `low` (visto uma vez, não reproduzido), `medium` (reproduzido ou documentado upstream), `high` (confirmado em 2+ projetos ou por teste) |
+| `confidence` | opcional | `low` (visto uma vez, não reproduzido; **toda nota nova escrita por agente nasce `low`**, o `vault_sync.py` recusa o contrário), `medium` (reproduzido ou documentado upstream), `high` (confirmado em 2+ projetos ou por teste) |
 | `seen_in` | opcional | lista de projetos que confirmaram a nota, ex.: `[capella_mcp, orbita-platform]`. Confirmar nota existente = acrescentar aqui, não criar nota duplicada |
 | `scope` | opcional | `global` (padrão) ou `project`. Nota `project` não é candidata a promoção |
 

@@ -111,14 +111,19 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
 
 ### 2b — Ao final da SESSÃO: sincronizar com o vault
 
-1. Se você aprendeu um padrão, decisão ou armadilha generalizável, **primeiro** `grep`
-   nos manifests pelo assunto. Duas saídas:
-   - **Já existe nota que diz isso** e este projeto a confirmou: acrescente o projeto em
-     `seen_in` e renove `verified` nela — sem nota nova. Se o projeto contradiz a
-     nota, corrija a nota (passo 2).
-   - **Não existe**: redija uma nota (tipicamente em `20_Permanent_Notes/`) com o
-     frontmatter padrão (ver abaixo), `provenance: <este-projeto>`,
-     `seen_in: [<este-projeto>]`, `verified: <hoje> via <como>` e `confidence`.
+1. Se você aprendeu um padrão, decisão ou armadilha generalizável, **primeiro** rode
+   `~/.claude/skills/second-brain-sync/scripts/note_candidates.sh "<título provisório>" "<tag1, tag2>"`
+   (até 3 linhas `path`, `título`, cobertura, `confidence`; vazio = nada parecido). Duas saídas:
+   - **Há candidato que diz isso** e este projeto o confirmou: acrescente o projeto em
+     `seen_in`, uma entrada datada e renove `verified` nela — sem nota nova. Se o projeto
+     contradiz a nota, corrija a nota (passo 2).
+   - **Não há**: redija uma nota (tipicamente em `20_Permanent_Notes/`) com o frontmatter
+     padrão (ver abaixo), `provenance: <este-projeto>`, `seen_in: [<este-projeto>]`,
+     `verified: <hoje> via <como>` e **`confidence: low`** — nota nova de agente sempre nasce
+     `low`; sobe para `medium`/`high` por evidência (2+ projetos em `seen_in`, ou teste),
+     nunca por declaração. O `vault_sync.py` recusa nota nova sem `confidence: low` e recusa
+     nota nova parecida com uma existente, a menos que você passe `--new-because "<uma linha
+     dizendo por que não é atualização>"`.
 2. **Propague a invalidação também aqui**: `grep` nos manifests
    (`00_META/manifests/by_type/*.md`) pelos termos que você tocou e corrija as notas do
    vault que a mudança tornou falsas — o passo é simétrico ao 2a, não só aditivo.
@@ -128,7 +133,8 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
      --vault-path ~/obsidian_vault \
      --note "20_Permanent_Notes/<Your Note>.md" \
      --project-name <this-project-name> \
-     --message "<concise commit message>"
+     --message "<concise commit message>" \
+     [--new-because "<por que não é atualização de nota existente>"]
    ```
    Isso faz `pull --ff-only`, regenera manifests, stageia só as notas passadas + os
    manifests que mudaram, commita e dá push no `master` do vault. Recusa rodar se o
@@ -246,7 +252,7 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 | `provenance` | recommended | `manual` for hand-authored notes; originating project name for agent-distilled notes; `unknown` when the origin can't be recovered |
 | `project` | optional | freeform, already used ad hoc |
 | `verified` | optional | `YYYY-MM-DD via <how>`; the date prefix feeds `--stale-report` |
-| `confidence` | optional | `low` (seen once, not reproduced), `medium` (reproduced or documented upstream), `high` (confirmed in 2+ projects or by a test) |
+| `confidence` | optional | `low` (seen once, not reproduced; **every new agent-written note starts here**), `medium` (reproduced or documented upstream), `high` (confirmed in 2+ projects or by a test) |
 | `seen_in` | optional | list of projects that confirmed the note, e.g. `[capella_mcp, orbita-platform]` |
 | `scope` | optional | `global` (default) or `project` — `project` notes stay out of promotion |
 
