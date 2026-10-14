@@ -47,4 +47,5 @@
 | 40_Projects/opencode/14_autenticacao.md | Autenticação de providers | opencode, auth, credentials | 2026-09-08 | projetos_ita |  |  |
 | 40_Projects/opencode/15_implicacoes_harness.md | Implicações de design para um harness próprio | opencode, harness, architecture, design-synthesis | 2026-09-08 | projetos_ita |  |  |
 | 40_Projects/opencode/16_fontes.md | Fontes | opencode, sources, references | 2026-09-08 | projetos_ita |  |  |
+| 40_Projects/second_brain_memory/F0 - Linha de Base de Tokens e Golden Set MVP.md | F0 — Linha de Base de Tokens e Golden Set MVP (resultados) | rfc, agentic-ai, second-brain, tokens, baseline, golden-set, evaluation, claude-code | 2026-10-14 | obsidian_vault | low |  |
 | 40_Projects/second_brain_memory/RFC-001 - Memória de Agentes sobre o Second Brain com Orçamento de Tokens.md | RFC-001 — Memória de Agentes sobre o Second Brain com Orçamento de Tokens | rfc, agentic-ai, second-brain, memory, rag, tokens, claude-code, design | 2026-10-14 | obsidian_vault | low |  |

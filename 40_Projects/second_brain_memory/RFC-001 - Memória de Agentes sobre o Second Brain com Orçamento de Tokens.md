@@ -20,6 +20,7 @@ scope: project
 **Objetivo nº1 (decisão do usuário):** maximizar trabalho útil por token. Memória só vale se custar menos tokens do que o esquecimento custa em retrabalho.
 
 **Restrições fechadas:**
+
 - Harness: Claude Code na v1. Interface em arquivos e CLI, sem API de plugin, para Codex e OpenCode entrarem depois sem retrabalho.
 - Local-first: nada do vault sai da máquina para indexar. Sem API externa de embeddings.
 - Leitura **e** escrita: o agente consulta o vault e destila de volta.
@@ -32,19 +33,19 @@ scope: project
 
 Resumo da pesquisa de 2026-10-14 (fontes abertas pelo agente de pesquisa; várias de 2026 foram lidas só pelo abstract, ver §11). Números de tokens deste vault são **estimativas** (bytes ÷ 3,5) até a F0a medir.
 
-| # | Achado | Fonte | Consequência |
-|---|---|---|---|
-| E1 | Ferramentas simples de arquivo bateram memória em grafo no LoCoMo (74,0% contra 68,5%), com ressalva de que o agente foi guiado e o benchmark é contestado | Letta, *Benchmarking AI Agent Memory* | Grep sobre manifests é ponto de partida legítimo |
-| E2 | BM25 é baseline robusto; denso puro muitas vezes fica atrás | BEIR (arXiv 2104.08663) | Híbrido/embeddings precisam provar ganho |
-| E3 | Abaixo de ~200 mil tokens, a Anthropic sugere pular RAG e usar o prompt com cache. O corpus de notas permanentes daqui tem ~498 KB (≈140 mil tokens, estimativa): cabe, mas encheria a janela | Anthropic, *Contextual Retrieval*; medição local | Não despejar o corpus; recuperar sob demanda |
-| E4 | A precisão cai com contexto longo e com distratores | *Lost in the Middle* (2307.03172); Chroma, *Context Rot* | Injetar pouco e relevante vale mais que injetar muito |
-| E5 | Cache de prefixo: leitura custa 0,05–0,1× e qualquer byte alterado antes do breakpoint invalida o resto. Cache reduz custo, não ocupa menos janela | Docs de prompt caching da Anthropic | Prefixo estável; conteúdo variável no fim; sem timestamps |
-| E6 | Multiagente gasta ~15× os tokens de um chat e rende pouco em código; subagentes devem devolver referências, não dumps | Anthropic, sistema multiagente de pesquisa; Cognition; MAST (2503.13657) | Padrão é um agente; subagente só para varredura |
-| E7 | Adicionar tudo à memória piora; erros guardados se propagam | Xiong et al. (2505.16067) | Portão na escrita |
-| E8 | Reescrever notas por inteiro apaga detalhe; atualização incremental evita | ACE (2510.04618) | Atualizar nota existente por anexo datado |
-| E9 | Filtro no momento da escrita não basta contra corrupção composta; proveniência ao longo do ciclo de vida é a defesa | MemPoison (2607.14651), PoisonedRAG, MINJA | Proveniência e confiança visíveis na recuperação |
-| E10 | Chaves de busca ricas por documento melhoram o retrieval | LongMemEval (2410.10813); Contextual Retrieval | Enriquecer o manifest |
-| E11 | Sem estudo que cubra um vault pessoal de ~300 notas de dev; a extrapolação é nossa | Lacuna declarada | Decidir com golden set próprio, não com opinião |
+| #   | Achado                                                                                                                                                                                        | Fonte                                                                    | Consequência                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------- |
+| E1  | Ferramentas simples de arquivo bateram memória em grafo no LoCoMo (74,0% contra 68,5%), com ressalva de que o agente foi guiado e o benchmark é contestado                                    | Letta, _Benchmarking AI Agent Memory_                                    | Grep sobre manifests é ponto de partida legítimo          |
+| E2  | BM25 é baseline robusto; denso puro muitas vezes fica atrás                                                                                                                                   | BEIR (arXiv 2104.08663)                                                  | Híbrido/embeddings precisam provar ganho                  |
+| E3  | Abaixo de ~200 mil tokens, a Anthropic sugere pular RAG e usar o prompt com cache. O corpus de notas permanentes daqui tem ~498 KB (≈140 mil tokens, estimativa): cabe, mas encheria a janela | Anthropic, _Contextual Retrieval_; medição local                         | Não despejar o corpus; recuperar sob demanda              |
+| E4  | A precisão cai com contexto longo e com distratores                                                                                                                                           | _Lost in the Middle_ (2307.03172); Chroma, _Context Rot_                 | Injetar pouco e relevante vale mais que injetar muito     |
+| E5  | Cache de prefixo: leitura custa 0,05–0,1× e qualquer byte alterado antes do breakpoint invalida o resto. Cache reduz custo, não ocupa menos janela                                            | Docs de prompt caching da Anthropic                                      | Prefixo estável; conteúdo variável no fim; sem timestamps |
+| E6  | Multiagente gasta ~15× os tokens de um chat e rende pouco em código; subagentes devem devolver referências, não dumps                                                                         | Anthropic, sistema multiagente de pesquisa; Cognition; MAST (2503.13657) | Padrão é um agente; subagente só para varredura           |
+| E7  | Adicionar tudo à memória piora; erros guardados se propagam                                                                                                                                   | Xiong et al. (2505.16067)                                                | Portão na escrita                                         |
+| E8  | Reescrever notas por inteiro apaga detalhe; atualização incremental evita                                                                                                                     | ACE (2510.04618)                                                         | Atualizar nota existente por anexo datado                 |
+| E9  | Filtro no momento da escrita não basta contra corrupção composta; proveniência ao longo do ciclo de vida é a defesa                                                                           | MemPoison (2607.14651), PoisonedRAG, MINJA                               | Proveniência e confiança visíveis na recuperação          |
+| E10 | Chaves de busca ricas por documento melhoram o retrieval                                                                                                                                      | LongMemEval (2410.10813); Contextual Retrieval                           | Enriquecer o manifest                                     |
+| E11 | Sem estudo que cubra um vault pessoal de ~300 notas de dev; a extrapolação é nossa                                                                                                            | Lacuna declarada                                                         | Decidir com golden set próprio, não com opinião           |
 
 Medições locais que ancoram o desenho: `00_META/manifests/by_type/pattern.md` tem 20,5 KB (≈5,9 mil tokens, estimativa), todos os manifests somam ≈54 KB (≈15 mil tokens) e `00_META/Agent-Instruction.md` tem 6,4 KB (≈1,8 mil tokens). Ler manifest inteiro é caro; **grep neles é barato**, e é a regra atual do `second-brain-sync`.
 
@@ -63,11 +64,11 @@ Medições locais que ancoram o desenho: `00_META/manifests/by_type/pattern.md` 
 
 Três camadas de leitura, com orçamento por camada. Alvos são **iniciais**, a calibrar com a linha de base da Fase 0.
 
-| Camada | Quando | O que entra no contexto | Orçamento (alvo inicial) |
-|---|---|---|---|
-| L0 | `SessionStart` | Até 5 linhas por nome do repo (já existe: `session_hint.sh`) | ≤ 5 linhas |
-| L1 | `UserPromptSubmit` | Até 3 linhas `título — path (tipo, confiança)` por prompt, só acima do limiar, sem repetir nota da sessão | ≤ 3 linhas (≈ 90 tokens por estimativa); teto duro de tokens e de latência (≈ 300 ms) a calibrar na F1b |
-| L2 | Sob demanda do agente | Leitura das notas escolhidas + hop de 1 `[[wikilink]]` (já previsto no `second-brain-sync`) | Decisão do agente; regra: abrir ≤ 3 notas antes de agir |
+| Camada | Quando                | O que entra no contexto                                                                                   | Orçamento (alvo inicial)                                                                                |
+| ------ | --------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| L0     | `SessionStart`        | Até 5 linhas por nome do repo (já existe: `session_hint.sh`)                                              | ≤ 5 linhas                                                                                              |
+| L1     | `UserPromptSubmit`    | Até 3 linhas `título — path (tipo, confiança)` por prompt, só acima do limiar, sem repetir nota da sessão | ≤ 3 linhas (≈ 90 tokens por estimativa); teto duro de tokens e de latência (≈ 300 ms) a calibrar na F1b |
+| L2     | Sob demanda do agente | Leitura das notas escolhidas + hop de 1 `[[wikilink]]` (já previsto no `second-brain-sync`)               | Decisão do agente; regra: abrir ≤ 3 notas antes de agir                                                 |
 
 L1 é a lacuna real: hoje a recuperação é por repo, não por tarefa.
 
@@ -101,6 +102,7 @@ Irmão do `second-brain-session-start.sh` (mesma família de hooks do vault). Os
 ### 4.3 Cache e estabilidade do prefixo
 
 O que controlamos, dado que o Claude Code monta o system prompt:
+
 - `CLAUDE.md`, `AGENTS.md` e regras: texto estável, sem datas nem contadores, para não invalidar o prefixo (E5).
 - Saída de hook entra nas mensagens (depois do prefixo): manter formato fixo e ordenação determinística (pontuação, depois path) para o mesmo prompt render o mesmo bloco.
 - Evitar mudar ferramentas/MCP no meio da sessão (invalida cache). Ligar/desligar plugin só entre sessões; `/reload-plugins` recarrega skills/agentes sem invalidar, mas MCP do plugin invalida.
@@ -117,11 +119,13 @@ Fluxo atual (mantido): `second-brain-sync` destila ao fim da tarefa e `vault_syn
 5. **Concorrência.** Duas sessões escrevendo no mesmo índice perdem dado ([[Sessões Paralelas Perdem Escrita no Índice Compartilhado]]); `vault_sync.py` aborta com árvore suja, mas não há trava entre sessões. Mitigação: `flock` no `vault_sync.py` (cobre commit/push e regeneração de manifest) e escrita atômica do manifest (§4.1). **Não cobre** duas sessões editando a mesma nota antes do sync; risco aceito, o `--ff-only` acusa a divergência.
 6. **Promoção** para `Agent-Instruction.md` continua manual e proposta ao usuário.
 
-Sem *staging* separado na v1 (D6). Reabrir se o golden set mostrar queda de precisão atribuível a notas de agente.
+Sem _staging_ separado na v1 (D6). Reabrir se o golden set mostrar queda de precisão atribuível a notas de agente.
 
 ## 6. Economia de tokens com vários agentes (trilha B)
 
 > **Trilha independente da memória.** Não depende do L1 nem do manifest e tem métrica própria (M1). Se esta RFC crescer, esta seção e as etapas F0b/F3 viram a RFC-002 sem perda. Mantida aqui porque o objetivo nº1 é o mesmo.
+>
+> **Já existe decisão no vault:** [[ECC - Adotar Ideias, Não o Runtime]] (2026-09-30) manda `ecc@ecc` desligado no escopo de usuário e ligado por projeto com `make ecc-on DIR=…`. O estado atual (`true`, `~/.claude/settings.json:159`) é **desvio** dela. A F0b passa a ser *restaurar* a decisão; a F3 *estende* o `make` existente com `status` e a linha do `SessionStart`, em vez de criar comando novo. Detalhes em [[F0 - Linha de Base de Tokens e Golden Set MVP]].
 
 Custo fixo medido hoje: plugin `ecc@ecc` ligado globalmente = ~47,5 mil tokens por sessão (saída de `claude plugin details ecc@ecc`, reproduzível); `~/.claude/rules/ecc-common` ≈ 4,4 mil (estimativa) em todo projeto; o conjunto de regras globais ≈ 6 mil (estimativa) e é **herdado por todo subagente**. Logo, cada subagente paga um piso fixo antes de trabalhar. Todos esses valores são reconferidos na F0a.
 
@@ -137,32 +141,32 @@ Custo fixo medido hoje: plugin `ecc@ecc` ligado globalmente = ~47,5 mil tokens p
 
 Tabela de decisões da RFC. `Recomendada` = proposta minha, ainda sem aceite; `Fechada` = decidida pelo usuário na conversa de 2026-10-14.
 
-| # | Tema | Decisão | Estado |
-|---|---|---|---|
-| D1 | Objetivo nº1 | Minimizar tokens por tarefa resolvida | Fechada |
-| D2 | Harness da v1 | Claude Code | Fechada |
-| D3 | Direção | Leitura e escrita | Fechada |
-| D4 | Contrato do manifest | `summary` extraído do corpo por script, só no manifest; nota nunca é reescrita pelo gerador | Recomendada |
-| D5 | Recuperação por prompt | Hook `UserPromptSubmit` com grep/awk, modo sombra antes de ativo, dedupe por sessão, teto de 3 linhas | Recomendada |
-| D6 | Staging de escrita | Sem staging na v1; portão "atualizar antes de criar" + `confidence: low` + git como rollback | Recomendada |
-| D7 | Embeddings/híbrido | Fora da v1; entram só pelo gate da §8 | Recomendada |
-| D8 | `PreCompact` | Fora da v1: a compactação nativa já preserva o resumo, e gravar estado transitório no vault arrisca poluí-lo | Recomendada |
-| D9 | ECC | Desligado por padrão; liga/desliga por projeto; `ecc-common` removido | Recomendada (aplicar exige confirmação) |
-| D10 | Memória do ECC | `unified-memory` e `continuous-learning-v2` não são adotados: exigem runtime ausente ou `pre:observe` desligado e criariam segunda fonte da verdade | Recomendada |
-| D11 | Fonte da verdade | Vault, única | Recomendada |
-| D12 | Subagentes | Padrão inline; teto de 3; retorno por ponteiro | Recomendada |
+| #   | Tema                   | Decisão                                                                                                                     | Estado  |
+| --- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------- |
+| D1  | Objetivo nº1           | Minimizar tokens por tarefa resolvida                                                                                       | Fechada |
+| D2  | Harness da v1          | Claude Code                                                                                                                 | Fechada |
+| D3  | Direção                | Leitura e escrita                                                                                                           | Fechada |
+| D4  | Contrato do manifest   | `summary` extraído do corpo por script, só no manifest; nota nunca é reescrita pelo gerador                                 | Fechada |
+| D5  | Recuperação por prompt | Hook `UserPromptSubmit` com grep/awk, modo sombra antes de ativo, dedupe por sessão, teto de 3 linhas                       | Fechada |
+| D6  | Staging de escrita     | Sem staging na v1; portão "atualizar antes de criar" + `confidence: low` + git como rollback                                | Fechada |
+| D7  | Embeddings/híbrido     | Fora da v1; entram só pelo gate da §8                                                                                       | Fechada |
+| D8  | `PreCompact`           | Fora da v1: a compactação nativa já preserva o resumo, e gravar estado transitório no vault arrisca poluí-lo                | Fechada |
+| D9  | ECC                    | Desligado por padrão; liga/desliga por projeto; `ecc-common` removido                                                       | Fechada |
+| D10 | Memória do ECC         | Utilizar o `unified-memory` e `continuous-learning-v2` como base para ser aplicado no vault, integrar o ecc ao second brain | Fechada |
+| D11 | Fonte da verdade       | Vault, única                                                                                                                | Fechada |
+| D12 | Subagentes             | Padrão inline; teto de 3; retorno por ponteiro                                                                              | Fechada |
 
 ## 8. Métricas e gates
 
 Linha de base obrigatória **antes** de mudar qualquer coisa (F0a): `/context` em sessão limpa (só o usuário consegue rodar), tamanho do catálogo de skills/agentes, e `usage` por mensagem nos transcripts em `~/.claude/projects/*` (campo a confirmar).
 
-| Métrica | Como mede | Uso |
-|---|---|---|
-| M1 tokens fixos de entrada por sessão | `/context` antes/depois da F0b e da F3 (trilha B) | Corte do ECC e das regras |
-| M2 tokens e latência do L1 por prompt | log do hook | Respeitar teto e orçamento de latência |
-| M3 recall@5, MRR, **tokens por acerto** | `run_eval.py` sobre o golden set, chamando o `vault_rank.sh` de produção | Gate de recuperação |
-| M4 tokens por tarefa | `usage` dos transcripts. Protocolo (a fechar na F0a): ~5 tarefas reais repetíveis, rodadas com o L1 em `shadow` (controle) e `active`, mesma formulação de prompt | Prova do objetivo nº1 |
-| M5 taxa de uso do injetado | nota injetada e depois lida pelo agente (via `transcript_path`) | Mede desperdício do L1 |
+| Métrica                                 | Como mede                                                                                                                                                         | Uso                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| M1 tokens fixos de entrada por sessão   | `/context` antes/depois da F0b e da F3 (trilha B)                                                                                                                 | Corte do ECC e das regras              |
+| M2 tokens e latência do L1 por prompt   | log do hook                                                                                                                                                       | Respeitar teto e orçamento de latência |
+| M3 recall@5, MRR, **tokens por acerto** | `run_eval.py` sobre o golden set, chamando o `vault_rank.sh` de produção                                                                                          | Gate de recuperação                    |
+| M4 tokens por tarefa                    | `usage` dos transcripts. Protocolo (a fechar na F0a): ~5 tarefas reais repetíveis, rodadas com o L1 em `shadow` (controle) e `active`, mesma formulação de prompt | Prova do objetivo nº1                  |
+| M5 taxa de uso do injetado              | nota injetada e depois lida pelo agente (via `transcript_path`)                                                                                                   | Mede desperdício do L1                 |
 
 **Pisos numéricos** (recall@5 e M5 mínimos para ativar o L1) são **fixados por escrito na saída da F0c**, a partir do M3 do grep atual, antes de qualquer execução do L1. Sem piso escrito, a F1c não começa.
 
@@ -174,32 +178,32 @@ Linha de base obrigatória **antes** de mudar qualquer coisa (F0a): `/context` e
 
 Cada etapa é um PR/commit pequeno e reversível. Ver [[Plano de Fase em Etapas Mescláveis]].
 
-| Etapa | Entrega | Critério de saída |
-|---|---|---|
-| F0a | Linha de base M1/M4 (relatório curto); fechar protocolo do M4 e o campo de `usage` | Números registrados |
-| F0b (trilha B) | Passo ECC: plugin `false` no escopo user, remover link `ecc-common` (**confirmar antes**) | M1 medido antes/depois |
-| F0c | Golden set MVP: `00_META/eval/golden.jsonl` (30 queries) + `run_eval.py` com adaptador `grep` e baseline degenerado, usando o `vault_rank.sh` | M3 do grep atual medido **e pisos da §8 escritos** |
-| F1a | Manifest enriquecido (`summary` na última coluna, escape, escrita atômica) + testes do gerador | Manifest válido; `session_hint.sh` inalterado em saída |
-| F1b | `vault_rank.sh` + `prompt_hint.sh` em modo sombra + log + testes dos scripts | M2 (tokens e latência) e M5 coletados em sessões reais; ≥ 60 pares |
-| F1c | Decidir `summary` (mantém ou reverte) e ativar L1 se passar o gate | Gate da §8, com pisos já escritos |
-| F2 | `note_candidates.sh` + `confidence: low` no `SKILL.md`/schema + `flock` no sync | Nenhuma criação de nota com candidato ignorado no log do `note_candidates` |
-| F3 (trilha B) | Comando `ecc` (ligar, desligar, status), linha de estado, contrato de delegação no `AGENTS.md`, resolver conflitos de regras | M1 estável; agente sabe o estado do ECC |
-| F4 (condicional) | `fts5`; só depois `embed`/`hybrid` | Gate da §8 |
+| Etapa            | Entrega                                                                                                                                       | Critério de saída                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| F0a              | Linha de base M1/M4 (relatório curto); fechar protocolo do M4 e o campo de `usage`                                                            | Números registrados                                                        |
+| F0b (trilha B)   | Passo ECC: plugin `false` no escopo user, remover link `ecc-common` (**confirmar antes**)                                                     | M1 medido antes/depois                                                     |
+| F0c              | Golden set MVP: `00_META/eval/golden.jsonl` (30 queries) + `run_eval.py` com adaptador `grep` e baseline degenerado, usando o `vault_rank.sh` | M3 do grep atual medido **e pisos da §8 escritos**                         |
+| F1a              | Manifest enriquecido (`summary` na última coluna, escape, escrita atômica) + testes do gerador                                                | Manifest válido; `session_hint.sh` inalterado em saída                     |
+| F1b              | `vault_rank.sh` + `prompt_hint.sh` em modo sombra + log + testes dos scripts                                                                  | M2 (tokens e latência) e M5 coletados em sessões reais; ≥ 60 pares         |
+| F1c              | Decidir `summary` (mantém ou reverte) e ativar L1 se passar o gate                                                                            | Gate da §8, com pisos já escritos                                          |
+| F2               | `note_candidates.sh` + `confidence: low` no `SKILL.md`/schema + `flock` no sync                                                               | Nenhuma criação de nota com candidato ignorado no log do `note_candidates` |
+| F3 (trilha B)    | Comando `ecc` (ligar, desligar, status), linha de estado, contrato de delegação no `AGENTS.md`, resolver conflitos de regras                  | M1 estável; agente sabe o estado do ECC                                    |
+| F4 (condicional) | `fts5`; só depois `embed`/`hybrid`                                                                                                            | Gate da §8                                                                 |
 
 ## 10. Riscos
 
-| Risco | Impacto | Mitigação |
-|---|---|---|
-| L1 injeta nota irrelevante e piora a resposta | Mais tokens e mais distração | Silêncio por padrão, limiar, dedupe, modo sombra e gate M5 (§4.2, §8) |
-| Memória de agente erra e o erro se propaga | Decisões ruins | `confidence: low`, proveniência visível, atualização por anexo, rollback git (§5) |
-| Nota maliciosa ou colada de fonte externa vira "instrução" | Injeção de prompt via memória | Cabeçalho "dado, não instrução" e regra global de tratar conteúdo buscado como não confiável (§4.2) |
-| `summary` derivado é ruim para notas sem parágrafo de abertura | Recall baixo | Medir no golden set; melhorar a extração, sem LLM na v1 (§4.1) |
-| Hook lê manifest pela metade durante a regeneração | Injeção vazia ou errada | Escrita atômica do manifest (§4.1) |
-| Prompt com barras invertidas ou acentos quebra o `awk` | Hook falha ou não casa PT | `ENVIRON` e normalização de acentos (§4.2) |
-| Duas sessões escrevem ao mesmo tempo | Perda de dado | `flock` no sync (§5) |
-| Ligar/desligar ECC no meio da sessão invalida cache | Custo de uma requisição sem cache | Só entre sessões; documentar (§4.3) |
-| Linha de base ausente | Não dá para provar ganho | F0 é pré-requisito de F1 |
-| Golden set pequeno (30) distingue só diferenças grandes | Decisão errada com falsa confiança | Reportar intervalo; crescer para 60–100 (nota do golden set) |
+| Risco                                                          | Impacto                            | Mitigação                                                                                           |
+| -------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| L1 injeta nota irrelevante e piora a resposta                  | Mais tokens e mais distração       | Silêncio por padrão, limiar, dedupe, modo sombra e gate M5 (§4.2, §8)                               |
+| Memória de agente erra e o erro se propaga                     | Decisões ruins                     | `confidence: low`, proveniência visível, atualização por anexo, rollback git (§5)                   |
+| Nota maliciosa ou colada de fonte externa vira "instrução"     | Injeção de prompt via memória      | Cabeçalho "dado, não instrução" e regra global de tratar conteúdo buscado como não confiável (§4.2) |
+| `summary` derivado é ruim para notas sem parágrafo de abertura | Recall baixo                       | Medir no golden set; melhorar a extração, sem LLM na v1 (§4.1)                                      |
+| Hook lê manifest pela metade durante a regeneração             | Injeção vazia ou errada            | Escrita atômica do manifest (§4.1)                                                                  |
+| Prompt com barras invertidas ou acentos quebra o `awk`         | Hook falha ou não casa PT          | `ENVIRON` e normalização de acentos (§4.2)                                                          |
+| Duas sessões escrevem ao mesmo tempo                           | Perda de dado                      | `flock` no sync (§5)                                                                                |
+| Ligar/desligar ECC no meio da sessão invalida cache            | Custo de uma requisição sem cache  | Só entre sessões; documentar (§4.3)                                                                 |
+| Linha de base ausente                                          | Não dá para provar ganho           | F0 é pré-requisito de F1                                                                            |
+| Golden set pequeno (30) distingue só diferenças grandes        | Decisão errada com falsa confiança | Reportar intervalo; crescer para 60–100 (nota do golden set)                                        |
 
 ## 11. Lacunas conhecidas
 
@@ -212,18 +216,18 @@ Cada etapa é um PR/commit pequeno e reversível. Ver [[Plano de Fase em Etapas 
 
 ## 12. Referências
 
-- Letta, *Benchmarking AI Agent Memory* — https://www.letta.com/blog/benchmarking-ai-agent-memory
-- Thakur et al., BEIR — https://arxiv.org/abs/2104.08663
-- Anthropic, *Introducing Contextual Retrieval* — https://www.anthropic.com/news/contextual-retrieval
-- Anthropic, *Effective context engineering for AI agents* — https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
-- Anthropic, *How we built our multi-agent research system* — https://www.anthropic.com/engineering/multi-agent-research-system
-- Anthropic, documentação de prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
-- Liu et al., *Lost in the Middle* — https://arxiv.org/abs/2307.03172
-- Hong, Troynikov, Huber, *Context Rot* (Chroma) — https://www.trychroma.com/research/context-rot
-- Cemri et al., MAST — https://arxiv.org/abs/2503.13657
-- Xiong et al., *How Memory Management Impacts LLM Agents* — https://arxiv.org/abs/2505.16067
-- Zhang et al., ACE — https://arxiv.org/abs/2510.04618
-- Wu et al., LongMemEval — https://arxiv.org/abs/2410.10813
-- MemPoison — https://arxiv.org/abs/2607.14651 · PoisonedRAG — https://arxiv.org/abs/2402.07867 · MINJA — https://arxiv.org/abs/2503.03704
-- Documentação do Claude Code: `plugins/cli-reference`, `plugins/install`, `costs`, `prompt-caching` — https://code.claude.com/docs/en/
+- Letta, _Benchmarking AI Agent Memory_ — <https://www.letta.com/blog/benchmarking-ai-agent-memory>
+- Thakur et al., BEIR — <https://arxiv.org/abs/2104.08663>
+- Anthropic, _Introducing Contextual Retrieval_ — <https://www.anthropic.com/news/contextual-retrieval>
+- Anthropic, _Effective context engineering for AI agents_ — <https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents>
+- Anthropic, _How we built our multi-agent research system_ — <https://www.anthropic.com/engineering/multi-agent-research-system>
+- Anthropic, documentação de prompt caching — <https://platform.claude.com/docs/en/build-with-claude/prompt-caching>
+- Liu et al., _Lost in the Middle_ — <https://arxiv.org/abs/2307.03172>
+- Hong, Troynikov, Huber, _Context Rot_ (Chroma) — <https://www.trychroma.com/research/context-rot>
+- Cemri et al., MAST — <https://arxiv.org/abs/2503.13657>
+- Xiong et al., _How Memory Management Impacts LLM Agents_ — <https://arxiv.org/abs/2505.16067>
+- Zhang et al., ACE — <https://arxiv.org/abs/2510.04618>
+- Wu et al., LongMemEval — <https://arxiv.org/abs/2410.10813>
+- MemPoison — <https://arxiv.org/abs/2607.14651> · PoisonedRAG — <https://arxiv.org/abs/2402.07867> · MINJA — <https://arxiv.org/abs/2503.03704>
+- Documentação do Claude Code: `plugins/cli-reference`, `plugins/install`, `costs`, `prompt-caching` — <https://code.claude.com/docs/en/>
 - Notas do vault: [[Golden Set para Avaliar Retrieval de Memória do Agente]], [[Skill Monolítica Gasta o Contexto Antes de a Tarefa Começar]], [[Documentação Desatualizada é Bug, Não Dívida]], [[00_META/Agent-Instruction]], [[00_META/Frontmatter-Schema]]
