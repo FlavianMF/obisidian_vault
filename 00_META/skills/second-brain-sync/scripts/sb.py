@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """sb: single entry point of the second-brain runtime (RFC-001; Estudo S5, step I1).
 
-I1 skeleton. Read-only subcommands over the scripts that already exist; no behavior changes.
+Subcommands over the scripts that already exist. status, doctor and search only read; `sync` is the
+single writer and delegates every guard to vault_sync.py.
 
   sb status                 vault, notes by type, git state, hook switches, last sync
   sb doctor [--json]        unresolved wikilinks, duplicate titles, frontmatter, secrets, stale notes
   sb search [-k N] <query>  the L1 ranker (vault_rank.sh), same TSV output
+  sb sync --note ... --project-name P --message M [--verdict V] [--reason R]
+                            vault_sync.py with the vault path preset; the guards live there
 
 Short-lived process, no daemon, stdlib only. `doctor` exits 1 when it finds an error-level issue.
 """
@@ -269,6 +272,15 @@ def run_search(vault: Path, query: str, k: int) -> int:
 
 # ---------------------------------------------------------------- cli
 
+def run_sync(rest: list[str]) -> int:
+    """`sb sync ...` is vault_sync.py with --vault-path preset; every guard stays in vault_sync.py."""
+    import vault_sync
+
+    vault = Path(os.environ.get("SECOND_BRAIN_VAULT") or gm.DEFAULT_VAULT_ROOT)
+    sys.argv = ["sb sync", "--vault-path", str(vault), *rest]  # a later --vault-path in `rest` wins
+    return vault_sync.main()
+
+
 def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--vault-path", type=Path, default=Path(os.environ.get("SECOND_BRAIN_VAULT") or gm.DEFAULT_VAULT_ROOT))
@@ -283,10 +295,14 @@ def build_parser() -> argparse.ArgumentParser:
     search = sub.add_parser("search", parents=[common], help="L1 ranker over the manifests")
     search.add_argument("-k", type=int, default=5)
     search.add_argument("query", nargs="+")
+    sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "sync":
+        return run_sync(argv[1:])
     args = build_parser().parse_args(argv)
     vault = args.vault_path.resolve()
     state_dir = Path(os.environ.get("SECOND_BRAIN_STATE_DIR") or Path.home() / ".local/state/second-brain")

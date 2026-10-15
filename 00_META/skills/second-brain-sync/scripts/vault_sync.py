@@ -21,6 +21,10 @@ Guardrails live here in code, not in prose the agent has to remember:
     to medium needs a changed `verified:` line, to high needs 2+ projects in `seen_in`
     or a changed `verified:` that cites a test.
   - Two NEW notes in the same call are also compared with each other.
+  - Every call carries a verdict, logged in sync.jsonl: `save` / `improve-then-save` (it creates a
+    note), `absorb` (it updates existing notes), `drop` (nothing is written; `--reason` is logged).
+    A declared verdict that contradicts the git facts is refused; an omitted one is inferred.
+  - A NEW trap or pattern note must have an "O que NÃO funcionou" section (updates are exempt).
   - "New" means absent from HEAD (not `git status` says untracked), so `git add` or a local
     commit before the sync does not switch the checks off.
   - Derived manifest files never count as unrelated dirty files; a failed commit or push
@@ -47,6 +51,7 @@ import fcntl
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 import time
@@ -56,6 +61,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate_manifests  # noqa: E402
 from lib import frontmatter  # noqa: E402
+
+VERDICTS = ("save", "improve-then-save", "absorb", "drop")
+SECTION_TYPES = {"trap", "pattern"}
+NEGATIVE_SECTION = re.compile(r"(?im)^#{2,6}\s+.*(?:n[ãa]o funcionou|did(?: not|n't) work)")
 
 MANIFEST_DIR_NAME = "00_META/manifests"
 LOCK_NAME = "second-brain-sync.lock"
@@ -296,8 +305,46 @@ def is_manifest(path: str) -> bool:
     return path.startswith(MANIFEST_DIR_NAME + "/")
 
 
+def check_verdict(args: argparse.Namespace, event: dict) -> str | None:
+    """Record the verdict and refuse one that contradicts what this call does (the git facts decide)."""
+    created, updated = event["created"], event["updated"]
+    if args.verdict is None:
+        inferred = "save" if created else "absorb" if updated else None
+        if inferred:
+            event.update(verdict=inferred, verdict_source="inferred")
+        return None
+    event.update(verdict=args.verdict, verdict_source="declared")
+    if args.verdict in ("save", "improve-then-save") and not created:
+        return f"verdict '{args.verdict}' needs a new note, but this call creates none (use 'absorb' to update an existing note)"
+    if args.verdict == "absorb" and created:
+        return "verdict 'absorb' means updating existing notes, but this call creates: " + ", ".join(created)
+    return None
+
+
+def check_negative_section(vault_root: Path, note: str) -> str | None:
+    """A new trap or pattern note must say what did NOT work (Estudo S3, step I2)."""
+    data, _, body = frontmatter.read_note(vault_root / note)
+    if data.get("type") in SECTION_TYPES and not NEGATIVE_SECTION.search(body):
+        return (
+            f"new {data['type']} note {note} has no 'O que NÃO funcionou' section. Add a heading with that name and "
+            "say what was tried and failed, or that nothing failed and how you know."
+        )
+    return None
+
+
 def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
     event: dict = {"project": args.project_name, "created": [], "updated": [], "outcome": "error"}
+
+    if args.verdict == "drop":
+        if args.note:
+            event["outcome"] = "refused-verdict"
+            return fail("verdict 'drop' writes nothing; remove --note"), event
+        if not args.reason:
+            event["outcome"] = "refused-verdict"
+            return fail("verdict 'drop' needs --reason (one line: why this was not worth saving)"), event
+        event.update(outcome="dropped", verdict="drop", verdict_source="declared", reason=args.reason[:300])
+        print("dropped: recorded in the sync log, nothing written")
+        return 0, event
 
     status = run_git(vault_root, ["status", "--porcelain", "--untracked-files=all", "-z"])
     entries = porcelain_entries(status.stdout)
@@ -320,11 +367,19 @@ def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
     event["updated"] = sorted(n for n in args.note if n in changed and n not in event["created"])
     if args.new_because:
         event["new_because"] = args.new_because
+    problem = check_verdict(args, event)
+    if problem:
+        event["outcome"] = "refused-verdict"
+        return fail(problem), event
     for note in event["created"]:
         problem = check_new_note(vault_root, note, args.new_because)
         if problem:
             event["outcome"], message = problem
             return fail(message), event
+        problem = check_negative_section(vault_root, note)
+        if problem:
+            event["outcome"] = "refused-section"
+            return fail(problem), event
 
     if len(event["created"]) > 1 and not args.new_because:
         problem = sibling_duplicates(vault_root, event["created"])
@@ -380,6 +435,12 @@ def main() -> int:
         "--new-because", default=None,
         help="One line: why a new note that resembles an existing one is not an update of it.",
     )
+    parser.add_argument(
+        "--verdict", choices=VERDICTS, default=None,
+        help="save / improve-then-save (this call creates a note), absorb (it updates existing notes), "
+             "drop (nothing is written, --reason is logged). Checked against git; inferred when omitted.",
+    )
+    parser.add_argument("--reason", default=None, help="Required with --verdict drop: why this was not worth saving.")
     args = parser.parse_args()
 
     vault_root = args.vault_path.resolve()

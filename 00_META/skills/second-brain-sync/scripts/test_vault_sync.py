@@ -16,6 +16,7 @@ SCRIPTS = Path(__file__).resolve().parent
 SYNC = SCRIPTS / "vault_sync.py"
 CANDIDATES = SCRIPTS / "note_candidates.sh"
 GEN = SCRIPTS / "generate_manifests.py"
+SB = SCRIPTS / "sb.py"
 
 NOTE = """---
 title: {title}
@@ -28,6 +29,10 @@ provenance: {provenance}
 # {title}
 
 Corpo da nota sobre {title}.
+
+## O que NÃO funcionou
+
+Nada falhou neste teste.
 """
 
 
@@ -70,12 +75,16 @@ class VaultFixture(unittest.TestCase):
         (self.vault / rel).write_text(make_note(title, **kwargs), encoding="utf-8")
         return rel
 
-    def sync(self, *notes, new_because=None, extra_env=None):
+    def sync(self, *notes, new_because=None, extra_env=None, verdict=None, reason=None):
         cmd = ["python3", str(SYNC), "--vault-path", str(self.vault), "--project-name", "projeto_x", "--message", "docs: t"]
         for note in notes:
             cmd += ["--note", note]
         if new_because:
             cmd += ["--new-because", new_because]
+        if verdict:
+            cmd += ["--verdict", verdict]
+        if reason:
+            cmd += ["--reason", reason]
         return subprocess.run(cmd, capture_output=True, text=True, env={**self.env, **(extra_env or {})}, check=False)
 
     def log(self, name):
@@ -362,6 +371,103 @@ class PromotionAndSiblingTest(VaultFixture):
         a = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
         b = self.write("Receita de Pão de Queijo Mineiro", tags="culinaria, receita")
         self.assertEqual(self.sync(a, b).returncode, 0)
+
+
+class VerdictAndNegativeSectionTest(VaultFixture):
+    def new_note(self, title="Calibração de Câmera Estéreo", type_="pattern", section=True):
+        rel = f"20_Permanent_Notes/{title}.md"
+        text = make_note(title, tags="visao, opencv").replace("type: pattern", f"type: {type_}")
+        if not section:
+            text = text.split("## O que NÃO funcionou")[0]
+        (self.vault / rel).write_text(text, encoding="utf-8")
+        return rel
+
+    def touch_existing(self):
+        rel = "20_Permanent_Notes/Importar Issues no Jira por REST.md"
+        path = self.vault / rel
+        path.write_text(path.read_text(encoding="utf-8") + "\nMais uma observação.\n", encoding="utf-8")
+        return rel
+
+    def last(self):
+        return self.log("sync.jsonl")[-1]
+
+    def test_verdict_is_inferred_and_logged_when_omitted(self):
+        self.assertEqual(self.sync(self.new_note()).returncode, 0)
+        self.assertEqual((self.last()["verdict"], self.last()["verdict_source"]), ("save", "inferred"))
+        self.assertEqual(self.sync(self.touch_existing()).returncode, 0)
+        self.assertEqual((self.last()["verdict"], self.last()["verdict_source"]), ("absorb", "inferred"))
+
+    def test_declared_verdicts_that_match_the_git_facts_are_logged(self):
+        self.assertEqual(self.sync(self.new_note(), verdict="improve-then-save").returncode, 0)
+        self.assertEqual((self.last()["verdict"], self.last()["verdict_source"]), ("improve-then-save", "declared"))
+        self.assertEqual(self.sync(self.touch_existing(), verdict="absorb").returncode, 0)
+        self.assertEqual(self.last()["verdict"], "absorb")
+
+    def test_save_without_a_new_note_is_refused(self):
+        done = self.sync(self.touch_existing(), verdict="save")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("needs a new note", done.stderr)
+        self.assertEqual(self.last()["outcome"], "refused-verdict")
+
+    def test_absorb_that_creates_a_note_is_refused(self):
+        done = self.sync(self.new_note(), verdict="absorb")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("updating existing notes", done.stderr)
+        self.assertEqual(self.last()["outcome"], "refused-verdict")
+
+    def test_drop_writes_nothing_and_records_the_reason(self):
+        head = subprocess.run(["git", "-C", str(self.vault), "rev-parse", "HEAD"], capture_output=True, text=True).stdout
+        done = self.sync(verdict="drop", reason="já coberto pela nota de Jira")
+        self.assertEqual(done.returncode, 0)
+        self.assertEqual((self.last()["outcome"], self.last()["verdict"]), ("dropped", "drop"))
+        self.assertEqual(self.last()["reason"], "já coberto pela nota de Jira")
+        self.assertEqual(
+            subprocess.run(["git", "-C", str(self.vault), "rev-parse", "HEAD"], capture_output=True, text=True).stdout, head
+        )
+
+    def test_drop_needs_a_reason_and_refuses_notes(self):
+        self.assertEqual(self.sync(verdict="drop").returncode, 1)
+        self.assertEqual(self.sync(self.new_note(), verdict="drop", reason="x").returncode, 1)
+        self.assertEqual(self.last()["outcome"], "refused-verdict")
+
+    def test_drop_ignores_a_dirty_vault(self):
+        self.new_note()
+        self.assertEqual(self.sync(verdict="drop", reason="rascunho descartado").returncode, 0)
+
+    def test_new_pattern_or_trap_without_the_section_is_refused(self):
+        for type_ in ("pattern", "trap"):
+            with self.subTest(type_):
+                done = self.sync(self.new_note(title=f"Nota {type_} sem seção", type_=type_, section=False))
+                self.assertEqual(done.returncode, 1)
+                self.assertIn("O que NÃO funcionou", done.stderr)
+                self.assertEqual(self.last()["outcome"], "refused-section")
+                (self.vault / f"20_Permanent_Notes/Nota {type_} sem seção.md").unlink()
+
+    def test_sb_sync_forwards_to_vault_sync_with_the_vault_preset(self):
+        rel = self.new_note()
+        env = {**self.env, "SECOND_BRAIN_VAULT": str(self.vault)}
+        done = subprocess.run(
+            ["python3", str(SB), "sync", "--note", rel, "--project-name", "projeto_x", "--message", "docs: via sb",
+             "--verdict", "save"],
+            capture_output=True, text=True, env=env, check=False,
+        )
+        self.assertEqual((done.returncode, done.stdout.startswith("synced: ")), (0, True))
+        self.assertEqual((self.last()["outcome"], self.last()["verdict"]), ("synced", "save"))
+        refused = subprocess.run(
+            ["python3", str(SB), "sync", "--project-name", "projeto_x", "--message", "m", "--verdict", "drop"],
+            capture_output=True, text=True, env=env, check=False,
+        )
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("--reason", refused.stderr)
+
+    def test_other_types_and_updates_do_not_need_the_section(self):
+        self.assertEqual(self.sync(self.new_note(type_="concept", section=False)).returncode, 0)
+        existing = self.vault / "20_Permanent_Notes/Importar Issues no Jira por REST.md"
+        existing.write_text(existing.read_text(encoding="utf-8").split("## O que NÃO funcionou")[0], encoding="utf-8")
+        git(self.vault, "add", "-A")
+        git(self.vault, "commit", "-q", "-m", "note without the section")
+        git(self.vault, "push", "-q", "origin", "master")
+        self.assertEqual(self.sync(self.touch_existing()).returncode, 0)
 
 
 if __name__ == "__main__":

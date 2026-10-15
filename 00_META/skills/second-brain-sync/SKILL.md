@@ -132,16 +132,22 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
      rode de novo com os mesmos argumentos; o `vault_sync.py` desfaz o stage e reenvia o que
      ficou local. Duas sessões com nota pendente se recusam ("unrelated dirty files"):
      sincronize uma, depois escreva a outra.
+   **Veredito, declarado e checado pelo código:** `save` (nota nova), `improve-then-save` (nota
+   nova que você revisou depois de reler o acervo) ou `absorb` (atualiza nota existente). O
+   `vault_sync.py` recusa o veredito que contradiz o git e o grava em `sync.jsonl`. Se concluir que
+   não vale registrar, use `--verdict drop --reason "<por quê>"`: nada é escrito e a decisão fica
+   no log. **Nota nova `trap` ou `pattern` precisa da seção `## O que NÃO funcionou`** (o que foi
+   tentado e falhou, ou que nada falhou e como você sabe); atualização está isenta.
 2. **Propague a invalidação também aqui**: `grep` nos manifests
    (`00_META/manifests/by_type/*.md`) pelos termos que você tocou e corrija as notas do
    vault que a mudança tornou falsas — o passo é simétrico ao 2a, não só aditivo.
 3. Rode:
    ```
-   python3 ~/.claude/skills/second-brain-sync/scripts/vault_sync.py \
-     --vault-path ~/obsidian_vault \
+   python3 ~/.claude/skills/second-brain-sync/scripts/sb.py sync \
      --note "20_Permanent_Notes/<Your Note>.md" \
      --project-name <this-project-name> \
      --message "<concise commit message>" \
+     --verdict <save|improve-then-save|absorb> \
      [--new-because "<por que não é atualização de nota existente>"]
    ```
    Isso faz `pull --ff-only`, regenera manifests, stageia só as notas passadas + os
