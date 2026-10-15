@@ -1,11 +1,11 @@
-| Path | Title | Tags | Created | Provenance | Confidence | Seen in | Summary |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 90_Assets/Template_Nota-de-Etapa.md | Template_Nota-de-Etapa | template, documentation, definition-of-done, traceability | 2026-09-11 | orbita-platform |  |  | A etapa não está pronta enquanto esta nota não existe. Ver Nota de Conclusão de Etapa é Entregável, Não Relatório. |
-| 90_Assets/Template_PRD.md | Template_PRD | template, prd, requirements, scope | 2026-09-11 | orbita-platform |  |  | Esqueleto do PRD. Em projeto de nível 3 ele se divide em dois arquivos (escopo do sistema + especificação da release); em nível 2 vira um arquivo só; em nível… |
-| 90_Assets/Template_Plano-de-Fase.md | Template_Plano-de-Fase | template, project-planning, acceptance-criteria, worktree | 2026-09-11 | orbita-platform |  |  | Transforma RFCs aprovadas em ordem de execução. Ver Plano de Fase em Etapas Mescláveis. |
-| 90_Assets/Template_Playbook.md | Template_Playbook | template, documentation, traps, agentic-ai | 2026-09-11 | orbita-platform |  |  | Nasce vazio, na primeira etapa, e cresce sempre. Existe em todos os níveis, inclusive no nível 1. Ver Playbook de Projeto - Erros Já Cometidos Como Artefato. |
-| 90_Assets/Template_Project_Prompt.md | 🧠 PROMPT: Instruções para o Agente de Desenvolvimento | template, agentic-ai, governance, project-bootstrap | 2026-05-21 | manual |  |  | Este arquivo é o seu contexto mestre para este projeto (docs/PROMPT.md). Leia-o integralmente antes de iniciar qualquer tarefa. |
-| 90_Assets/Template_Prompt-de-Sessao.md | Template_Prompt-de-Sessao | template, agentic-ai, onboarding, governance, session-prompt | 2026-09-11 | orbita-platform |  |  | Bloco que recarrega a governança inteira do projeto em qualquer sessão nova — agente ou humano. Fica no topo do índice, não num arquivo separado que ninguém… |
-| 90_Assets/Template_RFC-000-Visao-de-Fase.md | Template_RFC-000-Visao-de-Fase | template, rfc, product-decisions, risk | 2026-09-11 | orbita-platform |  |  | Só em projeto de nível 3. É o contrato da fase: registra as decisões de produto numeradas e mapeia as RFCs que as detalham. Ver RFC de Produto - Anatomia e… |
-| 90_Assets/Template_RFC.md | Template_RFC | template, rfc, adr, architecture-decision | 2026-09-11 | orbita-platform |  |  | Uma decisão técnica por documento. Numeração de três dígitos, sequencial e imutável. Ver RFC de Produto - Anatomia e Ciclo de Status. |
-| 90_Assets/Utilities/Cheat Sheet - SE Life Cycle.md | 🗺️ Cheat Sheet: Ciclo de Vida SE Completo |  | 2026-05-21 | manual |  |  | Resumo visual das fases NASA/INCOSE para consulta rápida durante estudos. |
+| Path | Title | Tags | Created | Provenance | Confidence | Seen in |
+| --- | --- | --- | --- | --- | --- | --- |
+| 90_Assets/Template_Nota-de-Etapa.md | Template_Nota-de-Etapa | template, documentation, definition-of-done, traceability | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Template_PRD.md | Template_PRD | template, prd, requirements, scope | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Template_Plano-de-Fase.md | Template_Plano-de-Fase | template, project-planning, acceptance-criteria, worktree | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Template_Playbook.md | Template_Playbook | template, documentation, traps, agentic-ai | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Template_Project_Prompt.md | 🧠 PROMPT: Instruções para o Agente de Desenvolvimento | template, agentic-ai, governance, project-bootstrap | 2026-05-21 | manual |  |  |
+| 90_Assets/Template_Prompt-de-Sessao.md | Template_Prompt-de-Sessao | template, agentic-ai, onboarding, governance, session-prompt | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Template_RFC-000-Visao-de-Fase.md | Template_RFC-000-Visao-de-Fase | template, rfc, product-decisions, risk | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Template_RFC.md | Template_RFC | template, rfc, adr, architecture-decision | 2026-09-11 | orbita-platform |  |  |
+| 90_Assets/Utilities/Cheat Sheet - SE Life Cycle.md | 🗺️ Cheat Sheet: Ciclo de Vida SE Completo |  | 2026-05-21 | manual |  |  |

@@ -5,6 +5,8 @@ tags: [ollama, llm, context-window, openai-compatible, num_ctx]
 created: 2026-09-02
 provenance: capella_llm_window
 project: capella_llm_window
+seen_in: [capella_llm_window, ollama-8gb-configs]
+verified: 2026-10-15 via ollama-8gb-configs (Modelfile num_ctx vence OLLAMA_CONTEXT_LENGTH global)
 ---
 
 # Ollama Ignora Tamanho de Contexto Enviado por Request
