@@ -233,6 +233,25 @@ título e tags como query, e 42 com ≥ 0,6. Isso mede vizinhança temática, n�
 mais que o necessário; o custo é uma linha `--new-because`. O critério de saída da F2 ("nenhuma criação com candidato
 ignorado") passa a ser verificável em `sync.jsonl` e `note_candidates.jsonl`, mas só terá número depois de uso real.
 
+## Atualização 2026-10-15: validação das negativas, veredito dos pisos e F3
+
+**Aprovações do usuário.** As 12 negativas dev `q031`–`q042` foram validadas (`validated: true`, `source: llm-draft+user-approved`).
+O veredito sobre o gate do L1 foi aceito: o ranqueador lexical não cumpre os dois pisos ao mesmo tempo (success@5 ≥ 0,80
+e falso positivo ≤ 0,20), então o L1 permanece em sombra e a recalibração depende dos dados reais do `shadow.jsonl`.
+O piso do M5 continua a fixar antes de qualquer ativação.
+
+**Dotfiles.** O `master` recebeu a branch do hook em sombra por fast-forward (`b217340`, `bd3bdb3`). Nada foi enviado
+ao remoto: o `master` local está à frente de `origin/master`. As alterações pessoais do usuário em `settings.json` e
+`zsh/.zshrc` continuam sem commit.
+
+**F3 (trilha B).** `make ecc-status` já existia e passou a informar o estado efetivo (local, projeto ou usuário), com a
+opção `--short`. O hook de `SessionStart` imprime uma linha (`ECC desligado (usuário). Só o usuário muda ...`, cerca de
+20 tokens), mesmo quando o vault não tem dica para o projeto. O `AGENTS.md` ganhou o contrato: o agente só liga ou
+desliga o ECC se o usuário pedir, sugere ligar para revisão Go/Java/Kotlin, `orch-review` e `review-pr`, e não usa
+agentes `ecc:*` com o plugin desligado. Commit `cb6cfb1` na branch `feat/ecc-session-status` do dotfiles, sem push e sem
+merge. Ficou de fora desta etapa: resolver os conflitos entre `rules/common` e o `AGENTS.md`, que só importam nos
+projetos em que o ECC for ligado com rules completas (o `ecc-common` global já foi removido na F0b).
+
 ## Próximos passos
 
 1. **Você**: validar ou reescrever as 30 queries (principalmente as 21 `paraphrase`), e aprovar ou ajustar
