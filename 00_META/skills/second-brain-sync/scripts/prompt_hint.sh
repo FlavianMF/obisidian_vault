@@ -99,6 +99,15 @@ done
 
 if [[ "${#emitted[@]}" -gt 0 ]]; then
   printf '%s\n' "${emitted[@]}" >>"$seen_file" 2>/dev/null
+  # `.injected` = notas que de fato entraram no contexto (a linha de status conta este arquivo):
+  # só em modo active; em shadow nada foi mostrado ao modelo.
+  if [[ "$mode" == "active" ]]; then
+    injected_file="$state_dir/$session.injected"
+    for note in "${emitted[@]}"; do
+      grep -qxF -- "$note" "$injected_file" 2>/dev/null || printf '%s\n' "$note" >>"$injected_file" 2>/dev/null
+    done
+    chmod 600 "$injected_file" 2>/dev/null
+  fi
 fi
 
 # Shadow log: what the hook saw and what it would have injected (one jq call).
@@ -119,7 +128,7 @@ if [[ "$(stat -c %s "$log_file" 2>/dev/null || echo 0)" -gt "$max_bytes" ]]; the
   tail -n "$keep_lines" "$log_file" >"$log_file.tmp" 2>/dev/null && chmod 600 "$log_file.tmp" && mv "$log_file.tmp" "$log_file"
 fi
 
-find "$state_dir" -maxdepth 1 -name '*.seen' -mtime +"$SEEN_MAX_AGE_DAYS" -delete 2>/dev/null
+find "$state_dir" -maxdepth 1 \( -name '*.seen' -o -name '*.injected' -o -name '*.opened' \) -mtime +"$SEEN_MAX_AGE_DAYS" -delete 2>/dev/null
 
 if [[ "$mode" == "active" && "${#lines[@]}" -gt 0 ]]; then
   printf '%s\n' "$HEADER"

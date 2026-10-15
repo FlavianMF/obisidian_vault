@@ -114,6 +114,19 @@ class PromptHintTest(unittest.TestCase):
         self.assertIn("coverage", entry["candidates"][0])
         self.assertEqual(entry["emitted"][0], "20/a.md")
 
+    def injected(self, session="s1"):
+        path = self.state / f"{session}.injected"
+        return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+    def test_active_records_injected_notes_without_repeats_and_shadow_records_none(self):
+        self.run_hint()
+        self.run_hint(prompt="como importar issues no jira por rest e csv", session="s1")
+        self.assertEqual(self.injected().count("20/a.md"), 1)
+        self.assertEqual(oct((self.state / "s1.injected").stat().st_mode & 0o777), "0o600")
+        self.env["SECOND_BRAIN_PROMPT_HINT"] = "shadow"
+        self.run_hint(session="s2")
+        self.assertEqual(self.injected("s2"), [])
+
     def test_dedupe_does_not_repeat_notes_in_the_same_session(self):
         first = self.run_hint()
         second = self.run_hint()
