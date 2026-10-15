@@ -13,8 +13,8 @@ scope: project
 # PRD-002 — ECC automático para web e C e linha de status ECC/second brain
 
 > Rascunho de design produzido por um agente `ecc:architect` (somente leitura) a pedido do usuário em 2026-10-15 e
-> revisado pela sessão principal. Nada foi implementado. As decisões da seção 6 aguardam o usuário. Itens marcados
-> **NÃO VERIFICADO** não foram confirmados na documentação do Claude Code nem por teste. Contexto: trilha B da
+> revisado pela sessão principal. As decisões da seção 6 foram respondidas em 2026-10-15 (ver lá); o spike E0 foi
+> executado (seção 2). Itens marcados **NÃO VERIFICADO** não foram confirmados na documentação do Claude Code nem por teste. Contexto: trilha B da
 > [[RFC-001 - Memória de Agentes sobre o Second Brain com Orçamento de Tokens]] e a decisão
 > [[ECC - Adotar Ideias, Não o Runtime]].
 
@@ -58,11 +58,15 @@ ligar o ECC no escopo de usuário; usar `claude plugin enable`; linkar `rules/co
 forks de `jq`; não usa `session_id`. A presença de `session_id` no JSON só foi confirmada indiretamente (a statusline do
 próprio ECC lê esse campo), portanto é dado de terceiros.
 
-**Linha acima do indicador de modo.** Múltiplas linhas são prováveis (a statusline do ECC emite várias), mas a posição em
-relação ao indicador de modo é **NÃO VERIFICADO**. Teste de 5 minutos (E0): num diretório temporário, um
-`.claude/settings.local.json` com `statusLine` que imprime `LINHA1\nLINHA2`, alternar os modos com Shift+Tab e anotar a
-posição em terminal largo e com 60 colunas. Se o modo ficar acima da statusline, o plano B é pôr o segmento como prefixo da
-linha atual.
+**Linha acima do indicador de modo (E0, verificado em 2026-10-15, Claude Code 2.1.300, tmux de 100 e 60 colunas).** A
+statusline aceita várias linhas e é renderizada **abaixo da caixa de entrada e acima do indicador de modo**
+(`⏵⏵ auto mode on`, `⏸ manual mode on`, que fica sempre na última linha, junto de `← 3 agents`). Portanto a **última linha
+impressa pelo comando da statusline** é a que fica imediatamente acima do indicador de modo; o segmento ECC/SB deve ser a
+última linha, não a primeira. Alternar o modo com Shift+Tab não mexe nas linhas da statusline. A statusline só é reexecutada
+quando há evento de mensagem (digitar não basta). O comando recebe `COLUMNS` (60 num terminal de 60 colunas). O JSON de
+entrada tem as chaves `context_window, cost, cwd, effort, exceeds_200k_tokens, fast_mode, model, output_style,
+prompt_cache, prompt_id, rate_limits, scratchpad_dir, session_id, thinking, transcript_path, version, workspace`: há
+`session_id`, e **não há campo com o modo de permissão**.
 
 **Formato proposto:** `ECC ligado (local) · SB 3 notas` (≤ 40 colunas, sem cor se `NO_COLOR`). Estados: `ECC desligado`;
 `ECC ligado* reinicie` (disco mudou depois do início da sessão); `ECC ? (disco: ligado)` (sem snapshot); `SB 0 notas`;
@@ -73,8 +77,10 @@ do disco fica em cache e só é recalculado se algum dos três arquivos de setti
 O `session_id` é sanitizado como no SessionStart.
 
 **Estado efetivo da sessão.** Um hook novo `ecc-session-start.sh`, separado do second brain, grava `<sid>.ecc` (0600) com
-estado, escopo, packs e se o second brain estava ligado. A statusline compara o snapshot com o disco. **NÃO VERIFICADO** se
-`/reload-plugins` dispara SessionStart.
+estado, escopo, packs e se o second brain estava ligado. A statusline compara o snapshot com o disco. **Verificado no E0:**
+`/reload-plugins` **não** dispara SessionStart (o hook de teste rodou uma vez, na abertura, e não de novo após o reload, que
+informou "Reloaded: 8 plugins · 64 skills · 26 agents · 5 hooks"). Depois de um reload, a linha não terá snapshot novo; o
+texto de divergência deve dizer "reinicie ou /reload-plugins".
 
 **"Nota linkada"**: recomendada = **injetada no contexto** (L0 sempre; L1 só em `active`). Aberta pelo agente exigiria um hook
 PostToolUse por chamada (futuro opcional). Ranqueada não conta: o modelo não viu. Implementação: arquivo `<sid>.injected`
@@ -124,8 +130,9 @@ de abrir; (b) allowlist em arquivo de config; (c) SessionStart só sugere; (d) `
 - Idempotente: se a chave `ecc@ecc` já existe em `local` ou `projeto` (`true` ou `false`), não mexe em nada.
 - Opt-out: `.claude/ecc.off` bloqueia o `auto`; `make ecc-off` passa a criar o marcador e `make ecc-on` a removê-lo; o marcador
   entra em `info/exclude`.
-- Subpastas: o `auto` atua no `$PWD`. **NÃO VERIFICADO** se o Claude Code sobe até a raiz do git para achar
-  `.claude/settings.local.json` (teste da E0); se subir, usar `git rev-parse --show-toplevel`.
+- Subpastas: **verificado no E0** que uma sessão aberta em `proj/sub/deep` carregou o `.claude/settings.local.json` da raiz
+  do repositório git (`proj/`): o hook de SessionStart definido lá rodou. Logo o `auto` deve escrever na raiz do git
+  (`git rev-parse --show-toplevel`; sem git, no `$PWD`), e o detector deve olhar essa raiz.
 
 ### 3.4 Regra do `AGENTS.md`
 
@@ -149,13 +156,19 @@ submódulo (`git submodule add` local) e worktree.
 
 | Etapa | Conteúdo | Pronto quando | Rollback |
 |---|---|---|---|
-| E0 (spike) | Testes da statusline multilinha, de `.claude/` em subpasta e de `/reload-plugins` vs SessionStart | respostas registradas numa nota do vault | n/a |
+| E0 (spike) | **Feito em 2026-10-15** (seção 2 e 3.3): statusline multilinha acima do modo, `.claude/` da raiz do git vale em subpasta, `/reload-plugins` não dispara SessionStart | respostas registradas aqui | n/a |
 | E1 | `ecc-detect.sh`, `exclude_add` com `--git-common-dir`, `tests/ecc_detect_test.sh` | matriz passa, < 50 ms, lint ok | reverter (nada usa ainda) |
 | E2 | `--packs`, `auto`, `ecc.off`, `claude/ecc-auto.conf`, targets do Makefile, `tests/ecc_project_test.sh` | idempotência, chave `false` explícita vence, `off` não religa, settings symlinkado intacto, `git status` limpo em repo comum, submódulo e worktree | reverter |
 | E3 | wrapper no zsh, sugestão no SessionStart, `AGENTS.md`, `c.md` | `claude` num fixture web liga e imprime a linha; num `none` não faz nada | remover a função do zsh |
 | E4 | `ecc-session-start.sh` (snapshot), `.injected`, ajuste do L1 e da limpeza de 7 dias, registro do hook editando `settings.json` do repo (nunca pelo CLI) | JSON de SessionStart como fixture, shadow não grava `.injected`, 0600 | reverter os dois repos |
 | E5 | `statusline.sh` e `tests/statusline_test.sh` | M2 e M3 passam; `sid` malicioso (`../x`) tratado | reverter |
 | E6 | medir M1 em um projeto web, um C e um neutro; destilar no vault | números registrados | n/a |
+| E7 | Fluxo interativo de melhoria do pack de C (decisão 1): skill ou comando que, em um projeto C, lê o código e o `c.md`/`cmake.md`/`makefile.md`, propõe acréscimos e correções às regras e só grava o que o usuário aceitar item a item | escopo e formato a fechar com o usuário antes de começar | remover a skill |
+| E8 | Kind `node-backend` (decisão 3): detector e arquivo de regras próprio `claude/rules/node-backend.md`, no mesmo molde do `c.md` | `ecc-detect.sh` distingue backend de web; regras escritas e revisadas pelo usuário | reverter |
+
+**Já entregue (decisão 6):** o hook `second-brain-note-opened.sh` (dotfiles, commit `502a6b2`, branch
+`feat/sb-opened-notes-hook`) registra em `<sid>.opened` as notas do vault que o agente abre com `Read` (sem repetir, sem
+manifests, sem subagentes, 0600), com teste em `tests/`. A E5 só precisa exibir a contagem (`SB 3 · 1 aberta`).
 
 Agentes: `ecc:tdd-guide`, `ecc:code-reviewer` e revisor de shell só existem em sessão aberta num diretório com ECC ligado (o
 dotfiles é recusado); nas outras, usar `cavecrew-*` ou um subagente geral com o mesmo contrato. Teto de 3 agentes por
@@ -167,12 +180,15 @@ Ligar o ECC no escopo de usuário; usar `claude plugin enable` ou `install`; lin
 arquivo versionado de projeto; o agente rodar `ecc-on`, `ecc-off` ou `auto` por conta própria; ler segredos ou o transcript
 na statusline; instalar dependências novas (só bash, `jq` e `git`).
 
-## 6. Decisões em aberto para o usuário
+## 6. Decisões do usuário (2026-10-15)
 
-1. **C liga o ECC sem pack de rules?** Recomendação: sim; o `cpp` contradiz o `c.md`, e a conferência mostrou que os packs
-   `cpp`/`python`/`rust` já carregam globalmente. Reavaliar o custo após duas semanas.
-2. **Projeto misto C/C++:** recomendação `none` até decidir; alternativa é o pack `cpp` completo.
-3. **Backend Node sem front conta como web?** Recomendação: não.
-4. **Gatilho:** recomendação wrapper + config + sugestão (a+b+c); a alternativa conservadora é só (c).
-5. **Ordem das linhas na statusline:** ECC/SB primeiro se a E0 confirmar a posição; senão, prefixo na linha única.
-6. **Contar notas abertas além das injetadas:** recomendação: não agora.
+1. **C liga o ECC sem pack de rules: aprovado.** Acrescentar um **fluxo interativo para melhorar o pack de C** (E7).
+2. **Projeto misto C/C++: `none` até decidir: aprovado.**
+3. **Backend Node sem front: não conta como web.** O usuário quer um tratamento "semelhante ao de C, mas para Node focado em
+   backend": plugin ligado, sem pack de rules do ECC para web, e um arquivo de regras próprio (E8). Sub-decisão pendente: incluir
+   ou não o pack `typescript` do ECC (recomendação inicial: não, para ficar igual ao C).
+4. **Gatilho: o usuário não entendeu a pergunta;** ela foi reexplicada na conversa (a recomendação continua wrapper + config +
+   sugestão) e aguarda resposta.
+5. **Ordem das linhas: aprovado**, com a correção do E0: o segmento ECC/SB deve ser a **última** linha da statusline, porque é a
+   que fica acima do indicador de modo.
+6. **Contar notas abertas além das injetadas: sim, feito agora** (hook `second-brain-note-opened.sh`).
