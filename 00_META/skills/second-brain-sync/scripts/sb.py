@@ -7,6 +7,8 @@ single writer and delegates every guard to vault_sync.py.
   sb status                 vault, notes by type, git state, hook switches, last sync
   sb doctor [--json]        unresolved wikilinks, duplicate titles, frontmatter, secrets, stale notes
   sb search [-k N] <query>  the L1 ranker (vault_rank.sh), same TSV output
+  sb candidate add|list|prune
+                            queue of note candidates (local state, 30-day TTL); never writes the vault
   sb sync --note ... --project-name P --message M [--verdict V] [--reason R]
                             vault_sync.py with the vault path preset; the guards live there
 
@@ -27,6 +29,7 @@ from typing import NamedTuple
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import candidates  # noqa: E402
 import generate_manifests as gm  # noqa: E402
 from lib import frontmatter, secret_scan  # noqa: E402
 
@@ -272,6 +275,7 @@ def run_status(vault: Path, state_dir: Path, env) -> str:
         f"SECOND_BRAIN_PROMPT_HINT={env.get('SECOND_BRAIN_PROMPT_HINT', 'unset')} "
         f"kill-switch={'ON' if (state_dir / 'DISABLED').exists() else 'off'}",
         f"last sync: {last_sync(state_dir)}",
+        f"candidates: {candidates.summary_line(state_dir)}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -285,6 +289,47 @@ def run_search(vault: Path, query: str, k: int) -> int:
 
 
 # ---------------------------------------------------------------- cli
+
+def run_candidate(args, state_dir: Path) -> int:
+    if args.action == "add":
+        project = args.project or detect_project()
+        try:
+            cid, created = candidates.add(state_dir, kind=args.kind, title=args.title, summary=args.summary,
+                                          project=project, source=args.source)
+        except candidates.QueueError as err:
+            sys.stderr.write(f"sb candidate: {err}\n")
+            return 2
+        sys.stdout.write(f"{'queued' if created else 'already queued'}: {cid}\n")
+        return 0
+    if args.action == "list":
+        items, bad = candidates.load(state_dir)
+        pending = candidates.live(items)
+        if args.json:
+            json.dump([{**i._asdict(), "ts": i.ts.isoformat(), "days_left": i.days_left} for i in pending],
+                      sys.stdout, ensure_ascii=False, indent=2)
+            sys.stdout.write("\n")
+        else:
+            sys.stdout.write(candidates.format_list(pending, len(items) - len(pending), bad))
+        return 0
+    removed = candidates.prune(state_dir, apply=args.apply)
+    verb = "removed" if args.apply else "would remove (dry run, add --apply)"
+    for item in removed:
+        sys.stdout.write(f"{verb}: {item.id} {item.kind} {item.age_days}d {item.title}\n")
+    if not removed:
+        sys.stdout.write("nothing expired\n")
+    return 0
+
+
+def detect_project() -> str:
+    """Name of the git repo the agent is working in; the folder name outside a repo."""
+    try:
+        top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5)
+        if top.returncode == 0 and top.stdout.strip():
+            return Path(top.stdout.strip()).name
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return Path.cwd().name
+
 
 def run_sync(rest: list[str]) -> int:
     """`sb sync ...` is vault_sync.py with --vault-path preset; every guard stays in vault_sync.py."""
@@ -309,6 +354,18 @@ def build_parser() -> argparse.ArgumentParser:
     search = sub.add_parser("search", parents=[common], help="L1 ranker over the manifests")
     search.add_argument("-k", type=int, default=5)
     search.add_argument("query", nargs="+")
+    cand = sub.add_parser("candidate", parents=[common], help="queue of note candidates (30-day TTL)")
+    cand_sub = cand.add_subparsers(dest="action", required=True)
+    cand_add = cand_sub.add_parser("add", help="queue one candidate; the vault is not touched")
+    cand_add.add_argument("--kind", required=True, choices=candidates.KINDS)
+    cand_add.add_argument("--title", required=True, help=f"up to {candidates.MAX_TITLE} characters")
+    cand_add.add_argument("--summary", default="", help=f"up to {candidates.MAX_SUMMARY} characters, no secrets")
+    cand_add.add_argument("--project", default="", help="default: the git repo name")
+    cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc"))
+    cand_list = cand_sub.add_parser("list", help="pending candidates, oldest first")
+    cand_list.add_argument("--json", action="store_true")
+    cand_prune = cand_sub.add_parser("prune", help="drop candidates older than 30 days (dry run by default)")
+    cand_prune.add_argument("--apply", action="store_true")
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
 
@@ -323,6 +380,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "status":
         sys.stdout.write(run_status(vault, state_dir, os.environ))
         return 0
+    if args.command == "candidate":
+        return run_candidate(args, state_dir)
     if args.command == "search":
         return run_search(vault, " ".join(args.query), args.k)
     issues = run_doctor(vault, args.stale_days, args.today or dt.date.today())

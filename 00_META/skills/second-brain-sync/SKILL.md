@@ -280,6 +280,14 @@ frontmatter, secrets, stale notes; exits 1 on an error-level issue; add `--json`
 `search <query>` (the L1 ranker). Run `doctor` before a large sync. A line with `sb-allow-secret` is
 skipped by the secret scan, for a deliberate fake example.
 
+**`sb candidate` (queue of note candidates).** When you are corrected or find a reusable trap or
+pattern mid-task, run `sb.py candidate add --kind trap|pattern|decision|concept --title "..."
+--summary "..."` instead of writing the vault. The queue is local state
+(`~/.local/state/second-brain/queue.jsonl`, mode 0600), each line expires after 30 days, and the
+command refuses text that looks like a secret. `list` shows pending lines (the last 7 days are
+flagged) and `prune` removes expired ones (dry run unless `--apply`). Nothing in the queue reaches
+the vault until a person reviews it (`sb review`, a later step).
+
 ## Guardrails
 
 - Never `--force` push. Never rewrite vault history.
