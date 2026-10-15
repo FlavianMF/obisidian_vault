@@ -29,6 +29,8 @@ scope: project
 
 **Fora de escopo da v1:** embeddings/índice vetorial, `unified-memory` e `continuous-learning-v2` do ECC, grafo de conhecimento, hook `PreCompact`, suporte a Codex/OpenCode.
 
+> **Emenda (2026-10-15):** por decisão do usuário, o ECC roda com perfil completo e o **observer do `continuous-learning-v2` está ligado** (nos projetos em que o ECC está ligado), e o second brain terá runtime próprio em arquitetura híbrida, com adaptador opcional para o `unified-memory`. Portanto `continuous-learning-v2` deixa de estar fora de escopo como **fonte de captura**: seus instincts entram por uma fila de revisão e **nunca** escrevem direto no vault. O `unified-memory` fica como adaptador opcional. Ver [[Reavaliação - ECC com Perfil Completo e Observer Ligado]] e [[Estudo - Integrar o Second Brain à Memória do ECC]].
+
 ## 2. Evidência que sustenta o desenho
 
 Resumo da pesquisa de 2026-10-14 (fontes abertas pelo agente de pesquisa; várias de 2026 foram lidas só pelo abstract, ver §11). Números de tokens deste vault são **estimativas** (bytes ÷ 3,5) até a F0a medir.
@@ -152,7 +154,7 @@ Tabela de decisões da RFC. `Recomendada` = proposta minha, ainda sem aceite; `F
 | D7  | Embeddings/híbrido     | Fora da v1; entram só pelo gate da §8                                                                                       | Fechada |
 | D8  | `PreCompact`           | Fora da v1: a compactação nativa já preserva o resumo, e gravar estado transitório no vault arrisca poluí-lo                | Fechada |
 | D9  | ECC                    | Desligado por padrão; liga/desliga por projeto; `ecc-common` removido                                                       | Fechada |
-| D10 | Memória do ECC         | Utilizar o `unified-memory` e `continuous-learning-v2` como base para ser aplicado no vault, integrar o ecc ao second brain | Fechada |
+| D10 | Memória do ECC         | Utilizar o `unified-memory` e `continuous-learning-v2` como base para ser aplicado no vault, integrar o ecc ao second brain. Esclarecida em 2026-10-15: runtime próprio (`sb`) como fonte da verdade, instincts do CLv2 como fonte de captura via fila de revisão, `unified-memory` como adaptador opcional | Fechada |
 | D11 | Fonte da verdade       | Vault, única                                                                                                                | Fechada |
 | D12 | Subagentes             | Padrão inline; teto de 3; retorno por ponteiro                                                                              | Fechada |
 

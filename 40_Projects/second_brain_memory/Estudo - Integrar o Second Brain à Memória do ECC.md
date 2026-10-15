@@ -120,7 +120,7 @@ Legenda: **Adotar** (ideia quase como está), **Adaptar** (ideia sobre o vault, 
 | Envelope "HISTORICAL REFERENCE ONLY" | segurança | **Já temos** (variante) | O L1 usa o cabeçalho fixo "dado, não instrução". |
 | `/save-session`, `/resume-session`, `ck` (handoff) | continuidade | **Adiar** | A D8 baniu estado transitório no vault. A ideia útil é o campo **"o que NÃO funcionou"**: exigir esse trecho no corpo de notas `trap` e `pattern` destiladas, sem criar arquivo de handoff. |
 | `pre-compact` e `session-end` com resumo por LLM | continuidade | **Rejeitar** | Custo de modelo extra, gravação silenciosa a cada Stop, sem scrub de segredos encontrado, e já decidido na D8. |
-| Observer de tool calls (`observe.sh`, instincts) | captura | **Rejeitar** | Ratifica a decisão de 2026-09-30; está inativo no nosso perfil. |
+| Observer de tool calls (`observe.sh`, instincts) | captura | **Adotar como fonte de captura (decisão do usuário, 2026-10-15)** | O usuário ligou o perfil completo e o observer; a rejeição de 2026-09-30 foi revertida (ver [[Reavaliação - ECC com Perfil Completo e Observer Ligado]]). Os instincts **nunca** viram nota sozinhos: entram na fila de candidatos, recebem veredito na revisão e passam pelas guardas do `vault_sync.py`. |
 | Memory Vault: formato `ecc.memory.v1`, CLI `ecc memory` e MCP | armazenamento e interoperação | **Adaptar (decisão do usuário: híbrido)** | O vault continua sendo a fonte da verdade. Um **adaptador** exporta as notas como espelho somente-leitura em `ecc.memory.v1` (o ECC, quando ligado, as acha por `ecc memory search`) e importa o que o ECC grava (`trust: unreviewed`) para a **fila de candidatos**, nunca direto para o vault. Não depende de `ecc-universal` para funcionar; o CLI do ECC é só um cliente opcional. |
 | Busca semântica | recuperação | **Adiar** | Continua dependente do gate da §8 e dos dados do `shadow.jsonl`. |
 
@@ -173,7 +173,7 @@ fim da tarefa / sob demanda: `sb review`
 
 | Etapa | Conteúdo | Pronto quando | Risco |
 |---|---|---|---|
-| I0 (estudo) | Verificar o adaptador: ler o validador e o formato do Memory Vault, confirmar o diretório e o que exige o CLI; escrever amostras e validá-las num diretório de teste; emendar a nota de decisão de 2026-09-30, o §1 e a D10 do RFC | relatório com o esquema confirmado e decisão sobre depender ou não de `ecc-universal` | baixo (só leitura e fixtures) |
+| I0 (estudo) | Verificar o adaptador: ler o validador e o formato do Memory Vault, confirmar o diretório e o que exige o CLI; escrever amostras e validá-las num diretório de teste; **testar o redator de segredos do `observe.sh` com credenciais falsas e conferir as permissões dos arquivos do observer, num `CLV2_HOMUNCULUS_DIR` temporário; confirmar o nome e o efeito do limite de injeção de instincts (`ECC_MAX_INJECTED_INSTINCTS`)**; ler o formato dos instincts (`instincts/personal|pending`) para o importador. A emenda da nota de decisão de 2026-09-30, do §1 e da D10 do RFC já foi feita em 2026-10-15 | relatório com o esquema confirmado, o resultado do teste do redator e decisão sobre depender ou não de `ecc-universal` | baixo (só leitura e fixtures) |
 | I1 | Esqueleto do `sb` (`status`, `doctor`, `search`) por cima dos scripts atuais, sem mudar comportamento; varredura de segredos e campo `status`/`supersedes` no schema | testes dos subcomandos; `doctor` acusa link quebrado, título duplicado e segredo falso | baixo |
 | I2 | `sb sync` com `verdict` (Save, Improve then Save, Absorb, Drop) e seção "o que NÃO funcionou" no molde de `trap`; hooks de sync passam a chamar o `sb` | `sync.jsonl` registra o veredito | baixo |
 | I3 | `sb candidate` (fila com TTL), regra no `AGENTS.md`, contagem na linha de status; **modo sombra** por 2 semanas | fila coleta sem alterar o vault | médio |
@@ -187,8 +187,11 @@ candidatos (aceitos / propostos) e taxa de retrabalho (notas criadas pela revis�
 espelho só gastam tokens sob demanda; nada novo entra no contexto por padrão, e o espelho do ECC só pesa quando o ECC está ligado.
 
 **Decisões em aberto para o usuário**
-1. **Observer do ECC (`continuous-learning-v2`):** continua rejeitado? Recomendação: sim (log de tool calls sem o porquê, custo
-   contínuo, redação de segredos fraca, inativo no perfil `minimal`).
+1. **Observer do ECC (`continuous-learning-v2`):** **resolvida em 2026-10-15.** O usuário escolheu o perfil completo com o observer
+   ligado; a recomendação anterior (manter rejeitado) foi superada. As questões que sobraram (limite temporário de injeção,
+   retenção, projetos excluídos, teste do redator de segredos) estão em
+   [[Reavaliação - ECC com Perfil Completo e Observer Ligado]]. O importador `sb import-ecc` passa a ler também os instincts
+   (`instincts/personal|pending`), não só o `ecc.memory.v1`.
 2. **Runtime sem daemon** (CLI `sb` de vida curta) está de acordo? Recomendação: sim, com reavaliação se o índice (F4) pedir.
 3. Onde fica a fila de candidatos: `~/.local/state/second-brain/` (recomendado) ou o `00_Inbox` do vault (contraria a D8).
 4. Aceita a regra no `AGENTS.md` de que o agente **acrescenta uma linha à fila** quando é corrigido ou descobre uma armadilha?

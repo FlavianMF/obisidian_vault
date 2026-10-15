@@ -145,8 +145,11 @@ delegação valem sobre qualquer "PROACTIVELY" de agente `ecc:*`. A automação 
 
 Custo de ~47,5 mil tokens em toda sessão web/C, inclusive tarefas triviais (cerca de 3,8 milhões de leitura de cache em 80
 turnos, F0); detecção errada liga o ECC onde não deve (mitigação: `none` na dúvida, linha impressa, `ecc.off`); descrições
-de agentes do plugin dizem "Use PROACTIVELY" e empurram fan-out (mitigação: regra acima); hooks do ECC ficam no perfil
-`minimal` (não mudar).
+de agentes do plugin dizem "Use PROACTIVELY" e empurram fan-out (mitigação: regra acima). **Atualização de 2026-10-15:** os hooks
+do ECC deixaram de ficar no perfil `minimal`; por decisão do usuário, o ECC roda com o **perfil `strict`, sem hooks desligados e
+com o observer ligado**. Em projetos web, C e Node, o M1 passa a incluir ~2 mil tokens de injeção no SessionStart e as perguntas do
+GateGuard a cada primeira edição de arquivo; nos demais projetos o M1 não muda. Riscos e mitigações em
+[[Reavaliação - ECC com Perfil Completo e Observer Ligado]].
 
 ## 4. Plano de desenvolvimento (etapas do tamanho de um merge)
 

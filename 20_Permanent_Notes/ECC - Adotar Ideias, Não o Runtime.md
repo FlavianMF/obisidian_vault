@@ -29,6 +29,18 @@ verified: 2026-09-30 via claude plugin details ecc@ecc e teste de make ecc-on em
 >   `mcpServers: {}` no `plugin.json`;
 > - [[Claude Plugin CLI Reescreve o settings.json Symlinkado do Repo]].
 
+> **Revisão (2026-10-15): perfil completo e observer ligado.** O usuário passou a querer o ECC
+> **completo quando ligado**: `ECC_HOOK_PROFILE=strict`, nenhum hook em `ECC_DISABLED_HOOKS` e
+> `observer.enabled=true` (`claude/ecc-clv2-config.json`, linkado por `make ecc-observer-config`).
+> Continua valendo: plugin desligado no escopo de usuário e ligado por projeto (agora por
+> `make ecc-auto` e pelo wrapper `claude`, em projetos web, C e Node). **Revertido:** o perfil
+> `minimal` e a rejeição do `continuous-learning-v2` da seção abaixo. Os quatro motivos da rejeição
+> (log só de tool calls, observer com custo contínuo, redação de segredos fraca, bugs no upstream)
+> foram aceitos pelo usuário; as mitigações e os riscos novos estão em
+> [[Reavaliação - ECC com Perfil Completo e Observer Ligado]], e o impacto no second brain em
+> [[Estudo - Integrar o Second Brain à Memória do ECC]]. A observação de tool calls fica fora de
+> diretórios `secrets`, `.ssh` e `.aws` (`ECC_OBSERVE_SKIP_PATHS`).
+
 **Decisão original:** do [ECC](https://github.com/affaan-m/ECC) (v2.2.2, MIT) entram só peças
 escolhidas, **reescritas** no `~/dotfiles`. Não se instala plugin, hooks nem rules do
 ECC. O pacote é tomado como catálogo de ideias para [[claude-code]], não como runtime.
