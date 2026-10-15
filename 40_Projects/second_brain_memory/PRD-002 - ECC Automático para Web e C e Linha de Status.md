@@ -160,8 +160,8 @@ submódulo (`git submodule add` local) e worktree.
 | E1 | `ecc-detect.sh`, `exclude_add` com `--git-common-dir`, `tests/ecc_detect_test.sh` | matriz passa, < 50 ms, lint ok | reverter (nada usa ainda) |
 | E2 | `--packs`, `auto`, `ecc.off`, `claude/ecc-auto.conf`, targets do Makefile, `tests/ecc_project_test.sh` | idempotência, chave `false` explícita vence, `off` não religa, settings symlinkado intacto, `git status` limpo em repo comum, submódulo e worktree | reverter |
 | E3 | **Feito.** wrapper no zsh, sugestão no SessionStart, `AGENTS.md` (o `c.md` não precisou de mudança) | `claude` num fixture web liga e imprime a linha; num `none` não faz nada | remover a função do zsh |
-| E4 | `ecc-session-start.sh` (snapshot), `.injected`, ajuste do L1 e da limpeza de 7 dias, registro do hook editando `settings.json` do repo (nunca pelo CLI) | JSON de SessionStart como fixture, shadow não grava `.injected`, 0600 | reverter os dois repos |
-| E5 | `statusline.sh` e `tests/statusline_test.sh` | M2 e M3 passam; `sid` malicioso (`../x`) tratado | reverter |
+| E4 | **Feito.** `ecc-session-start.sh` (snapshot), `.injected`, ajuste do L1 e da limpeza de 7 dias, registro do hook editando `settings.json` do repo (nunca pelo CLI) | JSON de SessionStart como fixture, shadow não grava `.injected`, 0600 | reverter os dois repos |
+| E5 | **Feito.** `statusline.sh` e `tests/statusline_test.sh` | M2 e M3 passam; `sid` malicioso (`../x`) tratado | reverter |
 | E6 | medir M1 em um projeto web, um C e um neutro; destilar no vault | números registrados | n/a |
 | E7 | Fluxo interativo de melhoria do pack de C (decisão 1): skill ou comando que, em um projeto C, lê o código e o `c.md`/`cmake.md`/`makefile.md`, propõe acréscimos e correções às regras e só grava o que o usuário aceitar item a item | escopo e formato a fechar com o usuário antes de começar | remover a skill |
 | E8 | Kind `node-backend` (decisão 3): detector e arquivo de regras próprio `claude/rules/node-backend.md`, no mesmo molde do `c.md` | `ecc-detect.sh` distingue backend de web; regras escritas e revisadas pelo usuário | reverter |
@@ -178,8 +178,16 @@ submódulo (`git submodule add` local) e worktree.
   subcomandos e `ECC_AUTO=0`), sugestão no SessionStart quando o ECC está desligado num projeto web/C/Node (respeita
   `ecc.off`) e política do `AGENTS.md`. A correção do `c.md:9` **não foi necessária**: a afirmação do agente de que
   `~/.claude/rules/ecc/cpp/` não existia estava errada (divergência 4).
-- Faltam **E4** (snapshot da sessão e `.injected`), **E5** (statusline, com ECC/SB como última linha), **E6** (medição de M1),
-  **E7** (fluxo interativo do pack de C) e **E8** (regras de Node backend).
+- **E4** (dotfiles `ecb55c5`; vault `prompt_hint.sh`): hook `ecc-session-start.sh` (independente do second brain, corrige a
+  divergência 3) imprime a linha de estado e a sugestão e grava o snapshot `<sid>.ecc` em `~/.local/state/claude-session/`
+  (0600) só em `startup`/`resume`; o L0 e o L1 em modo `active` gravam `<sid>.injected` (a contagem "SB n notas"; o L1 em
+  `shadow` não grava). `ecc-project.sh status` passou a resolver a raiz do git em subpastas e a responder no dotfiles.
+- **E5** (dotfiles `cf9c514`): `claude/statusline.sh` imprime duas linhas e a última é `ECC ligado (local) · SB 3 notas · 1
+  aberta`, com `*` e "reinicie" quando o disco mudou depois da abertura (cache por mtime), `NO_COLOR`, forma curta com
+  `COLUMNS < 40` e um `jq` só. Verificado ponta a ponta num tmux com o zsh real: o wrapper ligou o ECC num projeto React
+  descartável e a linha apareceu logo acima do indicador de modo (`⏵⏵ auto mode on`).
+- Faltam **E6** (medição de M1), **E7** (fluxo interativo do pack de C) e **E8** (regras de Node backend). Divergência de
+  formato: o asterisco vem depois do escopo (`ECC ligado (local)* reinicie`).
 
 **Já entregue (decisão 6):** o hook `second-brain-note-opened.sh` (dotfiles, commit `502a6b2`, branch
 `feat/sb-opened-notes-hook`) registra em `<sid>.opened` as notas do vault que o agente abre com `Read` (sem repetir, sem
