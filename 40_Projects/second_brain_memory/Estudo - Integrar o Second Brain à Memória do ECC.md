@@ -192,11 +192,16 @@ espelho só gastam tokens sob demanda; nada novo entra no contexto por padrão, 
    retenção, projetos excluídos, teste do redator de segredos) estão em
    [[Reavaliação - ECC com Perfil Completo e Observer Ligado]]. O importador `sb import-ecc` passa a ler também os instincts
    (`instincts/personal|pending`), não só o `ecc.memory.v1`.
-2. **Runtime sem daemon** (CLI `sb` de vida curta) está de acordo? Recomendação: sim, com reavaliação se o índice (F4) pedir.
-3. Onde fica a fila de candidatos: `~/.local/state/second-brain/` (recomendado) ou o `00_Inbox` do vault (contraria a D8).
-4. Aceita a regra no `AGENTS.md` de que o agente **acrescenta uma linha à fila** quando é corrigido ou descobre uma armadilha?
-5. TTL de 30 dias e aviso aos 7 (valores do ECC) ou outros?
-6. Ordem: recomendo I0, I1 e I2 primeiro (verificação, valor imediato e risco baixo) e deixar a I3 em sombra antes da I4.
+2. **Runtime sem daemon** (CLI `sb` de vida curta): **aprovado em 2026-10-15**, com reavaliação se o índice (F4) pedir.
+3. Local da fila de candidatos: **aprovado `~/.local/state/second-brain/`** (a alternativa, o `00_Inbox` do vault, contraria a D8).
+4. Regra no `AGENTS.md` de que o agente **acrescenta uma linha à fila** quando é corrigido ou descobre uma armadilha:
+   **aprovada**. A linha só entra no `AGENTS.md` junto com a I3, quando o `sb candidate` existir; antes disso ela citaria um
+   comando inexistente. Permanece válido que o agente **não** roda `/promote`, `/evolve`, `/instinct-import` nem `/prune` por conta
+   própria (o `sb review` pode invocá-los só em `--dry-run`).
+5. TTL de 30 dias e aviso aos 7: **aprovado**. Para observações e instincts `pending` do ECC, o `sb` implementa a rotina própria
+   (resultado da I0, item 3).
+6. Ordem: **aprovada**. I1 e I2 primeiro (verificação feita na I0; valor imediato, risco baixo); a I3 roda em **sombra por 2
+   semanas** antes de a I4 existir. A I5 de exportação fica **adiada** (resultado da I0) e só o import de instincts segue.
 7. Aprova que a I0 leia o código do plugin do ECC e escreva amostras num diretório de teste, **sem** instalar `ecc-universal`?
    **Resolvida em 2026-10-15:** a I0 rodou assim. Resultado na próxima seção.
 
