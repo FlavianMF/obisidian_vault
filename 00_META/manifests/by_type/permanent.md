@@ -1,11 +1,11 @@
-| Path | Title | Tags | Created | Provenance | Confidence | Seen in |
-| --- | --- | --- | --- | --- | --- | --- |
-| 20_Permanent_Notes/Capella no Processo de Definição de Produto.md | Capella no Processo de Definição de Produto | capella, mbse, arcadia, product-definition, visualization | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/Hotwire.md | Hotwire | hotwire, frontend, rails | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/JSONB.md | JSONB | database, postgresql, json | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/PostgreSQL.md | PostgreSQL | database, sql | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/Ruby on Rails.md | Ruby on Rails | ruby, rails, framework, web | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/Ruby-Testing-Docker.md | Testes de Software em Ruby on Rails com Docker | ruby, rails, testing, rspec, docker, dev-experience | 2026-05-22 | manual |  |  |
-| 20_Permanent_Notes/Stimulus.md | Stimulus | hotwire, stimulus, frontend | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/TailwindCSS.md | TailwindCSS | css, frontend, styling | 2026-05-21 | manual |  |  |
-| 20_Permanent_Notes/Turbo.md | Turbo | hotwire, turbo, frontend | 2026-05-21 | manual |  |  |
+| Path | Title | Tags | Created | Provenance | Confidence | Seen in | Summary |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 20_Permanent_Notes/Capella no Processo de Definição de Produto.md | Capella no Processo de Definição de Produto | capella, mbse, arcadia, product-definition, visualization | 2026-05-21 | manual |  |  | O uso do Capella MBSE transforma a definição de produto de um conjunto de documentos estáticos em um modelo dinâmico e rastreável. Ele é particularmente… |
+| 20_Permanent_Notes/Hotwire.md | Hotwire | hotwire, frontend, rails | 2026-05-21 | manual |  |  | Arquitetura para construir aplicações web modernas sem a complexidade de frameworks de JavaScript pesados. É a forma padrão do Rails de lidar com a interface… |
+| 20_Permanent_Notes/JSONB.md | JSONB | database, postgresql, json | 2026-05-21 | manual |  |  | Tipo de dado no PostgreSQL que armazena dados JSON em formato binário, permitindo consultas eficientes e indexação de campos dentro do JSON. |
+| 20_Permanent_Notes/PostgreSQL.md | PostgreSQL | database, sql | 2026-05-21 | manual |  |  | Sistema de gerenciamento de banco de dados relacional de código aberto, conhecido por sua robustez e suporte a recursos avançados. |
+| 20_Permanent_Notes/Ruby on Rails.md | Ruby on Rails | ruby, rails, framework, web | 2026-05-21 | manual |  |  | Framework web baseado na linguagem Ruby, focado na produtividade e felicidade do desenvolvedor através da convenção sobre configuração (CoC). |
+| 20_Permanent_Notes/Ruby-Testing-Docker.md | Testes de Software em Ruby on Rails com Docker | ruby, rails, testing, rspec, docker, dev-experience | 2026-05-22 | manual |  |  | Este padrão descreve como configurar e executar uma suíte de testes robusta para aplicações Ruby on Rails operando exclusivamente em ambientes containerizados… |
+| 20_Permanent_Notes/Stimulus.md | Stimulus | hotwire, stimulus, frontend | 2026-05-21 | manual |  |  | Framework de JavaScript minimalista que se conecta ao HTML, permitindo adicionar interatividade à página sem complexidade excessiva. Focado em "controllers" e… |
+| 20_Permanent_Notes/TailwindCSS.md | TailwindCSS | css, frontend, styling | 2026-05-21 | manual |  |  | Framework CSS utilitário que permite construir designs personalizados rapidamente, aplicando classes diretamente no HTML. |
+| 20_Permanent_Notes/Turbo.md | Turbo | hotwire, turbo, frontend | 2026-05-21 | manual |  |  | O coração do Hotwire, responsável por atualizar partes da página com fragmentos de HTML enviados do servidor. |
