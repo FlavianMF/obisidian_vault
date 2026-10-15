@@ -337,7 +337,39 @@ def run_sync(rest: list[str]) -> int:
 
     vault = Path(os.environ.get("SECOND_BRAIN_VAULT") or gm.DEFAULT_VAULT_ROOT)
     sys.argv = ["sb sync", "--vault-path", str(vault), *rest]  # a later --vault-path in `rest` wins
-    return vault_sync.main()
+    code = vault_sync.main()
+    if code == 0:
+        report_note_issues(vault, synced_notes(rest))
+    return code
+
+
+def synced_notes(rest: list[str]) -> set[str]:
+    """Paths passed with --note / --note=, relative to the vault, as `doctor` prints them."""
+    notes: set[str] = set()
+    for i, arg in enumerate(rest):
+        if arg == "--note" and i + 1 < len(rest):
+            notes.add(rest[i + 1])
+        elif arg.startswith("--note="):
+            notes.add(arg.split("=", 1)[1])
+    return notes
+
+
+def report_note_issues(vault: Path, notes: set[str]) -> None:
+    """Run `doctor` after a successful sync and print only the findings on the notes just synced."""
+    if not notes:
+        return
+    try:
+        issues = run_doctor(vault, gm.DEFAULT_STALE_DAYS, dt.date.today())
+    except Exception as exc:  # the sync already succeeded; a doctor failure must not turn it into an error
+        sys.stderr.write(f"sb sync: doctor skipped ({exc})\n")
+        return
+    mine = [i for i in issues if i.path in notes]
+    if not mine:
+        sys.stdout.write("doctor: no issues on the synced notes\n")
+        return
+    sys.stdout.write(f"doctor: {len(mine)} issue(s) on the synced notes, fix and sync again:\n")
+    for i in mine:
+        sys.stdout.write(f"  {i.severity} {i.check} {i.path}: {i.detail}\n")
 
 
 def build_parser() -> argparse.ArgumentParser:

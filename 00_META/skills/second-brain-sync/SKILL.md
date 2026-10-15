@@ -154,6 +154,9 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
    manifests que mudaram, commita e dá push no `master` do vault. Recusa rodar se o
    vault tiver arquivos sujos não declarados — então passe **todas** as notas novas na
    mesma chamada (`--note` é repetível).
+   Depois de um sync bem-sucedido, o `sb sync` roda o `doctor` e imprime só os achados das
+   notas sincronizadas (`doctor: no issues on the synced notes` quando limpo). Se houver achado,
+   corrija a nota e sincronize de novo; não precisa rodar o `doctor` à mão.
 
    Caminhos com espaço/acento: monte a lista em Python e chame `subprocess.run([...])`.
    `git status --porcelain` envolve caminhos com espaço em aspas **mesmo** com

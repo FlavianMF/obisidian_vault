@@ -255,5 +255,30 @@ class StatusAndSearchTest(VaultFixture):
         self.assertEqual((result.returncode, result.stdout), (0, ""))
 
 
+class SyncDoctorReportTest(VaultFixture):
+    def run_report(self, notes):
+        import contextlib
+        import io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            sb.report_note_issues(self.vault, notes)
+        return out.getvalue()
+
+    def test_synced_notes_reads_both_note_spellings(self):
+        rest = ["--note", "a.md", "--project-name", "p", "--note=b.md"]
+        self.assertEqual(sb.synced_notes(rest), {"a.md", "b.md"})
+
+    def test_reports_only_issues_on_the_synced_notes(self):
+        self.note("Alpha", body="Real [[Fantasma]].\n")
+        self.note("Beta", body="Outro [[Sumido]].\n")
+        text = self.run_report({"20_Permanent_Notes/Alpha.md"})
+        self.assertIn("Fantasma", text)
+        self.assertNotIn("Sumido", text)
+
+    def test_clean_synced_note_says_so(self):
+        self.note("Alpha")
+        self.assertIn("no issues", self.run_report({"20_Permanent_Notes/Alpha.md"}))
+
+
 if __name__ == "__main__":
     unittest.main()
