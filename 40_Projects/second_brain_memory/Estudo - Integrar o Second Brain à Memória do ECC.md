@@ -174,7 +174,7 @@ fim da tarefa / sob demanda: `sb review`
 | Etapa | Conteúdo | Pronto quando | Risco |
 |---|---|---|---|
 | I0 (estudo) | Verificar o adaptador: ler o validador e o formato do Memory Vault, confirmar o diretório e o que exige o CLI; escrever amostras e validá-las num diretório de teste; **testar o redator de segredos do `observe.sh` com credenciais falsas e conferir as permissões dos arquivos do observer, num `CLV2_HOMUNCULUS_DIR` temporário; confirmar o nome e o efeito do limite de injeção de instincts (`ECC_MAX_INJECTED_INSTINCTS`)**; ler o formato dos instincts (`instincts/personal|pending`) para o importador. A emenda da nota de decisão de 2026-09-30, do §1 e da D10 do RFC já foi feita em 2026-10-15 | relatório com o esquema confirmado, o resultado do teste do redator e decisão sobre depender ou não de `ecc-universal` | baixo (só leitura e fixtures) |
-| I1 | Esqueleto do `sb` (`status`, `doctor`, `search`) por cima dos scripts atuais, sem mudar comportamento; varredura de segredos e campo `status`/`supersedes` no schema | testes dos subcomandos; `doctor` acusa link quebrado, título duplicado e segredo falso | baixo |
+| I1 (entregue em 2026-10-15) | Esqueleto do `sb` (`status`, `doctor`, `search`) por cima dos scripts atuais, sem mudar comportamento; varredura de segredos e campo `status`/`supersedes` no schema | testes dos subcomandos; `doctor` acusa link quebrado, título duplicado e segredo falso | baixo |
 | I2 | `sb sync` com `verdict` (Save, Improve then Save, Absorb, Drop) e seção "o que NÃO funcionou" no molde de `trap`; hooks de sync passam a chamar o `sb` | `sync.jsonl` registra o veredito | baixo |
 | I3 | `sb candidate` (fila com TTL), regra no `AGENTS.md`, contagem na linha de status; **modo sombra** por 2 semanas | fila coleta sem alterar o vault | médio |
 | I4 | `sb review capture|promote|stock` interativo, `--dry-run` por padrão, estado retomável, `review.jsonl` com rejeições | ponta a ponta sobre vault de teste e sobre o real em dry-run | médio |
@@ -232,7 +232,7 @@ Com 11 credenciais **falsas**, passadas como entrada (`tool_start`) e saída (`t
 | Resultado | Casos |
 |---|---|
 | Redigido | `API_KEY=...`, `Authorization: Bearer ...`, `password: '...'` longa |
-| **Vaza** | senha curta (`DB_PASSWORD=hunter2`, menos de 8 caracteres), PAT do GitHub sem palavra-chave, `aws_secret_access_key=...` (o `_` após `secret` quebra o padrão), id de chave AWS, JWT, URL com credencial (`postgres://user:senha@host`), chave privada PEM, token do Slack |
+| **Vaza** | senha curta (`DB_PASSWORD=hunter2`, menos de 8 caracteres), PAT do GitHub sem palavra-chave, `aws_secret_access_key=...` (o `_` após `secret` quebra o padrão), id de chave AWS, JWT, URL com credencial (`postgres://user:senha@host`), chave privada PEM, token do Slack | <!-- sb-allow-secret: exemplo fictício -->
 
 A regex só casa quando uma palavra-chave (`api_key`, `token`, `secret`, `password`, `authorization`, `credential`, `auth`) precede o
 valor, seguida de até 8 separadores. O filtro `ECC_OBSERVE_SKIP_PATHS` funciona (um `cwd` contendo `secrets` não gera registro), mas

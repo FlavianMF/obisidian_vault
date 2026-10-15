@@ -27,6 +27,8 @@ este schema, atualize os dois scripts junto.
 | `confidence` | opcional | `low` (visto uma vez, não reproduzido; **toda nota nova nasce `low`, escrita por agente ou à mão**, o `vault_sync.py` recusa o contrário), `medium` (reproduzido ou documentado upstream), `high` (confirmado em 2+ projetos ou por teste). Subir o nível numa nota existente exige evidência verificada pelo `vault_sync.py`: `medium` pede `verified:` atualizado; `high` pede 2+ projetos em `seen_in` ou `verified:` novo citando teste. Descer não exige nada |
 | `seen_in` | opcional | lista de projetos que confirmaram a nota, ex.: `[capella_mcp, orbita-platform]`. Confirmar nota existente = acrescentar aqui, não criar nota duplicada |
 | `scope` | opcional | `global` (padrão) ou `project`. Nota `project` não é candidata a promoção |
+| `status` | opcional | `active` (padrão quando ausente) ou `superseded`. A nota `superseded` continua no vault e nos manifests; o `sb doctor` avisa quando nenhuma nota a declara em `supersedes` |
+| `supersedes` | opcional | título ou wikilink da nota que esta substitui (ou lista deles), ex.: `supersedes: [[Título Antigo]]`. O `sb doctor` acusa erro se o alvo não existir. Substituir = nota nova com `supersedes` + nota antiga com `status: superseded`; não apague a antiga |
 
 `path` nunca é campo de frontmatter — é metadado computado, só existe nos
 manifests (`00_META/manifests/`).

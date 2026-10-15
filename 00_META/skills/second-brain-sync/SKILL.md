@@ -263,8 +263,16 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 | `confidence` | optional | `low` (seen once, not reproduced; **every new agent-written note starts here**), `medium` (reproduced or documented upstream), `high` (confirmed in 2+ projects or by a test) |
 | `seen_in` | optional | list of projects that confirmed the note, e.g. `[capella_mcp, orbita-platform]` |
 | `scope` | optional | `global` (default) or `project` — `project` notes stay out of promotion |
+| `status` | optional | `active` (default) or `superseded`; a superseded note stays in the vault |
+| `supersedes` | optional | title or wikilink (or a list) of the note this one replaces; the target must exist |
 
 `path` is never a frontmatter field — it's manifest-only, computed metadata.
+
+**`sb` (read-only health check).** `python3 ~/obsidian_vault/00_META/skills/second-brain-sync/scripts/sb.py`
+runs `status` (vault, git, hook switches, last sync), `doctor` (broken wikilinks, duplicate titles,
+frontmatter, secrets, stale notes; exits 1 on an error-level issue; add `--json` or `--limit N`) and
+`search <query>` (the L1 ranker). Run `doctor` before a large sync. A line with `sb-allow-secret` is
+skipped by the secret scan, for a deliberate fake example.
 
 ## Guardrails
 
