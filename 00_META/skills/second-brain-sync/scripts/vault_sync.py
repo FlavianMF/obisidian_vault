@@ -16,8 +16,11 @@ Guardrails live here in code, not in prose the agent has to remember:
   - Update before create (RFC-001 §5): a NEW note whose title+tags already match an
     existing note (coverage >= SECOND_BRAIN_DUP_COVERAGE, default 0.5) is refused unless
     the caller states `--new-because "<why this is not an update>"`.
-  - A NEW note written by an agent (provenance other than `manual`) must be born with
-    `confidence: low`; the level only rises by evidence, never by declaration.
+  - Every NEW note must be born with `confidence: low`, whoever writes it; the level only
+    rises by evidence, never by declaration. Raising it on an existing note is checked:
+    to medium needs a changed `verified:` line, to high needs 2+ projects in `seen_in`
+    or a changed `verified:` that cites a test.
+  - Two NEW notes in the same call are also compared with each other.
   - "New" means absent from HEAD (not `git status` says untracked), so `git add` or a local
     commit before the sync does not switch the checks off.
   - Derived manifest files never count as unrelated dirty files; a failed commit or push
@@ -168,15 +171,19 @@ def dup_coverage() -> float:
         return DEFAULT_DUP_COVERAGE
 
 
-def existing_candidates(vault_root: Path, note: str) -> list[tuple[str, str, float]]:
+def existing_candidates(
+    vault_root: Path, note: str, manifest_dir: Path | None = None
+) -> list[tuple[str, str, float]]:
     """Notes already in the manifests that match the new note's title+tags strongly enough to be an update."""
     data, _, _ = frontmatter.read_note(vault_root / note)
     title = str(data.get("title") or Path(note).stem)
     tags = data.get("tags")
     tags_text = ", ".join(tags) if isinstance(tags, list) else str(tags or "")
     env = {**os.environ, "SECOND_BRAIN_VAULT": str(vault_root), "SECOND_BRAIN_CANDIDATE_COVERAGE": str(dup_coverage())}
+    if manifest_dir is not None:
+        env["SECOND_BRAIN_MANIFEST_DIR"] = str(manifest_dir)
     done = subprocess.run(
-        [str(CANDIDATES_SCRIPT), "-k", "3", "--", title, tags_text],
+        [str(CANDIDATES_SCRIPT), "-k", "5", "--", title, tags_text],
         capture_output=True, text=True, env=env, check=False, stdin=subprocess.DEVNULL
     )
     found = []
@@ -184,16 +191,16 @@ def existing_candidates(vault_root: Path, note: str) -> list[tuple[str, str, flo
         path, row_title, coverage, *_ = line.split("\t")
         if path != note:
             found.append((path, row_title, float(coverage)))
-    return found
+    return found[:3]
 
 
 def check_new_note(vault_root: Path, note: str, new_because: str | None) -> tuple[str, str] | None:
     """Return (outcome, message) when a NEW note breaks the F2 rules, else None."""
     data, _, _ = frontmatter.read_note(vault_root / note)
-    if str(data.get("provenance") or "") != "manual" and str(data.get("confidence") or "") != "low":
+    if clean_value(data.get("confidence")) != "low":
         return "refused-confidence", (
-            f"new note {note} must be born with `confidence: low` (agent notes rise to medium/high "
-            "by evidence, never by declaration; see Frontmatter-Schema)."
+            f"new note {note} must be born with `confidence: low` (every new note, manual or not, rises "
+            "to medium/high by evidence, never by declaration; see Frontmatter-Schema)."
         )
     if new_because:
         return None
@@ -205,6 +212,74 @@ def check_new_note(vault_root: Path, note: str, new_because: str | None) -> tupl
         f"new note {note} looks like an existing note; update it instead (dated entry, add the project "
         f"to `seen_in`):\n  {listing}\n"
         "If this really is a different subject, rerun with --new-because \"<one line why>\"."
+    )
+
+
+CONFIDENCE_RANK = {"low": 0, "medium": 1, "high": 2}
+
+
+def clean_value(value: object) -> str:
+    return str(value or "").strip().strip("\"'").lower()
+
+
+def head_frontmatter(vault_root: Path, path: str) -> dict:
+    done = run_git(vault_root, ["show", f"HEAD:{path}"], check=False)
+    if done.returncode != 0:
+        return {}
+    fm_lines, _ = frontmatter.split_frontmatter(done.stdout)
+    return frontmatter.parse_frontmatter(fm_lines)[0] if fm_lines else {}
+
+
+def seen_count(data: dict) -> int:
+    seen = data.get("seen_in")
+    items = seen if isinstance(seen, list) else [str(seen or "")]
+    return len({item.strip() for item in items if item.strip()})
+
+
+def check_promotion(vault_root: Path, note: str) -> str | None:
+    """Return an error message when an UPDATED note raises `confidence` without evidence."""
+    new, _, _ = frontmatter.read_note(vault_root / note)
+    old = head_frontmatter(vault_root, note)
+    before = CONFIDENCE_RANK.get(clean_value(old.get("confidence")), 0)
+    after = CONFIDENCE_RANK.get(clean_value(new.get("confidence")), before)
+    if after <= before:
+        return None
+    verified_changed = bool(clean_value(new.get("verified"))) and new.get("verified") != old.get("verified")
+    cites_test = verified_changed and any(w in clean_value(new.get("verified")) for w in ("test", "teste"))
+    if after == CONFIDENCE_RANK["medium"] and verified_changed:
+        return None
+    if after == CONFIDENCE_RANK["high"] and (seen_count(new) >= 2 or cites_test):
+        return None
+    need = (
+        "update `verified: <hoje> via <como foi reproduzido ou documentado>`"
+        if after == CONFIDENCE_RANK["medium"]
+        else "list 2+ projects in `seen_in`, or update `verified:` citing a test"
+    )
+    return (
+        f"{note} raises confidence to {clean_value(new.get('confidence'))} without evidence; {need}, "
+        "or keep the previous level (promotion is by evidence, never by declaration)."
+    )
+
+
+def sibling_duplicates(vault_root: Path, created: list[str]) -> str | None:
+    """Compare NEW notes of the same call with each other (the committed manifests do not know them)."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        for rel, content in generate_manifests.build_manifest_files(vault_root).items():
+            target = Path(tmp) / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+        lines = []
+        for note in created:
+            for path, _, cov in existing_candidates(vault_root, note, Path(tmp) / "by_type"):
+                if path in created:
+                    lines.append(f"{note}  ~  {path}  (coverage {cov:.2f})")
+    if not lines:
+        return None
+    return (
+        "new notes in this call look like each other; merge them into one note:\n  " + "\n  ".join(lines) + "\n"
+        "If they really cover different subjects, rerun with --new-because \"<one line why>\"."
     )
 
 
@@ -250,6 +325,17 @@ def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
         if problem:
             event["outcome"], message = problem
             return fail(message), event
+
+    if len(event["created"]) > 1 and not args.new_because:
+        problem = sibling_duplicates(vault_root, event["created"])
+        if problem:
+            event["outcome"] = "refused-candidate"
+            return fail(problem), event
+    for note in event["updated"]:
+        problem = check_promotion(vault_root, note)
+        if problem:
+            event["outcome"] = "refused-promotion"
+            return fail(problem), event
 
     generate_manifests.write_manifests(vault_root)
     after_manifest_status = run_git(

@@ -273,6 +273,23 @@ corrigidos, com 8 testes de regressão que falham no código antigo (50 testes n
 5. Dois syncs concorrentes com nota pendente em ambos se recusam mutuamente; ficou documentado no `SKILL.md`, sem mudança de código.
 6. Um commit local feito à mão antes do sync é enviado sem as checagens de nota nova.
 
+## Atualização 2026-10-15: decisões de política da F2 aplicadas
+
+Por decisão do usuário, três lacunas apontadas na revisão foram fechadas no `vault_sync.py` (28 testes do sync passam; os
+6 testes novos de política falham no código anterior):
+
+1. **`low` sempre.** `provenance: manual` deixou de isentar: toda nota nova nasce `confidence: low`.
+2. **Promoção verificada.** Ao subir `confidence` numa nota existente, o sync compara com a versão do `HEAD`. Para `medium`
+   exige uma linha `verified:` alterada; para `high`, 2+ projetos distintos em `seen_in` ou um `verified:` novo que cite
+   teste. Valores com aspas ou maiúsculas são normalizados, e descer de nível nunca pede evidência. A evidência é checada
+   só na forma (linha alterada, contagem de projetos); o sync não reproduz o teste.
+3. **Duplicata entre notas novas da mesma chamada.** As notas novas são comparadas entre si com manifests temporários
+   (não os commitados), e a justificativa `--new-because` vale para o conjunto.
+
+**Auditoria das notas existentes** (17 com `confidence`: 10 `medium`, 7 `low`, nenhuma `high`): uma `medium` sem
+evidência no frontmatter, `40_Projects/MB-249 - Guia de Estudo.md` (sem `seen_in` nem `verified`). Não alterei a nota;
+decida se rebaixa ou documenta a evidência.
+
 ## Próximos passos
 
 1. **Você**: validar ou reescrever as 30 queries (principalmente as 21 `paraphrase`), e aprovar ou ajustar

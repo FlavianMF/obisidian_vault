@@ -120,8 +120,12 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
    - **Não há**: redija uma nota (tipicamente em `20_Permanent_Notes/`) com o frontmatter
      padrão (ver abaixo), `provenance: <este-projeto>`, `seen_in: [<este-projeto>]`,
      `verified: <hoje> via <como>` e **`confidence: low`** — nota nova de agente sempre nasce
-     `low`; sobe para `medium`/`high` por evidência (2+ projetos em `seen_in`, ou teste),
-     nunca por declaração. O `vault_sync.py` recusa nota nova sem `confidence: low` e recusa
+     `low`, também a escrita à mão (`provenance: manual` não isenta); sobe para `medium`/`high`
+     por evidência, nunca por declaração: para `medium`, atualize a linha `verified:` (data de
+     hoje e como reproduziu ou onde documentou); para `high`, 2+ projetos em `seen_in` ou um
+     `verified:` novo que cite o teste. O `vault_sync.py` recusa nota nova sem `confidence: low`,
+     recusa promoção sem essa evidência, recusa duas notas novas parecidas entre si na mesma
+     chamada e recusa
      nota nova parecida com uma existente, a menos que você passe `--new-because "<uma linha
      dizendo por que não é atualização>"`. "Nova" significa ausente do `HEAD`: não rode
      `git add` nem `git commit` na nota antes do sync. Se o sync falhar no commit ou no push,

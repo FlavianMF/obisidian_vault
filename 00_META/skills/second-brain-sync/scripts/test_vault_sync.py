@@ -149,8 +149,12 @@ class SyncGuardsTest(VaultFixture):
             self.assertIn("confidence: low", done.stderr)
             (self.vault / rel).unlink()
 
-    def test_manual_provenance_is_exempt_from_low_confidence(self):
+    def test_manual_provenance_does_not_exempt_a_new_note_from_low_confidence(self):
         rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv", provenance="manual", confidence="high")
+        done = self.sync(rel)
+        self.assertEqual(done.returncode, 1)
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "refused-confidence")
+        (self.vault / rel).write_text(make_note("Calibração de Câmera Estéreo", tags="visao, opencv", provenance="manual"), encoding="utf-8")
         self.assertEqual(self.sync(rel).returncode, 0)
 
     def test_second_sync_waits_for_the_lock_instead_of_racing(self):
@@ -285,6 +289,79 @@ class ReviewRegressionTest(VaultFixture):
                 self.assertEqual(module.lock_timeout(), module.DEFAULT_LOCK_TIMEOUT_SECONDS, bad)
             finally:
                 del os.environ["SECOND_BRAIN_LOCK_TIMEOUT"]
+
+
+class PromotionAndSiblingTest(VaultFixture):
+    LOW = "20_Permanent_Notes/Calibração de Câmera Estéreo.md"
+    MEDIUM = "20_Permanent_Notes/Importar Issues no Jira por REST.md"
+
+    def commit_low_note(self):
+        (self.vault / self.LOW).write_text(make_note("Calibração de Câmera Estéreo", tags="visao, opencv"), encoding="utf-8")
+        self.assertEqual(self.sync(self.LOW).returncode, 0)
+
+    def edit(self, rel, *pairs):
+        path = self.vault / rel
+        text = path.read_text(encoding="utf-8")
+        for old, new in pairs:
+            self.assertIn(old, text)
+            text = text.replace(old, new, 1)
+        path.write_text(text, encoding="utf-8")
+
+    def test_low_to_medium_needs_a_new_verified_line(self):
+        self.commit_low_note()
+        self.edit(self.LOW, ("confidence: low", "confidence: medium"))
+        done = self.sync(self.LOW)
+        self.assertEqual(done.returncode, 1)
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "refused-promotion")
+        self.edit(self.LOW, ("confidence: medium\n", "confidence: medium\nverified: 2026-10-15 via teste manual\n"))
+        self.assertEqual(self.sync(self.LOW).returncode, 0)
+
+    def test_declaring_the_same_verified_line_again_is_not_new_evidence(self):
+        self.commit_low_note()
+        self.edit(self.LOW, ("confidence: low\n", "confidence: low\nverified: 2026-10-15 via git log\n"))
+        self.assertEqual(self.sync(self.LOW).returncode, 0)
+        self.edit(self.LOW, ("confidence: low", "confidence: medium"))
+        self.assertEqual(self.sync(self.LOW).returncode, 1)
+
+    def test_to_high_needs_two_projects_or_a_test(self):
+        self.edit(self.MEDIUM, ("confidence: medium", "confidence: high"))
+        self.assertEqual(self.sync(self.MEDIUM).returncode, 1)
+        self.edit(self.MEDIUM, ("confidence: high\n", "confidence: high\nseen_in: [projeto_x]\n"))
+        self.assertEqual(self.sync(self.MEDIUM).returncode, 1, "one project is not enough")
+        self.edit(self.MEDIUM, ("seen_in: [projeto_x]", "seen_in: [projeto_x, projeto_y]"))
+        self.assertEqual(self.sync(self.MEDIUM).returncode, 0)
+
+    def test_quoted_or_capitalised_confidence_cannot_dodge_the_check(self):
+        self.edit(self.MEDIUM, ("confidence: medium", 'confidence: "High"'))
+        self.assertEqual(self.sync(self.MEDIUM).returncode, 1)
+
+    def test_demotion_and_unchanged_confidence_never_ask_for_evidence(self):
+        self.edit(self.MEDIUM, ("confidence: medium", "confidence: low"))
+        self.assertEqual(self.sync(self.MEDIUM).returncode, 0)
+
+    def two_siblings(self):
+        a = "20_Permanent_Notes/Calibração Estéreo A.md"
+        b = "20_Permanent_Notes/Calibração Estéreo B.md"
+        for rel, title in ((a, "Calibração de Câmera Estéreo com OpenCV"), (b, "Calibração de Câmera Estéreo no OpenCV")):
+            (self.vault / rel).write_text(make_note(title, tags="visao, opencv, calibracao"), encoding="utf-8")
+        return a, b
+
+    def test_two_near_identical_new_notes_in_one_call_are_refused(self):
+        a, b = self.two_siblings()
+        done = self.sync(a, b)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("look like each other", done.stderr)
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "refused-candidate")
+        self.assertFalse(any(p.suffix == ".tmp" for p in self.vault.rglob("*")))
+
+    def test_siblings_pass_with_a_justification(self):
+        a, b = self.two_siblings()
+        self.assertEqual(self.sync(a, b, new_because="A cobre intrínsecos, B cobre extrínsecos").returncode, 0)
+
+    def test_two_unrelated_new_notes_in_one_call_pass(self):
+        a = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        b = self.write("Receita de Pão de Queijo Mineiro", tags="culinaria, receita")
+        self.assertEqual(self.sync(a, b).returncode, 0)
 
 
 if __name__ == "__main__":
