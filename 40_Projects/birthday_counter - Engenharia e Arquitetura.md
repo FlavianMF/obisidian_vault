@@ -17,7 +17,7 @@ Aplicação [[Ruby on Rails|Ruby on Rails 7.1]] focada em interatividade de temp
 ### Stack Tecnológico
 - **Frontend**: [[Hotwire]] ([[Turbo]] + [[Stimulus]]) para uma experiência SPA-like. Estilização via [[TailwindCSS]] ("Modern Festive Dark" com glassmorphism).
 - **Backend**: [[Ruby on Rails|Ruby on Rails 7.1]]. API v1 (JSON) + Views dinâmicas.
-- **Real-time**: [[ActionCable]] (WebSockets) para eventos de celebração.
+- **Real-time**: ActionCable (WebSockets) para eventos de celebração.
 - **Banco de Dados**: [[PostgreSQL]] com uso intensivo de [[JSONB]] para configurações dinâmicas e índices de performance.
 
 ## System Engineering Testing Aspects

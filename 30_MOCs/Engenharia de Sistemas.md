@@ -56,6 +56,6 @@ SORT type ASC
 
 ## 🛠️ Competências e Interesses Técnicos
 - [[Flavian Fernandes|Perfil do Pesquisador]]
-- [[Sistemas Embarcados]] & Firmware
-- [[Sistemas de Controle]] (PID e Controle Moderno)
-- [[IoT]] & Edge AI
+- Sistemas Embarcados & Firmware
+- Sistemas de Controle (PID e Controle Moderno)
+- IoT & Edge AI

@@ -25,5 +25,5 @@ Integração de [[Agentic AI]] no ciclo de vida do [[MBSE]] para automar a deriv
 
 ## 🛠️ Aplicações
 - Aeroespacial (Simulações de design)
-- Defesa ([[IoBT]])
+- Defesa (IoBT)
 - [[Digital Twin|Gêmeos Digitais]] (Sincronização físico-digital)

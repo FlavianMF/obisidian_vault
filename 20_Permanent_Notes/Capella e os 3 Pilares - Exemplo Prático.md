@@ -44,8 +44,8 @@ Este guia mostra como navegar no Capella através dos 3 pilares do framework, us
 ### Nível Físico (PA - O Hardware Real)
 - **Diagrama PAB (Physical Architecture Blank)**:
   - **PCBA**: Placa principal.
-  - **Componentes**: [[ESP32]] (Microcontrolador), **ADS1115** (ADC de alta precisão), **Sensor SCT-013** (Transformador de Corrente).
-  - **Firmware**: [[ESP-IDF]] com RTOS.
+  - **Componentes**: ESP32 (Microcontrolador), **ADS1115** (ADC de alta precisão), **Sensor SCT-013** (Transformador de Corrente).
+  - **Firmware**: ESP-IDF com RTOS.
 - **Diagrama de Interfaces (ICD)**: Detalha que o Sensor se conecta ao ADC via I2C.
 
 ---
@@ -61,4 +61,4 @@ Este guia mostra como navegar no Capella através dos 3 pilares do framework, us
 ## 🔗 Conexões
 - [[Capella MBSE]]
 - [[Framework 3 Pilares SE]]
-- [[IoT]]
+- IoT

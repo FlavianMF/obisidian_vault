@@ -13,7 +13,7 @@ O coração do [[Hotwire]], responsável por atualizar partes da página com fra
 ## Funcionalidades
 - **Turbo Drive**: Navegação rápida sem *page reload*.
 - **Turbo Frames**: Atualiza partes específicas da página de forma isolada.
-- **Turbo Streams**: Entrega atualizações de página em tempo real via [[ActionCable]].
+- **Turbo Streams**: Entrega atualizações de página em tempo real via ActionCable.
 
 ## Referências
 - [[Hotwire]]

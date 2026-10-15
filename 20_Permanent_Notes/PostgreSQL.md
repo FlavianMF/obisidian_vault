@@ -12,7 +12,7 @@ Sistema de gerenciamento de banco de dados relacional de código aberto, conheci
 
 ## Recursos
 - Suporte a [[JSONB]] para dados semi-estruturados.
-- Extensões poderosas ([[pg_trgm]] para busca textual).
+- Extensões poderosas (pg_trgm para busca textual).
 
 ## Referências
 - [[Tecnologias Web]]

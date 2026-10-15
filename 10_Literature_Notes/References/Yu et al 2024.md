@@ -19,9 +19,9 @@ citekey: Yu2024
 - Necessidade de frameworks para garantir rastreabilidade bidirecional.
 
 ## 🔗 Conexões (Zettelkasten)
-- [[Complex Intelligent Systems]]
+- Complex Intelligent Systems
 - [[SysML]]
-- [[Rastreabilidade de Requisitos]]
+- Rastreabilidade de Requisitos
 - [[MBSE com Agentic AI]]
 
 ---

@@ -16,7 +16,7 @@ Padrão de desenvolvimento onde um [[Agentic AI|Agente de IA]] (como o [[hermes_
 2. **Modelagem de Estados (FSM)**: Definição formal de estados do sistema (ex: `PRE_EVENT`, `CLIMAX`, `POST_EVENT`) para garantir comportamento previsível.
 3. **Mapeamento de Stakeholders**: Identificação de atores humanos e sistêmicos (AI Engine) para derivar requisitos funcionais e de interface.
 4. **Alinhamento com Fases SE (NASA/INCOSE)**:
-    - **[[Pré-Fase A - Análise de Conceito|Pré-Fase A]]/[[Fase A - Desenvolvimento de Conceito|Fase A]]**: Criação de [[PRD]], [[stakeholders|Stakeholder Matrix]] e [[user_journeys|User Journeys]].
+    - **[[Pré-Fase A - Análise de Conceito|Pré-Fase A]]/[[Fase A - Desenvolvimento de Conceito|Fase A]]**: Criação de [[PRD]], Stakeholder Matrix e User Journeys.
     - **[[Fase B - Definição Preliminar|Fase B]]**: Definição da Stack, Esquema de Banco de Dados e Contratos de API.
 
 ## Vantagens

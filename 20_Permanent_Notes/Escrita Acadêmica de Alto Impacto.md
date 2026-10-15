@@ -12,7 +12,7 @@ Para desenvolver trabalhos científicos de alto teor técnico capazes de serem p
 
 ## 🚀 Princípios Fundamentais (SOTA 2025)
 
-1.  **Storytelling Científico**: Não apenas relate dados; conte uma história de resolução de problemas. O "so what?" (qual a relevância?) deve estar claro desde o [[Resumo Científico|Abstract]].
+1.  **Storytelling Científico**: Não apenas relate dados; conte uma história de resolução de problemas. O "so what?" (qual a relevância?) deve estar claro desde o Abstract.
 2.  **Foco em Aplicabilidade**: Trabalhos de alto impacto em [[Engenharia de Sistemas]] devem demonstrar como a inovação metodológica ou técnica pode ser generalizada para outros domínios ou problemas complexos.
 3.  **Clareza e Concisão**: Use a voz ativa ("Nós projetamos..." em vez de "Foi projetado...") para melhorar o engajamento e a responsabilidade.
 4.  **Data Transparency**: Disponibilizar código e datasets em repositórios (GitHub, Zenodo) aumenta drasticamente a confiança dos revisores e o potencial de citação.

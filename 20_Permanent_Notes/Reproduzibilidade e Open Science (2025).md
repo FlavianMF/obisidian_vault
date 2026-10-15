@@ -8,13 +8,13 @@ provenance: manual
 
 # 🧬 Reproduzibilidade e Open Science (2025)
 
-A "Ciência Aberta" evoluiu de uma recomendação para um requisito estrutural em 2025, com instituições como [[IEEE]] e ACM liderando a transição para os princípios **FAIR** (Findable, Accessible, Interoperable, Reusable).
+A "Ciência Aberta" evoluiu de uma recomendação para um requisito estrutural em 2025, com instituições como IEEE e ACM liderando a transição para os princípios **FAIR** (Findable, Accessible, Interoperable, Reusable).
 
 ## 📋 Requisitos de Publicação Modernos
 
 1.  **Data Availability Statement (DAS)**: Declaração obrigatória no manuscrito explicando onde os dados estão ou por que não podem ser compartilhados.
 2.  **Persistent Identifiers (DOIs)**: Todos os datasets e códigos devem ter seu próprio DOI (via Zenodo ou IEEE DataPort).
-3.  **Compute Capsules (Code Ocean)**: Uso de containers (como [[Docker]]) que incluem o código, dados e o ambiente computacional exato para eliminar o problema "funciona na minha máquina".
+3.  **Compute Capsules (Code Ocean)**: Uso de containers (como Docker) que incluem o código, dados e o ambiente computacional exato para eliminar o problema "funciona na minha máquina".
 4.  **Reproducibility Reviews**: Alguns journals agora realizam auditoria técnica do código antes de aceitar o artigo.
 
 ## 🛠️ Infraestrutura e Ferramentas

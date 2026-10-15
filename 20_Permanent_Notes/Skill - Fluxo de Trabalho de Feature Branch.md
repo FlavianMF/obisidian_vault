@@ -16,7 +16,7 @@ novas funcionalidades.
 
 1.  **Criação de branch**: branch dedicada, nunca trabalho direto na branch de integração.
 2.  **Commits de processo**: commits incrementais a cada sub-etapa concluída (ex.: "define
-    schemas", "impl logic", "add tests"), em [[caveman-commit|Conventional Commits]].
+    schemas", "impl logic", "add tests"), em Conventional Commits.
 3.  **Finalização**: **nunca mesclar automaticamente**. O agente deixa a branch pronta e
     informa o usuário.
 

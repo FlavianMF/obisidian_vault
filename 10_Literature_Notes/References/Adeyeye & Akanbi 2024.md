@@ -20,7 +20,7 @@ citekey: Adeyeye2024
 
 ## 🔗 Conexões (Zettelkasten)
 - [[MBSE]]
-- [[Complexidade de Sistemas]]
+- Complexidade de Sistemas
 - [[MBSE com Agentic AI]]
 
 ---

@@ -57,7 +57,7 @@ graph TD
 ## 🔗 Conexões
 - [[Ciclo de Vida de Engenharia de Sistemas]]
 - [[MBSE]]
-- [[Rastreabilidade de Requisitos]]
+- Rastreabilidade de Requisitos
 
 ## Fontes
 - INCOSE Systems Engineering Handbook.

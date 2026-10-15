@@ -15,12 +15,12 @@ successor: /home/flv/projetos_pnaat/validacoes_iot
 Sistema de validação e avaliação técnica automatizada de entregas de alunos (IoT), utilizando agentes de IA e scripts de processamento em massa.
 
 ## 📌 Visão Geral
-Este projeto utiliza a infraestrutura do [[hermes_docker]] para executar um pipeline de avaliação. Originalmente concebido com [[Multi-Agent Systems (MAS)]] via CrewAI, evoluiu para uma abordagem híbrida de alta performance.
+Este projeto utiliza a infraestrutura do [[hermes_docker]] para executar um pipeline de avaliação. Originalmente concebido com Multi-Agent Systems (MAS) via CrewAI, evoluiu para uma abordagem híbrida de alta performance.
 
 ## 🧠 Conceitos e Padrões Extraídos
 - [[Orquestração Híbrida de Agentes]]: Uso de scripts para tarefas repetitivas e LLMs para análise qualitativa.
 - [[Validação Acadêmica Automatizada]]: Aplicação de rubricas técnicas via código.
-- [[Dashboard de Resultados Agênticos]]: Visualização consolidada de outputs de múltiplos agentes/processos.
+- Dashboard de Resultados Agênticos: Visualização consolidada de outputs de múltiplos agentes/processos.
 
 ## 🛠️ Componentes do Sistema
 1. **iot_validator (CrewAI)**: Definição de agentes (Inspector, Specialist, Evaluator).

@@ -83,7 +83,7 @@ passar:
 - `second-brain-sync` **Behavior 2** — dispara sozinho ao fim de tarefa/sessão.
 - **Eixo 7** de [[Checklist de Bootstrap de Workflow de Desenvolvimento]] — é o que o
   Behavior 3 replica para o `CLAUDE.md`/`AGENTS.md`/`.cursorrules` de cada projeto.
-- [[Agentic Knowledge Bridge|Agent-Instruction]] — alcança agentes que leem o vault direto.
+- Agent-Instruction — alcança agentes que leem o vault direto.
 
 ## 🔗 Conexões
 - [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]]

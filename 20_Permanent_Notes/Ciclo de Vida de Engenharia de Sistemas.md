@@ -25,4 +25,4 @@ Nesta etapa, o foco muda do design para a construção, integração, testes e, 
 
 ## 🔗 Referências
 - [[Systems Engineering Handbook|NASA SE Handbook]]
-- [[Fundamentos de Engenharia de Sistemas]]
+- Fundamentos de Engenharia de Sistemas

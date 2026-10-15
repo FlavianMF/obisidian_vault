@@ -13,7 +13,7 @@ A Engenharia de Sistemas Baseada em Modelos é a aplicação formalizada de mode
 
 ## 🔑 Pilares
 - **Modelo sobre Documento**: A "única fonte de verdade" é o [[Digital Twin|modelo digital]], não relatórios estáticos.
-- **Rastreabilidade**: Conexão direta entre [[Rastreabilidade de Requisitos|requisitos]], arquitetura e testes.
+- **Rastreabilidade**: Conexão direta entre requisitos, arquitetura e testes.
 - **Consistência**: Mudanças no modelo se propagam automaticamente por todas as visões ([[SysML]]).
 
 ## 🚀 Evolução com IA

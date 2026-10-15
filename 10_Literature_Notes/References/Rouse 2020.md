@@ -19,8 +19,8 @@ citekey: Rouse2020
 - Transição da automação isolada para o suporte à decisão e design.
 
 ## 🔗 Conexões (Zettelkasten)
-- [[Augmented Intelligence]]
-- [[Co-Design Humano-IA]]
+- Augmented Intelligence
+- Co-Design Humano-IA
 - [[MBSE com Agentic AI]]
 
 ---

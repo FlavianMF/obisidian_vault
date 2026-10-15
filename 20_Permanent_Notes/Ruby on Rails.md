@@ -8,7 +8,7 @@ provenance: manual
 
 # 💎 Ruby on Rails
 
-Framework web baseado na linguagem [[Ruby]], focado na produtividade e felicidade do desenvolvedor através da convenção sobre configuração (CoC).
+Framework web baseado na linguagem [[Ruby on Rails|Ruby]], focado na produtividade e felicidade do desenvolvedor através da convenção sobre configuração (CoC).
 
 ## Características
 - **CoC (Convention over Configuration)**: Muitas decisões são tomadas pelo framework, acelerando o desenvolvimento.

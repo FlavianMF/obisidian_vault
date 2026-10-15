@@ -19,8 +19,8 @@ citekey: Ekundayo2024
 - IA transformando a gestão de consistência técnica.
 
 ## 🔗 Conexões (Zettelkasten)
-- [[Decision Intelligence]]
-- [[Otimização de Sistemas]]
+- Decision Intelligence
+- Otimização de Sistemas
 - [[MBSE com Agentic AI]]
 
 ---

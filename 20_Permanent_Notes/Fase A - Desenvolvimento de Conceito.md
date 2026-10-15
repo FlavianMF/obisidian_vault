@@ -24,4 +24,4 @@ Determinar a viabilidade e o mérito de um sistema proposto. Define a arquitetur
 - [[Ciclo de Vida de Engenharia de Sistemas]]
 - [[NASA SE Engine]]
 - [[Plano de Gerenciamento de Engenharia de Sistemas (SEMP)]]
-- [[Rastreabilidade de Requisitos]]
+- Rastreabilidade de Requisitos

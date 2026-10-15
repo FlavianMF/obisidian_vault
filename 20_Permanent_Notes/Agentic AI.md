@@ -28,4 +28,4 @@ Em [[MBSE com Agentic AI]], os agentes atuam como "co-designers", validando rest
 
 ## 🔗 Referências
 - [[Rouse 2020]] (IA como Inteligência Aumentada)
-- [[Capella AI Agent Talk]]
+- Capella AI Agent Talk

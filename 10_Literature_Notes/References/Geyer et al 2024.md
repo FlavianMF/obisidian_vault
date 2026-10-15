@@ -20,7 +20,7 @@ citekey: Geyer2024
 
 ## 🔗 Conexões (Zettelkasten)
 - [[XAI]]
-- [[Digital Models]]
+- Digital Models
 - [[MBSE com Agentic AI]]
 
 ---

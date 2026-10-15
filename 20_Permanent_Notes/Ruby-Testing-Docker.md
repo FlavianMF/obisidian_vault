@@ -8,11 +8,11 @@ provenance: manual
 
 # 🧪 Testes de Software em Ruby on Rails com Docker
 
-Este padrão descreve como configurar e executar uma suíte de testes robusta para aplicações Ruby on Rails operando exclusivamente em ambientes containerizados ([[Docker]]).
+Este padrão descreve como configurar e executar uma suíte de testes robusta para aplicações Ruby on Rails operando exclusivamente em ambientes containerizados (Docker).
 
 ## 🏗️ Arquitetura de Testes
 
-Para ambientes sem Ruby local, a execução depende de [[Docker Compose]]. O container de API deve possuir as dependências de teste no `Gemfile`.
+Para ambientes sem Ruby local, a execução depende de Docker Compose. O container de API deve possuir as dependências de teste no `Gemfile`.
 
 ### Ferramentas Recomendadas
 - **RSpec**: Padrão da indústria para BDD em Ruby.
@@ -50,6 +50,6 @@ Garantem que os endpoints da API respondem conforme o esperado.
 Utilizar o `Database Cleaner` configurado para `transaction` na maioria dos casos e `truncation` para testes que utilizam drivers de navegador (System Tests).
 
 ## 🖇️ Conexões
-- [[Engenharia de Software]]
+- Engenharia de Software
 - [[Docker-out-of-Docker (DooD)]]
 - [[Skill - Sincronização de Conhecimento Recursiva|Sincronização de Conhecimento Recursiva]]

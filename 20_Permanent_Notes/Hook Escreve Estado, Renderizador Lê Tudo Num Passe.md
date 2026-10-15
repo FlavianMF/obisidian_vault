@@ -15,7 +15,7 @@ do processo escreve/atualiza um arquivo de estado pequeno; um renderizador
 externo, rodando no seu próprio timer, lê todos os arquivos de estado num
 único passe e desenha a UI**. Nenhum dos dois lados chama o outro.
 
-Concretamente, em [[tmux-claude-monitor]]: os hooks clássicos do Claude Code
+Concretamente, em tmux-claude-monitor: os hooks clássicos do Claude Code
 (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `Notification`, `Stop`,
 `SessionEnd`) escrevem uma linha `chave=valor` por pane em
 `~/.local/state/<app>/panes/pane-<id>.state`; `render.sh`, chamado a cada

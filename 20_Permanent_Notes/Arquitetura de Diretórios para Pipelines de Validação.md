@@ -43,7 +43,7 @@ subprocess.run([sys.executable, script_path], env=env)
 Ao implementar dashboards interativos que servem arquivos de múltiplas subpastas, sobrescreva o `translate_path` do servidor HTTP para mapear rotas virtuais para os diretórios físicos corretos (`reports/` para assets, `data/` para JSONs).
 
 ### 4. Dashboards Autossuficientes (Offline-first)
-Para máxima portabilidade, o pipeline final deve ser capaz de embutir dados (JSON) diretamente no HTML via injeção de tags `<script>`, eliminando dependências de servidores locais ou problemas de [[CORS]].
+Para máxima portabilidade, o pipeline final deve ser capaz de embutir dados (JSON) diretamente no HTML via injeção de tags `<script>`, eliminando dependências de servidores locais ou problemas de CORS.
 
 ## 🚀 Benefícios
 - **Clean Root**: O diretório raiz contém apenas o que é essencial para o usuário final.

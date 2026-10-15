@@ -27,7 +27,7 @@ A partir de **2026-05-25**, o projeto suporta **Multi-Instância Dinâmica**, pe
 - [[Setup de Infraestrutura Hermes Docker]]
 - [[Integração NVIDIA NIM]]
 - [[Fluxo de Autenticação OAuth em Containers]]
-- [[Pesquisa Hermes Agent]]
+- Pesquisa Hermes Agent
 
 ## 📂 Estrutura do Projeto
 - `Dockerfile`: Configuração da imagem base (Ubuntu 22.04).
