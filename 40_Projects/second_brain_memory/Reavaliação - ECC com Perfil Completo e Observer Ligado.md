@@ -89,12 +89,15 @@ mantém a observação fora de diretórios de trabalho com esses nomes (o padrã
 - PRD-002: §3.5 e a lista de "o que não será feito".
 - Estudo: matriz S4 e a etapa I0 (verificar o redator de segredos e o nome do limite de injeção).
 
-## 5. Decisões para o usuário
+## 5. Decisões tomadas (2026-10-15)
 
-1. **Limite temporário da injeção de instincts** (`ECC_MAX_INJECTED_INSTINCTS=0` por 2 semanas, medindo antes de soltar)?
-   Recomendação: sim, é o único ponto em que o princípio 8 ainda vale sem reverter a sua escolha.
-2. O observer processa só projetos web, C e Node (onde o ECC liga). Quer também uma lista de projetos **excluídos** (além de
-   `secrets`, `.ssh`, `.aws`)? Ex.: projetos com dados pessoais.
-3. Retenção: o ECC poda sessões com mais de 30 dias; definir a retenção das observações e dos instincts `pending` (TTL de 30 dias, como o `prune`).
-4. Quem executa `/promote`, `/evolve` e `/prune`: só o usuário, ou o `sb review` pode invocá-los em modo `--dry-run` e mostrar o resultado?
-5. A etapa I0 passa a incluir o teste do redator de segredos e a leitura do limite de injeção; aprova?
+1. **Limite temporário da injeção de instincts: aprovado.** `ECC_MAX_INJECTED_INSTINCTS=0` por 2 semanas, medindo antes de soltar.
+   É o único ponto em que o princípio 8 ainda vale sem reverter a escolha do usuário. O nome da variável e o efeito seguem
+   NÃO VERIFICADOS até a I0; se não existirem, a I0 propõe outra forma de limitar a injeção.
+2. **Lista de projetos excluídos do observer: não por enquanto.** Vale só `ECC_OBSERVE_SKIP_PATHS` (`secrets`, `.ssh`, `.aws`
+   e afins). Reabrir se aparecer projeto com dados pessoais.
+3. **Retenção: aprovada.** TTL de 30 dias para observações e instincts `pending`, alinhado ao `prune` do ECC.
+4. **`/promote`, `/evolve`, `/prune`: o `sb review` pode invocá-los em modo `--dry-run` e mostrar o resultado.** Sem
+   `--dry-run`, só o usuário executa. O agente continua sem rodar esses comandos por conta própria.
+5. **I0 inclui o teste do redator de segredos e a leitura do limite de injeção: aprovado.** O teste usa credenciais falsas em
+   `CLV2_HOMUNCULUS_DIR` temporário, nunca no diretório real.
