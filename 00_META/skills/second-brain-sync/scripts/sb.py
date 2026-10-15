@@ -4,7 +4,7 @@
 I1 skeleton. Read-only subcommands over the scripts that already exist; no behavior changes.
 
   sb status                 vault, notes by type, git state, hook switches, last sync
-  sb doctor [--json]        broken wikilinks, duplicate titles, frontmatter, secrets, stale notes
+  sb doctor [--json]        unresolved wikilinks, duplicate titles, frontmatter, secrets, stale notes
   sb search [-k N] <query>  the L1 ranker (vault_rank.sh), same TSV output
 
 Short-lived process, no daemon, stdlib only. `doctor` exits 1 when it finds an error-level issue.
@@ -30,11 +30,12 @@ from lib import frontmatter, secret_scan  # noqa: E402
 REQUIRED_FIELDS = ("title", "type", "tags", "created")
 NOTE_TYPES = {
     "meta", "pattern", "decision", "concept", "trap", "project", "literature", "moc", "inbox", "template",
-    "unclassified",
+    "unclassified", "article", "literature-note", "permanent",
 }
 CONFIDENCE_LEVELS = {"low", "medium", "high"}
 SCOPES = {"global", "project"}
-STATUSES = {"active", "superseded"}
+STATUSES = {"active", "superseded", "completed", "archived"}
+TEMPLATE_DIR = "90_Assets/"  # placeholders such as `type: article/book/paper` are not real values
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SKIP_DIRS = {".git", ".obsidian"}
 ERROR, WARN = "error", "warn"
@@ -120,6 +121,10 @@ def normalize_supersedes(value) -> list[str]:
 def check_note(vault: Path, rel: Path, text: str, index: LinkIndex) -> tuple[list[Issue], dict]:
     issues: list[Issue] = []
     path = str(rel)
+    if not text.strip():
+        return [Issue("empty-note", WARN, path, "0 bytes; Obsidian creates these when a pending link is clicked")], {}
+    if path.startswith(TEMPLATE_DIR):
+        return [Issue("secret", ERROR, path, f"{f.label} (line {f.line})") for f in secret_scan.scan_text(text)], {}
     fm_lines, body = frontmatter.split_frontmatter(text)
     if fm_lines is None:
         issues.append(Issue("frontmatter", ERROR, path, "no frontmatter block"))
@@ -146,7 +151,8 @@ def check_note(vault: Path, rel: Path, text: str, index: LinkIndex) -> tuple[lis
         target = clean_link_target(match.group(1))
         if target and target not in reported and not link_resolves(target, index):
             reported.add(target)
-            issues.append(Issue("broken-link", ERROR, path, f"[[{target}]]"))
+            # A link to a note that does not exist yet is normal Obsidian practice (a pending note).
+            issues.append(Issue("unresolved-link", WARN, path, f"[[{target}]]"))
     for finding in secret_scan.scan_text(text):
         issues.append(Issue("secret", ERROR, path, f"{finding.label} (line {finding.line})"))
     return issues, data

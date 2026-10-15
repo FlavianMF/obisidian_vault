@@ -95,19 +95,39 @@ class DoctorTest(VaultFixture):
         self.note("Beta")
         self.assertEqual(self.doctor(), [])
 
-    def test_reports_broken_link_but_not_links_shown_in_code(self):
+    def test_reports_unresolved_link_as_a_warning_but_not_links_shown_in_code(self):
         self.note("Alpha", body="Real [[Fantasma]].\n\n```\n[[Exemplo Em Bloco]]\n```\n\nInline `[[Exemplo Inline]]`.\n")
-        details = [i.detail for i in self.checks(self.doctor(), "broken-link")]
-        self.assertEqual(details, ["[[Fantasma]]"])
+        issues = self.checks(self.doctor(), "unresolved-link")
+        self.assertEqual([(i.detail, i.severity) for i in issues], [("[[Fantasma]]", sb.WARN)])
 
     def test_ignores_a_wikilink_that_spans_lines(self):
         self.note("Alpha", body="Texto [[Skill - Sincronização de\nConhecimento Recursiva]] fim.\n")
-        self.assertEqual(self.checks(self.doctor(), "broken-link"), [])
+        self.assertEqual(self.checks(self.doctor(), "unresolved-link"), [])
 
     def test_resolves_folder_path_and_case_insensitive_links(self):
         self.note("Alpha", body="[[20_Permanent_Notes/Beta]] e [[beta]] e [[Beta.md]].\n")
         self.note("Beta")
-        self.assertEqual(self.checks(self.doctor(), "broken-link"), [])
+        self.assertEqual(self.checks(self.doctor(), "unresolved-link"), [])
+
+    def test_accepts_the_vault_note_types_and_project_statuses(self):
+        self.note("Artigo", type_="article")
+        self.note("Ficha", type_="literature-note")
+        self.note("Conceito", type_="permanent")
+        self.note("Feito", type_="project", extra="status: completed\n")
+        self.note("Guardado", type_="project", extra="status: archived\n")
+        self.assertEqual(self.checks(self.doctor(), "frontmatter"), [])
+
+    def test_empty_note_is_a_warning_and_skips_the_other_checks(self):
+        (self.vault / "Vazia.md").write_text("")
+        issues = [i for i in self.doctor() if i.path == "Vazia.md"]
+        self.assertEqual([(i.check, i.severity) for i in issues], [("empty-note", sb.WARN)])
+
+    def test_template_placeholders_are_not_checked_but_secrets_still_are(self):
+        self.note("Modelo", type_="article/book/paper", body="[[Alvo Inexistente]]\n", folder="90_Assets")
+        self.assertEqual([i for i in self.doctor() if i.path.startswith("90_Assets/")], [])
+        secret = SecretScanTest.SHAPES["GitHub token"]
+        self.note("Modelo", folder="90_Assets", body=f"{secret}\n")
+        self.assertEqual([i.check for i in self.doctor() if i.path.startswith("90_Assets/")], ["secret"])
 
     def test_reports_duplicate_titles_across_notes(self):
         self.note("Alpha", title="Mesmo Título")
@@ -157,14 +177,14 @@ class DoctorTest(VaultFixture):
         self.assertEqual([i.severity for i in drift], [sb.WARN])
 
     def test_cli_exit_code_and_json(self):
-        self.note("Alpha", body="[[Fantasma]]\n")
+        self.note("Alpha", type_="coisa")
         gm.write_manifests(self.vault)
         result = subprocess.run(
             [sys.executable, str(SB), "doctor", "--vault-path", str(self.vault), "--json"],
             capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 1)
-        self.assertEqual([i["check"] for i in json.loads(result.stdout)], ["broken-link"])
+        self.assertEqual([i["check"] for i in json.loads(result.stdout)], ["frontmatter"])
 
     def test_cli_exit_zero_when_only_warnings(self):
         self.note("Velha", type_="pattern", created="2020-01-01")

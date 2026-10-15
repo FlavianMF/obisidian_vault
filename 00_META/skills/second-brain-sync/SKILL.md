@@ -254,7 +254,7 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 | field | required | notes |
 |---|---|---|
 | `title` | yes | human-readable, may differ from filename |
-| `type` | yes | `meta, pattern, decision, concept, trap, project, literature, moc, inbox, template, unclassified` |
+| `type` | yes | `meta, pattern, decision, concept, trap, project, literature, moc, inbox, template, unclassified`; also in use: `article`, `literature-note`, `permanent` |
 | `tags` | yes | list, may be `[]` |
 | `created` | yes | `YYYY-MM-DD` |
 | `provenance` | recommended | `manual` for hand-authored notes; originating project name for agent-distilled notes; `unknown` when the origin can't be recovered |
@@ -263,7 +263,7 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 | `confidence` | optional | `low` (seen once, not reproduced; **every new agent-written note starts here**), `medium` (reproduced or documented upstream), `high` (confirmed in 2+ projects or by a test) |
 | `seen_in` | optional | list of projects that confirmed the note, e.g. `[capella_mcp, orbita-platform]` |
 | `scope` | optional | `global` (default) or `project` — `project` notes stay out of promotion |
-| `status` | optional | `active` (default) or `superseded`; a superseded note stays in the vault |
+| `status` | optional | `active` (default), `superseded`, `completed` or `archived` (the last two for project notes); a superseded note stays in the vault |
 | `supersedes` | optional | title or wikilink (or a list) of the note this one replaces; the target must exist |
 
 `path` is never a frontmatter field — it's manifest-only, computed metadata.
