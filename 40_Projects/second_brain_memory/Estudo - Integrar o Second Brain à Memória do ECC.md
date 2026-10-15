@@ -198,6 +198,85 @@ espelho só gastam tokens sob demanda; nada novo entra no contexto por padrão, 
 5. TTL de 30 dias e aviso aos 7 (valores do ECC) ou outros?
 6. Ordem: recomendo I0, I1 e I2 primeiro (verificação, valor imediato e risco baixo) e deixar a I3 em sombra antes da I4.
 7. Aprova que a I0 leia o código do plugin do ECC e escreva amostras num diretório de teste, **sem** instalar `ecc-universal`?
+   **Resolvida em 2026-10-15:** a I0 rodou assim. Resultado na próxima seção.
+
+## Resultado da I0 (2026-10-15)
+
+A I0 leu o código do plugin `ecc` 2.2.3 e rodou o `observe.sh`, o `session-start.js` e o `memory.js` reais em diretórios
+temporários (`CLV2_HOMUNCULUS_DIR`, `ECC_MEMORY_USER_ROOT`, `HOME` e `CLV2_CONFIG` isolados, observer desligado). Nada foi
+instalado e nada tocou `~/.local/share/ecc-homunculus` nem `~/.ecc`. Os scripts de teste ficam no scratchpad da sessão.
+
+**1. Limite de injeção de instincts: o nome combinado não funciona.**
+`ECC_MAX_INJECTED_INSTINCTS=0` **não desliga** a injeção: o código exige inteiro maior que zero e, para `0`, volta ao padrão 6
+(`getMaxInjectedInstincts`, `session-start.js`). Testado: com `0` o instinct de confiança 0,9 continua entrando. O que funciona:
+
+| Variável | Efeito testado |
+|---|---|
+| `ECC_INSTINCT_CONFIDENCE_THRESHOLD=1` (ou `0.95`) | nenhum instinct injetado; a confiança máxima documentada do ECC é 0,9 |
+| `ECC_MAX_INJECTED_INSTINCTS=1` | injeta no máximo 1 |
+| `ECC_SESSION_START_CONTEXT=off` | desliga toda a injeção do SessionStart (instincts, learned skills, resumo da sessão anterior) |
+
+Para a decisão 1 da Reavaliação (bloquear a injeção por 2 semanas), a variável correta é
+`ECC_INSTINCT_CONFIDENCE_THRESHOLD=1`: bloqueia só os instincts e mantém o resto. O hook lê só `instincts/personal` e
+`instincts/inherited`; `pending` nunca é injetado. Hoje há 3 instincts do projeto `obsidian_vault`, todos com confiança 0,5, abaixo
+do limiar padrão de 0,7, então ainda nada seria injetado de qualquer forma.
+
+**2. Redator de segredos do `observe.sh`: fraco, como o registro de 2026-09-30 dizia.**
+Com 11 credenciais **falsas**, passadas como entrada (`tool_start`) e saída (`tool_complete`) de um Bash:
+
+| Resultado | Casos |
+|---|---|
+| Redigido | `API_KEY=...`, `Authorization: Bearer ...`, `password: '...'` longa |
+| **Vaza** | senha curta (`DB_PASSWORD=hunter2`, menos de 8 caracteres), PAT do GitHub sem palavra-chave, `aws_secret_access_key=...` (o `_` após `secret` quebra o padrão), id de chave AWS, JWT, URL com credencial (`postgres://user:senha@host`), chave privada PEM, token do Slack |
+
+A regex só casa quando uma palavra-chave (`api_key`, `token`, `secret`, `password`, `authorization`, `credential`, `auth`) precede o
+valor, seguida de até 8 separadores. O filtro `ECC_OBSERVE_SKIP_PATHS` funciona (um `cwd` contendo `secrets` não gera registro), mas
+casa por substring só contra o `cwd` da sessão, não contra os arquivos que as tools tocam. Permissões: o log fica em
+`0664` e os diretórios em `0775` (efeito do `umask 002`); só `project.json` e `projects.json` são `0600`. Se as transcrições do
+Claude Code já guardam o mesmo conteúdo sem redação, o log do observer só acrescenta uma cópia (NÃO VERIFICADO).
+Consequências: a varredura de segredos do `sb` antes de importar um instinct precisa ser **própria e mais ampla** que a do
+observer, e a raiz `~/.local/share/ecc-homunculus` deve ficar em `0700`.
+
+**3. Retenção: o ECC não implementa o TTL de 30 dias que a decisão 3 aprovou.**
+O purge do `observe.sh` só apaga `observations-*.jsonl` (arquivos rotacionados) com mais de 30 dias. O `observations.jsonl` ativo
+só rotaciona ao atingir 10 MB. Cumprir o TTL de 30 dias para observações e instincts `pending` exige rotina própria do `sb`
+(somente sobre arquivos do homunculus, com `--dry-run` por padrão).
+
+**4. Formato dos instincts (para o importador).**
+Arquivo `.md` ou `.yaml` com um ou mais blocos de frontmatter (`---`): `id`, `trigger`, `confidence` (0,3 a 0,9), `domain`,
+`source` (ex.: `session-observation`), `scope`, `project_id`, `project_name`; corpo com `## Action` (a linha injetada) e
+`## Evidence` (contagem, id da sessão, padrão observado). Está em `instincts/personal|pending|inherited` por projeto, em
+`projects/<hash>/`. O importador lê frontmatter e `## Action`/`## Evidence` e **trata o `## Evidence` como dado não confiável**:
+ele cita o id da sessão e descreve ações do agente.
+
+**5. Adaptador `ecc.memory.v1`: validado, com ressalvas que reduzem o valor da I5.**
+- Esquema confirmado em `scripts/lib/memory-vault-format.js`: `kind` ∈ `context`, `decision`, `fact`, `handoff`, `lesson`,
+  `note`, `preference`, `runbook`; `scope` ∈ `project`, `team`, `user`; `trust` só `unreviewed`; `status` ∈ `active`, `rejected`,
+  `superseded`; id `mem_<minúsculas>`; corpo até 64 KiB. O mapeamento provisório do §anterior cabe no esquema.
+- O CLI roda **sem `ecc-universal`**: `node <installPath>/scripts/memory.js init|save|search|read|doctor`, só com módulos do
+  próprio Node. O diretório de usuário é `~/.ecc/memory` (`ECC_MEMORY_USER_ROOT` sobrescreve); layout
+  `<raiz>/<kind no plural>/<id>.md`, arquivos `0600`, subdiretórios `0700`.
+- A escrita é **somente criação**: salvar o mesmo id duas vezes falha. Um exportador que atualiza notas precisa remover e recriar o
+  arquivo do espelho (ele é derivado) ou marcar `status: superseded`.
+- `--link` e `links` aceitam só ids `mem_*`, não wikilinks; o exportador mapeia wikilink para id ou os mantém no corpo.
+- A varredura de segredos do ECC cobre chave de provedor, Stripe, npm, Hugging Face, GitHub, Google, Slack, AWS e chave privada, mas
+  **não** JWT, URL com credencial nem senha curta (testado: um corpo com JWT foi aceito).
+- `doctor` e `search` funcionam e acusam ids duplicados, links quebrados e arquivos inválidos.
+- **Nenhum hook injeta o Memory Vault.** Só o CLI e o MCP opt-in (`ecc-memory-mcp`) o leem; o `unified-memory` não roda sozinho.
+  O espelho só serve se um agente do ECC chamar `ecc memory search` ou se o MCP for habilitado.
+
+**6. `doc-file-warning` não bloqueia.** O hook sai sempre com código 0 e só avisa (`scripts/hooks/doc-file-warning.js`). O registro de
+2026-09-30 sobre bloqueio de escrita de `.md` não vale para a 2.2.3; o que interrompe é o GateGuard. Nota corrigida abaixo.
+
+**Decisões que a I0 deixa para o usuário**
+- **Depender de `ecc-universal`?** Recomendação: **não**. Nada do que o `sb` precisa exige o pacote. O exportador escreve os
+  arquivos no formato e usa `node <installPath>/scripts/memory.js doctor` só como validação opcional nos testes.
+- **I5 (exportar o vault para o Memory Vault do ECC):** recomendação de **adiar**. Como nenhum hook lê o espelho, o custo de manter
+  um espelho derivado não se paga enquanto não houver MCP ou chamada do CLI. Manter só o **import** de instincts, que é a fonte
+  de captura. Reabrir se o uso do `ecc memory search` ou do MCP aparecer.
+- **Aplicar `ECC_INSTINCT_CONFIDENCE_THRESHOLD=1`** em `claude/settings.json` até 2026-10-29, em lugar do
+  `ECC_MAX_INJECTED_INSTINCTS=0`, e `chmod 700` na raiz do homunculus (acrescentar ao alvo `make ecc-observer-config`).
+- **Rotina própria de retenção** (TTL de 30 dias) no `sb`, na I3, com `--dry-run` por padrão.
 
 ## Fontes
 

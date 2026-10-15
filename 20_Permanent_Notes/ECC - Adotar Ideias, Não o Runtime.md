@@ -51,8 +51,8 @@ ECC. O pacote é tomado como catálogo de ideias para [[claude-code]], não como
   [[Skill Monolítica Gasta o Contexto Antes de a Tarefa Começar]]: o custo aparece antes
   da tarefa, e boa parte não se aplica.
 - **O perfil `standard` de hooks atrapalha o fluxo real:** o GateGuard intercepta ações
-  rotineiras, há bloqueio de escrita de `.md` (que quebra a escrita de notas e docs de
-  projeto), e as rules forçam delegar para agents `ecc:*`, competindo com as skills e
+  rotineiras, o `doc-file-warning` avisa na escrita de `.md` (a nota original dizia que
+  bloqueava; na 2.2.3 ele só avisa, verificado em 2026-10-15), e as rules forçam delegar para agents `ecc:*`, competindo com as skills e
   agents já em uso. É a mesma classe de conflito de
   [[Skills de Design se Contradizem Entre Si, Dentro e Fora do Pacote]].
 

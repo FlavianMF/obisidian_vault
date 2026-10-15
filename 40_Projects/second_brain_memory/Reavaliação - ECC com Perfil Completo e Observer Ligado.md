@@ -50,7 +50,7 @@ mantém a observação fora de diretórios de trabalho com esses nomes (o padrã
 | RFC-001 D10 (Fechada): "usar `unified-memory` e `continuous-learning-v2` como base para aplicar no vault" | **Agora coerente** | Com o observer ligado, D10 deixa de contradizer a prática. Leitura adotada: o CLv2 captura, o vault guarda o que foi curado; o `unified-memory` vira adaptador opcional. |
 | RFC-001 D8: sem `PreCompact` no vault | **Mantida** | O `pre-compact` do ECC grava em `~/.claude/session-data`, fora do vault. Nada transitório entra no vault. |
 | RFC-001 D6/F2: escrita no vault só com portão em código | **Mantida e reforçada** | Instincts nunca viram nota por conta própria: passam pela fila, pelo veredito e pelo `vault_sync.py` (nota nasce `low`, varredura de segredos, recusa de duplicata). |
-| Princípio 8 (RFC): **sombra antes de ativo, com gate numérico** | **Em tensão** | A **coleta** de instincts e a **injeção** no SessionStart são a mesma chave de ligar. Recomendação, sem aplicar: manter `observer` e a observação ligados, mas por 2 semanas limitar a injeção com `ECC_MAX_INJECTED_INSTINCTS=0` (**NÃO VERIFICADO** se o nome e o efeito estão corretos no pin; confirmar na I0) e só soltar a injeção depois de medir a taxa de aceitação dos instincts na revisão. |
+| Princípio 8 (RFC): **sombra antes de ativo, com gate numérico** | **Em tensão** | A **coleta** de instincts e a **injeção** no SessionStart são a mesma chave de ligar. Recomendação, sem aplicar: manter `observer` e a observação ligados, mas por 2 semanas limitar a injeção com `ECC_INSTINCT_CONFIDENCE_THRESHOLD=1` (a I0 de 2026-10-15 mostrou que `ECC_MAX_INJECTED_INSTINCTS=0` **não** desliga: volta ao padrão 6; o limiar 1 zera a injeção, testado) e só soltar a injeção depois de medir a taxa de aceitação dos instincts na revisão. |
 | PRD-002 §3.5: "hooks do ECC ficam no perfil `minimal` (não mudar)" | **Desatualizada** | Trocar por: perfil `strict`. M1 para projetos web/C/Node passa a incluir os hooks: ~2 mil tokens de injeção no SessionStart e as perguntas do GateGuard a cada primeira edição. M1 para os demais projetos não muda. |
 | PRD-002 §5: o agente nunca roda `ecc-on`/`ecc-off`/`auto` | **Mantida** | Acrescentar: o agente também não roda `/promote`, `/evolve`, `/instinct-import` nem `/prune` sozinho; sugere. |
 | Estudo S4: observer "Rejeitar"; adaptador `ecc.memory.v1` como principal | **Revisada** | Instincts viram a **fonte principal de captura automática**; o `unified-memory` fica adaptador opcional e de menor prioridade. |
@@ -75,8 +75,8 @@ mantém a observação fora de diretórios de trabalho com esses nomes (o padrã
    que o usuário acabou de ligar.
    **Atenção a um registro anterior:** a nota de 2026-09-30 diz que o perfil `standard` tinha "bloqueio de escrita de `.md`", o que
    quebrava a escrita de notas e docs de projeto. Nesta sessão (perfil completo ativo) o `doc-file-warning` **não bloqueou** a
-   escrita de várias notas `.md`; só o GateGuard barrou, até os fatos serem apresentados. No pin 2.2.3 isso parece ser só aviso
-   (**NÃO VERIFICADO** em todos os caminhos de arquivo); conferir na I0 antes de confiar.
+   escrita de várias notas `.md`; só o GateGuard barrou, até os fatos serem apresentados. No pin 2.2.3 isso é só aviso
+   (verificado na I0 de 2026-10-15: `doc-file-warning.js` sai sempre com código 0); o registro antigo não vale para esta versão.
 5. **Duplicação de hooks** (`suggest-compact`, format/typecheck). Fechamento: aceita como ruído; se atrapalhar, desligar um dos
    lados por id em `ECC_DISABLED_HOOKS`.
 6. **Dois injetores no SessionStart** (o do ECC e os nossos L0/L1, a linha de ECC e a sugestão). Fechamento: orçamento somado
@@ -91,9 +91,10 @@ mantém a observação fora de diretórios de trabalho com esses nomes (o padrã
 
 ## 5. Decisões tomadas (2026-10-15)
 
-1. **Limite temporário da injeção de instincts: aprovado.** `ECC_MAX_INJECTED_INSTINCTS=0` por 2 semanas, medindo antes de soltar.
-   É o único ponto em que o princípio 8 ainda vale sem reverter a escolha do usuário. O nome da variável e o efeito seguem
-   NÃO VERIFICADOS até a I0; se não existirem, a I0 propõe outra forma de limitar a injeção.
+1. **Limite temporário da injeção de instincts: aprovado.** Bloquear a injeção por 2 semanas, medindo antes de soltar.
+   É o único ponto em que o princípio 8 ainda vale sem reverter a escolha do usuário. **Correção da I0 (2026-10-15):** o nome
+   combinado, `ECC_MAX_INJECTED_INSTINCTS=0`, não funciona (volta ao padrão 6). A variável que cumpre a decisão é
+   `ECC_INSTINCT_CONFIDENCE_THRESHOLD=1`, testada; ainda não aplicada em `claude/settings.json`.
 2. **Lista de projetos excluídos do observer: não por enquanto.** Vale só `ECC_OBSERVE_SKIP_PATHS` (`secrets`, `.ssh`, `.aws`
    e afins). Reabrir se aparecer projeto com dados pessoais.
 3. **Retenção: aprovada.** TTL de 30 dias para observações e instincts `pending`, alinhado ao `prune` do ECC.
