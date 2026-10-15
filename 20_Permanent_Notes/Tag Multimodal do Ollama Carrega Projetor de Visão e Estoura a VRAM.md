@@ -28,4 +28,4 @@ Não verificado: se o import só-texto realmente mantém tools no Ollama 0.40.
 
 ## 🔗 Conexões
 - [[Orçamento de VRAM para LLM Local - Pesos, Grafo e KV Cache]]
-- [[Projeto ollama-8gb-configs]]
+- [[ollama-8gb-configs|Projeto ollama-8gb-configs]]

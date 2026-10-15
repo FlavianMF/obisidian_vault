@@ -34,4 +34,4 @@ Hipótese não confirmada por teste A/B nesta máquina (tabela do estudo vazia).
 ## 🔗 Conexões
 - [[Orçamento de VRAM para LLM Local - Pesos, Grafo e KV Cache]]
 - [[Otimização de Recursos para LLMs em CPU]]
-- [[Projeto ollama-8gb-configs]]
+- [[ollama-8gb-configs|Projeto ollama-8gb-configs]]

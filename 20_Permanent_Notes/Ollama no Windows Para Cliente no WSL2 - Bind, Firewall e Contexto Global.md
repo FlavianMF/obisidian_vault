@@ -25,4 +25,4 @@ Setup: Ollama **nativo no Windows** (acesso direto ao driver, sem teto de RAM da
 ## 🔗 Conexões
 - [[Ollama Ignora Tamanho de Contexto Enviado por Request]]
 - [[Orçamento de VRAM para LLM Local - Pesos, Grafo e KV Cache]]
-- [[Projeto ollama-8gb-configs]]
+- [[ollama-8gb-configs|Projeto ollama-8gb-configs]]

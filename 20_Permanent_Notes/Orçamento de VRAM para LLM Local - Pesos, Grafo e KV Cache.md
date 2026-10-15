@@ -41,6 +41,6 @@ Decode é limitado por memória: `tok/s ≈ largura de banda ÷ bytes lidos por 
 Todos os números do projeto de origem são **estimativas**; as tabelas de medição (eval rate, PROCESSOR) ficaram vazias. Trate como método, não como resultado.
 
 ## 🔗 Conexões
-- [[Projeto ollama-8gb-configs]]
+- [[ollama-8gb-configs|Projeto ollama-8gb-configs]]
 - [[Tag Multimodal do Ollama Carrega Projetor de Visão e Estoura a VRAM]]
 - [[Ollama Ignora Tamanho de Contexto Enviado por Request]]

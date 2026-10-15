@@ -24,4 +24,4 @@ Com 8 GB cabe **um** modelo por vez (`OLLAMA_MAX_LOADED_MODELS=1`); trocar desca
 ## 🔗 Conexões
 - [[opencode]]
 - [[Orçamento de VRAM para LLM Local - Pesos, Grafo e KV Cache]]
-- [[Projeto ollama-8gb-configs]]
+- [[ollama-8gb-configs|Projeto ollama-8gb-configs]]
