@@ -159,12 +159,27 @@ submódulo (`git submodule add` local) e worktree.
 | E0 (spike) | **Feito em 2026-10-15** (seção 2 e 3.3): statusline multilinha acima do modo, `.claude/` da raiz do git vale em subpasta, `/reload-plugins` não dispara SessionStart | respostas registradas aqui | n/a |
 | E1 | `ecc-detect.sh`, `exclude_add` com `--git-common-dir`, `tests/ecc_detect_test.sh` | matriz passa, < 50 ms, lint ok | reverter (nada usa ainda) |
 | E2 | `--packs`, `auto`, `ecc.off`, `claude/ecc-auto.conf`, targets do Makefile, `tests/ecc_project_test.sh` | idempotência, chave `false` explícita vence, `off` não religa, settings symlinkado intacto, `git status` limpo em repo comum, submódulo e worktree | reverter |
-| E3 | wrapper no zsh, sugestão no SessionStart, `AGENTS.md`, `c.md` | `claude` num fixture web liga e imprime a linha; num `none` não faz nada | remover a função do zsh |
+| E3 | **Feito.** wrapper no zsh, sugestão no SessionStart, `AGENTS.md` (o `c.md` não precisou de mudança) | `claude` num fixture web liga e imprime a linha; num `none` não faz nada | remover a função do zsh |
 | E4 | `ecc-session-start.sh` (snapshot), `.injected`, ajuste do L1 e da limpeza de 7 dias, registro do hook editando `settings.json` do repo (nunca pelo CLI) | JSON de SessionStart como fixture, shadow não grava `.injected`, 0600 | reverter os dois repos |
 | E5 | `statusline.sh` e `tests/statusline_test.sh` | M2 e M3 passam; `sid` malicioso (`../x`) tratado | reverter |
 | E6 | medir M1 em um projeto web, um C e um neutro; destilar no vault | números registrados | n/a |
 | E7 | Fluxo interativo de melhoria do pack de C (decisão 1): skill ou comando que, em um projeto C, lê o código e o `c.md`/`cmake.md`/`makefile.md`, propõe acréscimos e correções às regras e só grava o que o usuário aceitar item a item | escopo e formato a fechar com o usuário antes de começar | remover a skill |
 | E8 | Kind `node-backend` (decisão 3): detector e arquivo de regras próprio `claude/rules/node-backend.md`, no mesmo molde do `c.md` | `ecc-detect.sh` distingue backend de web; regras escritas e revisadas pelo usuário | reverter |
+
+**Entregue em 2026-10-15 (dotfiles, branch `master` até `792cec3`; E3 em `feat/ecc-auto-wrapper`):**
+
+- **E1 e E2** (`cc9e802`, `9b1310e`, `792cec3`): `claude/ecc-detect.sh`, `ecc-project.sh auto|--packs|--no-rules`, marcador
+  `.claude/ecc.off`, `claude/ecc-auto.conf` (`kinds`, `include`, `exclude`), `make ecc-auto`/`make test` e 3 suítes de teste.
+  Uma revisão independente achou e corrigiu: corrida entre `auto` simultâneos (agora `flock` por repo), `settings.local.json`
+  inválido anunciando sucesso, `auto` fora de git, nomes de `--packs` sem validação, `kinds=none`, symlinks, `info/exclude`
+  sem `\n` final e vários falsos positivos do detector. Registro: o worktree tinha o bug de `.claude/` aparecer como não
+  rastreado (confirmado e corrigido com `--git-common-dir`).
+- **E3** (`8008e4b`, `0380d64`, `a5bd20e`): função `claude` em `zsh/ecc-auto.zsh` (aviso em stderr, nunca bloqueia, pula
+  subcomandos e `ECC_AUTO=0`), sugestão no SessionStart quando o ECC está desligado num projeto web/C/Node (respeita
+  `ecc.off`) e política do `AGENTS.md`. A correção do `c.md:9` **não foi necessária**: a afirmação do agente de que
+  `~/.claude/rules/ecc/cpp/` não existia estava errada (divergência 4).
+- Faltam **E4** (snapshot da sessão e `.injected`), **E5** (statusline, com ECC/SB como última linha), **E6** (medição de M1),
+  **E7** (fluxo interativo do pack de C) e **E8** (regras de Node backend).
 
 **Já entregue (decisão 6):** o hook `second-brain-note-opened.sh` (dotfiles, commit `502a6b2`, branch
 `feat/sb-opened-notes-hook`) registra em `<sid>.opened` as notas do vault que o agente abre com `Read` (sem repetir, sem
@@ -187,8 +202,7 @@ na statusline; instalar dependências novas (só bash, `jq` e `git`).
 3. **Backend Node sem front: não conta como web.** O usuário quer um tratamento "semelhante ao de C, mas para Node focado em
    backend": plugin ligado, sem pack de rules do ECC para web, e um arquivo de regras próprio (E8). Sub-decisão pendente: incluir
    ou não o pack `typescript` do ECC (recomendação inicial: não, para ficar igual ao C).
-4. **Gatilho: o usuário não entendeu a pergunta;** ela foi reexplicada na conversa (a recomendação continua wrapper + config +
-   sugestão) e aguarda resposta.
+4. **Gatilho: opção A aprovada** (wrapper `claude` no zsh + config + sugestão no SessionStart como fallback).
 5. **Ordem das linhas: aprovado**, com a correção do E0: o segmento ECC/SB deve ser a **última** linha da statusline, porque é a
    que fica acima do indicador de modo.
 6. **Contar notas abertas além das injetadas: sim, feito agora** (hook `second-brain-note-opened.sh`).
