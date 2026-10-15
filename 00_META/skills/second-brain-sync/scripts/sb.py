@@ -161,18 +161,31 @@ def check_note(vault: Path, rel: Path, text: str, index: LinkIndex) -> tuple[lis
     return issues, data
 
 
+def bare_link_targets(body: str) -> set[str]:
+    """Stems that a note points at by name only (no folder), which is where duplicates become ambiguous."""
+    targets = set()
+    for match in gm.WIKILINK.finditer(strip_code(body)):
+        if "\n" not in match.group(1):
+            target = clean_link_target(match.group(1))
+            if target and "/" not in target:
+                targets.add(target.casefold())
+    return targets
+
+
 def run_doctor(vault: Path, stale_days: int, today: dt.date) -> list[Issue]:
     index = build_index(vault)
     issues: list[Issue] = []
     by_title: dict[str, list[str]] = defaultdict(list)
     by_stem: dict[str, list[str]] = defaultdict(list)
     superseded_targets: set[str] = set()
+    bare_targets: set[str] = set()
     superseded_notes: list[tuple[str, str]] = []
     cutoff = today - dt.timedelta(days=stale_days)
     for path, rel in gm.iter_notes(vault):
         text = path.read_text(encoding="utf-8", errors="replace")
         note_issues, data = check_note(vault, rel, text, index)
         issues.extend(note_issues)
+        bare_targets |= bare_link_targets(text)
         if data.get("title"):
             by_title[data["title"].casefold()].append(str(rel))
         by_stem[path.stem.casefold()].append(str(rel))
@@ -187,7 +200,8 @@ def run_doctor(vault: Path, stale_days: int, today: dt.date) -> list[Issue]:
                 issues.append(Issue("stale", WARN, str(rel), f"{source} {date or '?'}"))
     for label, groups in (("duplicate-title", by_title), ("duplicate-name", by_stem)):
         for key, paths in sorted(groups.items()):
-            if len(paths) > 1:
+            # Same file name in two folders only misleads a `[[name]]` link, so skip names nobody links by name.
+            if len(paths) > 1 and (label == "duplicate-title" or key in bare_targets):
                 issues.append(Issue(label, WARN, paths[0], f"`{key}` also in: {', '.join(paths[1:])}"))
     for rel, stem in superseded_notes:
         if stem not in superseded_targets:

@@ -136,6 +136,14 @@ class DoctorTest(VaultFixture):
         self.assertEqual(len(issues), 1)
         self.assertIn("Beta.md", issues[0].detail)
 
+    def test_duplicate_file_name_warns_only_when_a_bare_link_targets_it(self):
+        self.note("indice", folder="40_Projects/a")
+        self.note("indice", folder="40_Projects/b", body="[[a/indice]]\n")
+        self.assertEqual(self.checks(self.doctor(), "duplicate-name"), [])
+        self.note("Ref", body="Veja [[indice]].\n")
+        issues = self.checks(self.doctor(), "duplicate-name")
+        self.assertEqual(len(issues), 1)
+
     def test_reports_secret_without_echoing_it(self):
         secret = SecretScanTest.SHAPES["GitHub token"]
         self.note("Alpha", body=f"chave {secret}\n")
