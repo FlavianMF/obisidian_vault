@@ -52,4 +52,4 @@ Utilizar o `Database Cleaner` configurado para `transaction` na maioria dos caso
 ## 🖇️ Conexões
 - [[Engenharia de Software]]
 - [[Docker-out-of-Docker (DooD)]]
-- [[Sincronização de Conhecimento Recursiva]]
+- [[Skill - Sincronização de Conhecimento Recursiva|Sincronização de Conhecimento Recursiva]]

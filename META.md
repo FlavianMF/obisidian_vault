@@ -28,7 +28,7 @@ Este arquivo serve como instrução para futuras sessões de IA para manter a in
 
 ## 🎯 Objetivos de Longo Prazo
 - Apoiar a pesquisa de Mestrado de [[Flavian Fernandes]].
-- Integrar [[MBSE]] com [[Agentic AI]] e [[IA Generativa]].
+- Integrar [[MBSE]] com [[Agentic AI]] e [[IA Generativa na Engenharia de Sistemas|IA Generativa]].
 - Manter rastreabilidade entre a prática (Sistemas Embarcados) e a teoria de sistemas (NASA SE Lifecycle).
 
 ---

@@ -46,7 +46,7 @@ O SEMP não é estático. Ele deve ser atualizado em cada **Key Decision Point (
 - [[NASA SE Engine]]
 - [[Ciclo de Vida de Engenharia de Sistemas]]
 - [[Análise de Trade-off (Trade Study)]]
-- [[Engenharia de Sistemas (MOC)]]
+- [[Engenharia de Sistemas|Engenharia de Sistemas (MOC)]]
 
 ---
 *Referência: NASA SE Handbook (App J) e INCOSE SE Handbook.*

@@ -17,7 +17,7 @@ Engenheiro Mecatrônico (FACENS, 2022) com foco em **Sistemas Embarcados**, **Fi
 - **Certificação**: Experiência com homologação INMETRO.
 
 ## 🎓 Objetivos de Pesquisa
-- **Mestrado**: Integração de [[Agentic AI]] e [[IA Generativa]] no ciclo de [[MBSE]].
+- **Mestrado**: Integração de [[Agentic AI]] e [[IA Generativa na Engenharia de Sistemas|IA Generativa]] no ciclo de [[MBSE]].
 - **Interesses Secundários**: Controle (PID), Sistemas de Controle, Edge AI.
 
 ## 🔗 Conexões

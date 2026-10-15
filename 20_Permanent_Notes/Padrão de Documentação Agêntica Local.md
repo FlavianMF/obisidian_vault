@@ -45,7 +45,7 @@ nota por etapa → playbook), os três níveis de aplicação e as convenções 
 > 2. Se criar uma nova funcionalidade, atualize `docs/PRD.md`.
 > 3. Se tomar uma decisão técnica, registre numa RFC em `docs/escopo/rfc/`, com a alternativa rejeitada.
 > 4. Ao final de cada tarefa, adicione ao `docs/projeto/Playbook-de-Desenvolvimento.md` o que custou uma sessão (sintoma + causa + comando exato).
-> 5. Mantenha a rastreabilidade com o cofre principal: [[Caminho/Para/Nota/No/Vault]]."
+> 5. Mantenha a rastreabilidade com o cofre principal: `[[Caminho/Para/Nota/No/Vault]]`."
 
 ## 🔄 Fluxo de Crescimento Recursivo
 O agente não apenas lê, mas **escreve seu próprio contexto futuro**. Isso resolve o problema de perda de memória entre sessões longas e garante que a documentação nunca fique desatualizada.

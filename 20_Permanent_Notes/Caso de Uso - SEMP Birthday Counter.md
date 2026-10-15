@@ -25,7 +25,7 @@ O *Birthday Counter* é um sistema de celebração gamificada que utiliza IA, ge
 ### 5.2 Technical Requirements (Requisitos Técnicos)
 - **Método**: Tradução do PRD em requisitos "Shall" (devem).
 - **Exemplo**: "O sistema *deve* emitir um evento WebSocket `CELEBRATION_TRIGGER` em menos de 100ms após o trigger do cron."
-- **Ferramenta**: [[docs/PRD.md]] e Git Issues.
+- **Ferramenta**: `docs/PRD.md` e Git Issues.
 
 ### 5.3 Logical Decomposition (Decomposição Lógica)
 - **Método**: Modelagem Funcional via Diagramas de Atividade para o motor de gamificação.

@@ -1,6 +1,7 @@
 ---
 title: Jev denylist
 type: meta
+tags: []
 created: 2026-10-05
 ---
 

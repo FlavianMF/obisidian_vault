@@ -13,14 +13,14 @@ O modelo IMRaD (Introduction, Methods, Results, and Discussion) é o padrão int
 ## 📍 Componentes do Modelo
 
 ### 1. Introduction (O "Porquê")
-- **Contexto**: O que já se sabe? (Linkar para [[10_Literature_Notes/|Literatura]]).
+- **Contexto**: O que já se sabe? (Linkar para a pasta `10_Literature_Notes/`, Literatura).
 - **Gap**: O que falta saber? Qual o problema não resolvido?
 - **Objetivo**: O que este artigo propõe para fechar esse gap?
 - **Contribuição**: Qual o diferencial deste trabalho?
 
 ### 2. Methods (O "Como")
 - Descrição detalhada o suficiente para permitir a **Reprodutibilidade**.
-- Se for [[Engenharia de Sistemas]], descrever o [[V-Model|processo de ciclo de vida]] e ferramentas (ex: [[SysML]], [[Capella MBSE]]).
+- Se for [[Engenharia de Sistemas]], descrever o [[V-Model (Vee Model)|processo de ciclo de vida]] e ferramentas (ex: [[SysML]], [[Capella MBSE]]).
 - Justificativa das escolhas técnicas.
 
 ### 3. Results (O "Quê")

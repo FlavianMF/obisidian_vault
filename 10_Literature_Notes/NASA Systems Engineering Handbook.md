@@ -42,6 +42,6 @@ Os processos de SE não são lineares; eles são aplicados:
 Enfatiza a integração de operadores humanos como parte integrante do sistema desde as fases iniciais.
 
 ## 🔗 Conexões
-- [[Engenharia de Sistemas (MOC)]]
+- [[Engenharia de Sistemas|Engenharia de Sistemas (MOC)]]
 - [[MBSE]]
 - [[V-Model (Vee Model)]]
