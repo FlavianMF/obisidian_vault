@@ -123,7 +123,11 @@ ao código. O vault sozinho não pegaria: o incidente que originou esta regra fo
      `low`; sobe para `medium`/`high` por evidência (2+ projetos em `seen_in`, ou teste),
      nunca por declaração. O `vault_sync.py` recusa nota nova sem `confidence: low` e recusa
      nota nova parecida com uma existente, a menos que você passe `--new-because "<uma linha
-     dizendo por que não é atualização>"`.
+     dizendo por que não é atualização>"`. "Nova" significa ausente do `HEAD`: não rode
+     `git add` nem `git commit` na nota antes do sync. Se o sync falhar no commit ou no push,
+     rode de novo com os mesmos argumentos; o `vault_sync.py` desfaz o stage e reenvia o que
+     ficou local. Duas sessões com nota pendente se recusam ("unrelated dirty files"):
+     sincronize uma, depois escreva a outra.
 2. **Propague a invalidação também aqui**: `grep` nos manifests
    (`00_META/manifests/by_type/*.md`) pelos termos que você tocou e corrija as notas do
    vault que a mudança tornou falsas — o passo é simétrico ao 2a, não só aditivo.

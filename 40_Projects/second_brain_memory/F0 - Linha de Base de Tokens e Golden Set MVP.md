@@ -252,6 +252,27 @@ agentes `ecc:*` com o plugin desligado. Commit `cb6cfb1` na branch `feat/ecc-ses
 merge. Ficou de fora desta etapa: resolver os conflitos entre `rules/common` e o `AGENTS.md`, que só importam nos
 projetos em que o ECC for ligado com rules completas (o `ecc-common` global já foi removido na F0b).
 
+## Atualização 2026-10-15: revisão independente da F2
+
+Um agente `ecc:code-reviewer` (somente leitura, fixtures em diretório temporário) reproduziu por execução três achados
+altos, três médios e três baixos em `vault_sync.py` e `note_candidates.sh`. Todos os que eram defeito de código foram
+corrigidos, com 8 testes de regressão que falham no código antigo (50 testes no total passam):
+
+- "Nota nova" era inferida por `git status` (`??`); `git add` antes do sync desligava as duas checagens. Agora é "ausente do `HEAD`".
+- Em worktree (`.git` é arquivo) o lock caía na raiz do worktree e todo sync era recusado como sujo. O lock agora fica no diretório git comum.
+- Título começando com `-` era lido como opção pelo `vault_rank.sh` e a checagem de duplicata ficava muda. Passou a usar `--` e `stdin` fechado.
+- Falha de commit deixava manifests e a nota no index; falha de push nunca era reenviada. Agora o commit falho desfaz o stage (`commit-failed`), manifests derivados não contam como sujeira, e o retry envia o que ficou local (`push-failed`).
+- Exceção inesperada gerava traceback sem registro no log (agora `crash`), log com bytes inválidos derrubava o exit code depois do push, e `SECOND_BRAIN_LOCK_TIMEOUT=nan` esperava para sempre.
+
+**Não corrigido, por serem decisões de política suas:**
+
+1. `provenance: manual` autodeclarado isenta a nota nova de `confidence: low`, o que contradiz "nunca por declaração".
+2. A promoção de `medium` para `high` numa nota existente não é verificada em lugar nenhum.
+3. Duas notas quase idênticas criadas na mesma chamada passam, porque os candidatos vêm só dos manifests já commitados.
+4. Uma nota que é symlink para fora do vault é commitada como symlink.
+5. Dois syncs concorrentes com nota pendente em ambos se recusam mutuamente; ficou documentado no `SKILL.md`, sem mudança de código.
+6. Um commit local feito à mão antes do sync é enviado sem as checagens de nota nova.
+
 ## Próximos passos
 
 1. **Você**: validar ou reescrever as 30 queries (principalmente as 21 `paraphrase`), e aprovar ou ajustar

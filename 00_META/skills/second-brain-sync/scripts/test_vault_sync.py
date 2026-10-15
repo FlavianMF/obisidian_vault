@@ -3,6 +3,7 @@
     python3 -m unittest discover -s 00_META/skills/second-brain-sync/scripts -v
 """
 
+import importlib
 import json
 import os
 import subprocess
@@ -183,6 +184,7 @@ class SyncGuardsTest(VaultFixture):
             done = self.sync(rel, extra_env={"SECOND_BRAIN_LOCK_TIMEOUT": "0.5"})
             self.assertEqual(done.returncode, 1)
             self.assertIn("lock", done.stderr.lower())
+            self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "lock-timeout")
         finally:
             holder.wait()
             holder.stdout.close()
@@ -193,6 +195,96 @@ class SyncGuardsTest(VaultFixture):
         done = self.sync(rel)
         self.assertEqual(done.returncode, 1)
         self.assertIn("unrelated dirty", done.stderr)
+
+
+class ReviewRegressionTest(VaultFixture):
+    """Achados da revisão independente da F2 (2026-10-15)."""
+
+    def duplicate(self, **kwargs):
+        return self.write("Importar Issues no Jira via REST", tags="jira, rest, csv", **kwargs)
+
+    def test_staging_the_new_note_first_does_not_switch_the_checks_off(self):
+        rel = self.duplicate(confidence="high")
+        git(self.vault, "add", rel)
+        done = self.sync(rel)
+        self.assertEqual(done.returncode, 1)
+        self.assertEqual(self.log("sync.jsonl")[-1]["created"], [rel])
+
+    def test_title_starting_with_a_dash_still_finds_the_candidate(self):
+        (self.vault / "20_Permanent_Notes" / "Importar Issues no Jira via REST.md").write_text(
+            make_note("- Importar Issues no Jira via REST", tags="jira, rest, csv"), encoding="utf-8"
+        )
+        rel = "20_Permanent_Notes/Importar Issues no Jira via REST.md"
+        done = self.sync(rel)
+        self.assertEqual(done.returncode, 1, done.stdout)
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "refused-candidate")
+
+    def test_sync_works_from_a_linked_worktree(self):
+        worktree = Path(self.tmp.name) / "wt"
+        git(self.vault, "worktree", "add", "-q", "-b", "wtb", str(worktree))
+        rel = "20_Permanent_Notes/Calibração de Câmera Estéreo.md"
+        (worktree / rel).write_text(make_note("Calibração de Câmera Estéreo", tags="visao, opencv"), encoding="utf-8")
+        cmd = ["python3", str(SYNC), "--vault-path", str(worktree), "--project-name", "projeto_x", "--message", "docs: t", "--note", rel]
+        done = subprocess.run(cmd, capture_output=True, text=True, env=self.env, check=False)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertFalse((worktree / "second-brain-sync.lock").exists())
+
+    def test_failed_commit_unstages_and_the_retry_succeeds(self):
+        hook = self.vault / ".git" / "hooks" / "pre-commit"
+        hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        hook.chmod(0o755)
+        rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        self.assertEqual(self.sync(rel).returncode, 1)
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "commit-failed")
+        staged = subprocess.run(["git", "-C", str(self.vault), "diff", "--cached", "--name-only"], capture_output=True, text=True).stdout
+        self.assertEqual(staged, "")
+        hook.unlink()
+        self.assertEqual(self.sync(rel).returncode, 0)
+
+    def test_failed_push_keeps_the_commit_and_the_retry_pushes_it(self):
+        hook = self.remote / "hooks" / "pre-receive"
+        hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        hook.chmod(0o755)
+        rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        self.assertEqual(self.sync(rel).returncode, 1)
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "push-failed")
+        hook.unlink()
+        retry = self.sync(rel)
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        remote_head = subprocess.run(["git", "-C", str(self.remote), "rev-parse", "master"], capture_output=True, text=True).stdout
+        local_head = subprocess.run(["git", "-C", str(self.vault), "rev-parse", "HEAD"], capture_output=True, text=True).stdout
+        self.assertEqual(remote_head, local_head)
+
+    def test_not_a_repository_fails_cleanly_without_litter_and_is_logged(self):
+        plain = Path(self.tmp.name) / "plain"
+        plain.mkdir()
+        cmd = ["python3", str(SYNC), "--vault-path", str(plain), "--project-name", "p", "--message", "m"]
+        done = subprocess.run(cmd, capture_output=True, text=True, env=self.env, check=False)
+        self.assertEqual(done.returncode, 1)
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertEqual(list(plain.iterdir()), [])
+        self.assertEqual(self.log("sync.jsonl")[-1]["outcome"], "crash")
+
+    def test_undecodable_argument_does_not_break_the_exit_code_after_the_push(self):
+        rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        done = self.sync(rel, new_because="motivo \udcff")
+        self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_lock_timeout_is_logged_and_non_finite_timeouts_are_rejected(self):
+        sys_path = str(SCRIPTS)
+        import sys
+
+        sys.path.insert(0, sys_path)
+        try:
+            module = importlib.import_module("vault_sync")
+        finally:
+            sys.path.remove(sys_path)
+        for bad in ("nan", "inf", "-1", "abc"):
+            os.environ["SECOND_BRAIN_LOCK_TIMEOUT"] = bad
+            try:
+                self.assertEqual(module.lock_timeout(), module.DEFAULT_LOCK_TIMEOUT_SECONDS, bad)
+            finally:
+                del os.environ["SECOND_BRAIN_LOCK_TIMEOUT"]
 
 
 if __name__ == "__main__":

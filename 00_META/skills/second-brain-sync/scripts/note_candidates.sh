@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# note_candidates.sh [-k N] "<título>" ["<tags>"]
+# note_candidates.sh [-k N] [--] "<título>" ["<tags>"]
 #
 # Antes de criar nota: lista as notas do vault que já cobrem o assunto (RFC-001 §5, F2).
 # Há candidato → atualize a nota existente (entrada datada + projeto em `seen_in`) em vez de
@@ -16,6 +16,7 @@
 K=3
 MIN_COVERAGE_DEFAULT=0.25
 if [[ "${1:-}" == "-k" && "${2:-}" =~ ^[0-9]+$ ]]; then K="$2"; shift 2; fi
+[[ "${1:-}" == "--" ]] && shift
 
 title="${1:-}"
 tags="${2:-}"
@@ -33,7 +34,7 @@ fi
 
 min_cov="${SECOND_BRAIN_CANDIDATE_COVERAGE:-$MIN_COVERAGE_DEFAULT}"
 query="$title ${tags//,/ }"
-ranked="$("$ranker" -k "$K" -c "$min_cov" -t 1 "$query" 2>/dev/null)"
+ranked="$("$ranker" -k "$K" -c "$min_cov" -t 1 -- "$query" 2>/dev/null </dev/null)"
 
 if [[ -n "$ranked" ]]; then
   while IFS=$'\t' read -r _score path row_title coverage confidence; do

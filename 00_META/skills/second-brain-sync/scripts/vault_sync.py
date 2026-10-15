@@ -18,7 +18,16 @@ Guardrails live here in code, not in prose the agent has to remember:
     the caller states `--new-because "<why this is not an update>"`.
   - A NEW note written by an agent (provenance other than `manual`) must be born with
     `confidence: low`; the level only rises by evidence, never by declaration.
-  - Every run appends one line to ~/.local/state/second-brain/sync.jsonl (0600).
+  - "New" means absent from HEAD (not `git status` says untracked), so `git add` or a local
+    commit before the sync does not switch the checks off.
+  - Derived manifest files never count as unrelated dirty files; a failed commit or push
+    can be retried (the retry pushes commits that are still ahead of origin).
+  - The lock lives in the git common dir, so it also works from a linked worktree.
+  - Every run appends one line to ~/.local/state/second-brain/sync.jsonl (0600); an
+    unexpected exception is logged as `crash`.
+
+Write the note AFTER taking turns: two sessions that both have an unsynced note in the vault
+refuse each other as "unrelated dirty files"; sync one, then write the next.
 
 Usage:
     python3 vault_sync.py --vault-path docs/second_brain \
@@ -33,6 +42,7 @@ import argparse
 import datetime as dt
 import fcntl
 import json
+import math
 import os
 import subprocess
 import sys
@@ -50,7 +60,6 @@ DEFAULT_LOCK_TIMEOUT_SECONDS = 120.0
 LOCK_POLL_SECONDS = 0.1
 DEFAULT_DUP_COVERAGE = 0.5
 CANDIDATES_SCRIPT = Path(__file__).resolve().parent / "note_candidates.sh"
-UNTRACKED = "??"
 
 
 def run_git(vault_root: Path, args: list[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -112,19 +121,30 @@ def log_event(event: dict) -> None:
         target = directory / "sync.jsonl"
         with open(os.open(target, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600), "a", encoding="utf-8") as handle:
             handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except OSError:
+    except (OSError, ValueError):
         pass
+
+
+def lock_timeout() -> float:
+    try:
+        value = float(os.environ.get("SECOND_BRAIN_LOCK_TIMEOUT", DEFAULT_LOCK_TIMEOUT_SECONDS))
+    except ValueError:
+        return DEFAULT_LOCK_TIMEOUT_SECONDS
+    return value if math.isfinite(value) and value >= 0 else DEFAULT_LOCK_TIMEOUT_SECONDS
+
+
+def git_common_dir(vault_root: Path) -> Path:
+    done = run_git(vault_root, ["rev-parse", "--path-format=absolute", "--git-common-dir"], check=False)
+    if done.returncode != 0 or not done.stdout.strip():
+        raise RuntimeError(f"not a git repository: {vault_root}")
+    return Path(done.stdout.strip())
 
 
 @contextmanager
 def sync_lock(vault_root: Path):
-    """Exclusive inter-process lock in .git/ (never shows up as a dirty file). Raises TimeoutError."""
-    try:
-        timeout = float(os.environ.get("SECOND_BRAIN_LOCK_TIMEOUT", DEFAULT_LOCK_TIMEOUT_SECONDS))
-    except ValueError:
-        timeout = DEFAULT_LOCK_TIMEOUT_SECONDS
-    git_dir = vault_root / ".git"
-    lock_path = (git_dir if git_dir.is_dir() else vault_root) / LOCK_NAME
+    """Exclusive inter-process lock in the git common dir (never a dirty file, shared by worktrees)."""
+    timeout = lock_timeout()
+    lock_path = git_common_dir(vault_root) / LOCK_NAME
     handle = open(lock_path, "w", encoding="utf-8")
     deadline = time.monotonic() + timeout
     try:
@@ -156,7 +176,8 @@ def existing_candidates(vault_root: Path, note: str) -> list[tuple[str, str, flo
     tags_text = ", ".join(tags) if isinstance(tags, list) else str(tags or "")
     env = {**os.environ, "SECOND_BRAIN_VAULT": str(vault_root), "SECOND_BRAIN_CANDIDATE_COVERAGE": str(dup_coverage())}
     done = subprocess.run(
-        [str(CANDIDATES_SCRIPT), "-k", "3", title, tags_text], capture_output=True, text=True, env=env, check=False
+        [str(CANDIDATES_SCRIPT), "-k", "3", "--", title, tags_text],
+        capture_output=True, text=True, env=env, check=False, stdin=subprocess.DEVNULL
     )
     found = []
     for line in done.stdout.splitlines():
@@ -166,11 +187,11 @@ def existing_candidates(vault_root: Path, note: str) -> list[tuple[str, str, flo
     return found
 
 
-def check_new_note(vault_root: Path, note: str, new_because: str | None) -> str | None:
-    """Return an error message when a NEW note breaks the F2 rules, else None."""
+def check_new_note(vault_root: Path, note: str, new_because: str | None) -> tuple[str, str] | None:
+    """Return (outcome, message) when a NEW note breaks the F2 rules, else None."""
     data, _, _ = frontmatter.read_note(vault_root / note)
     if str(data.get("provenance") or "") != "manual" and str(data.get("confidence") or "") != "low":
-        return (
+        return "refused-confidence", (
             f"new note {note} must be born with `confidence: low` (agent notes rise to medium/high "
             "by evidence, never by declaration; see Frontmatter-Schema)."
         )
@@ -180,11 +201,24 @@ def check_new_note(vault_root: Path, note: str, new_because: str | None) -> str 
     if not candidates:
         return None
     listing = "\n  ".join(f"{path}  (coverage {cov:.2f})" for path, _, cov in candidates)
-    return (
+    return "refused-candidate", (
         f"new note {note} looks like an existing note; update it instead (dated entry, add the project "
         f"to `seen_in`):\n  {listing}\n"
         "If this really is a different subject, rerun with --new-because \"<one line why>\"."
     )
+
+
+def in_head(vault_root: Path, path: str) -> bool:
+    return run_git(vault_root, ["cat-file", "-e", f"HEAD:{path}"], check=False).returncode == 0
+
+
+def ahead_of_origin(vault_root: Path) -> bool:
+    done = run_git(vault_root, ["rev-list", "--count", "origin/master..HEAD"], check=False)
+    return done.returncode == 0 and done.stdout.strip() not in ("", "0")
+
+
+def is_manifest(path: str) -> bool:
+    return path.startswith(MANIFEST_DIR_NAME + "/")
 
 
 def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
@@ -193,7 +227,7 @@ def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
     status = run_git(vault_root, ["status", "--porcelain", "--untracked-files=all", "-z"])
     entries = porcelain_entries(status.stdout)
     expected = set(args.note)
-    unexpected = [path for _, path in entries if path not in expected]
+    unexpected = [path for _, path in entries if path not in expected and not is_manifest(path)]
     if unexpected:
         event["outcome"] = "refused-dirty"
         return fail("vault has unrelated dirty/untracked files, refusing to proceed:\n  " + "\n  ".join(unexpected)), event
@@ -206,39 +240,43 @@ def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
         if not (vault_root / note).exists():
             return fail(f"--note path does not exist in vault: {note}"), event
 
-    untracked = {path for code, path in entries if code == UNTRACKED}
-    event["created"] = sorted(n for n in args.note if n in untracked)
-    event["updated"] = sorted(n for n in args.note if n not in untracked)
+    changed = {path for _, path in entries}
+    event["created"] = sorted(n for n in args.note if n in changed and not in_head(vault_root, n))
+    event["updated"] = sorted(n for n in args.note if n in changed and n not in event["created"])
     if args.new_because:
         event["new_because"] = args.new_because
     for note in event["created"]:
         problem = check_new_note(vault_root, note, args.new_because)
         if problem:
-            event["outcome"] = "refused-confidence" if "confidence: low" in problem else "refused-candidate"
-            return fail(problem), event
+            event["outcome"], message = problem
+            return fail(message), event
 
     generate_manifests.write_manifests(vault_root)
     after_manifest_status = run_git(
         vault_root, ["status", "--porcelain", "--untracked-files=all", "-z", "--", MANIFEST_DIR_NAME]
     )
-    stage_paths = sorted(set(args.note) | set(porcelain_paths(after_manifest_status.stdout)))
-    if not stage_paths:
+    stage_paths = sorted(
+        {n for n in args.note if n in changed} | set(porcelain_paths(after_manifest_status.stdout))
+    )
+    if stage_paths:
+        run_git(vault_root, ["add", "--", *stage_paths])
+        message = args.message
+        if args.project_name:
+            message = f"{message}\n\nProvenance: {args.project_name}"
+        commit = run_git(vault_root, ["commit", "-m", message], check=False)
+        if commit.returncode != 0:
+            run_git(vault_root, ["reset", "-q", "--", *stage_paths], check=False)
+            event["outcome"] = "commit-failed"
+            return fail(f"git commit failed (staged paths unstaged again; retry is safe):\n{commit.stderr}"), event
+    elif not ahead_of_origin(vault_root):
         event["outcome"] = "nothing-to-sync"
         print("nothing to sync (no note changes, manifests already up to date)")
         return 0, event
 
-    run_git(vault_root, ["add", "--", *stage_paths])
-
-    message = args.message
-    if args.project_name:
-        message = f"{message}\n\nProvenance: {args.project_name}"
-    commit = run_git(vault_root, ["commit", "-m", message], check=False)
-    if commit.returncode != 0:
-        return fail(f"git commit failed:\n{commit.stderr}"), event
-
     push = run_git(vault_root, ["push", "origin", "master"], check=False)
     if push.returncode != 0:
-        return fail(f"git push failed:\n{push.stderr}"), event
+        event.update(outcome="push-failed", sha=run_git(vault_root, ["rev-parse", "HEAD"]).stdout.strip())
+        return fail(f"git push failed (the commit stays local; rerun to push it):\n{push.stderr}"), event
 
     sha = run_git(vault_root, ["rev-parse", "HEAD"]).stdout.strip()
     event.update(outcome="synced", sha=sha)
@@ -268,6 +306,9 @@ def main() -> int:
     except TimeoutError as exc:
         log_event({"project": args.project_name, "outcome": "lock-timeout"})
         return fail(str(exc))
+    except Exception as exc:  # noqa: BLE001 - last resort: log it, never leave only a traceback
+        log_event({"project": args.project_name, "outcome": "crash", "error": f"{type(exc).__name__}: {exc}"[:300]})
+        return fail(f"{type(exc).__name__}: {exc}")
     log_event(event)
     return code
 
