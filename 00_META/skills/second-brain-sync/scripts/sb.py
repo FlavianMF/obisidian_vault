@@ -9,6 +9,8 @@ single writer and delegates every guard to vault_sync.py.
   sb search [-k N] <query>  the L1 ranker (vault_rank.sh), same TSV output
   sb candidate add|list|prune
                             queue of note candidates (local state, 30-day TTL); never writes the vault
+  sb observe record|summarize
+                            deterministic observer: tool-call metadata log (PostToolUse), candidates (Stop)
   sb sync --note ... --project-name P --message M [--verdict V] [--reason R]
                             vault_sync.py with the vault path preset; the guards live there
 
@@ -30,6 +32,7 @@ from typing import NamedTuple
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import candidates  # noqa: E402
+import observe  # noqa: E402
 import generate_manifests as gm  # noqa: E402
 from lib import frontmatter, secret_scan  # noqa: E402
 
@@ -320,6 +323,21 @@ def run_candidate(args, state_dir: Path) -> int:
     return 0
 
 
+def run_observe(args, state_dir: Path) -> int:
+    if args.action == "record":
+        try:
+            payload = json.load(sys.stdin)
+        except ValueError:
+            return 0
+        if isinstance(payload, dict):
+            observe.record(state_dir, payload)
+        return 0  # hook contract: never blocks the tool call
+    transcript = Path(args.transcript).expanduser() if args.transcript else None
+    result = observe.summarize(state_dir, args.session, args.project or detect_project(), transcript)
+    sys.stdout.write(observe.format_summary(result))
+    return 0
+
+
 def detect_project() -> str:
     """Name of the git repo the agent is working in; the folder name outside a repo."""
     try:
@@ -393,11 +411,18 @@ def build_parser() -> argparse.ArgumentParser:
     cand_add.add_argument("--title", required=True, help=f"up to {candidates.MAX_TITLE} characters")
     cand_add.add_argument("--summary", default="", help=f"up to {candidates.MAX_SUMMARY} characters, no secrets")
     cand_add.add_argument("--project", default="", help="default: the git repo name")
-    cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc"))
+    cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc", "observer"))
     cand_list = cand_sub.add_parser("list", help="pending candidates, oldest first")
     cand_list.add_argument("--json", action="store_true")
     cand_prune = cand_sub.add_parser("prune", help="drop candidates older than 30 days (dry run by default)")
     cand_prune.add_argument("--apply", action="store_true")
+    obs = sub.add_parser("observe", parents=[common], help="tool-call metadata log and candidates (no model)")
+    obs_sub = obs.add_subparsers(dest="action", required=True)
+    obs_sub.add_parser("record", help="read one PostToolUse payload on stdin and log its metadata")
+    obs_sum = obs_sub.add_parser("summarize", help="queue candidates found in one session's log")
+    obs_sum.add_argument("--session", required=True)
+    obs_sum.add_argument("--project", default="", help="default: the git repo name")
+    obs_sum.add_argument("--transcript", default="", help="transcript path, read for numeric usage only")
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
 
@@ -414,6 +439,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "candidate":
         return run_candidate(args, state_dir)
+    if args.command == "observe":
+        return run_observe(args, state_dir)
     if args.command == "search":
         return run_search(vault, " ".join(args.query), args.k)
     issues = run_doctor(vault, args.stale_days, args.today or dt.date.today())
