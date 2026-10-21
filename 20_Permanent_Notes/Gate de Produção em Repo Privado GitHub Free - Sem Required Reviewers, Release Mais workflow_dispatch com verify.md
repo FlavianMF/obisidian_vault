@@ -5,9 +5,9 @@ tags: [github, environments, branch-protection, release-gate, workflow-dispatch,
 created: 2026-10-19
 provenance: outlet_promo
 project: outlet_promo
-seen_in: [orbita-platform]
-verified: 2026-10-19 via CI-CD-Pipeline.md §5.2 e §9 do orbita-platform (erros 422/403 reais da API e fluxo em produção desde 2026-07-22), docs.github.com e plano da fase 6 do outlet_promo (D1, Task 13); o job verify e o Environment na conta pessoal ainda não foram exercitados
-confidence: low
+seen_in: [orbita-platform, outlet_promo]
+verified: 2026-10-21 via run 39619762122 do outlet_promo (PR #10 develop→master, merge commit, v0.0.1 em prod); antes 2026-10-19 via CI-CD-Pipeline.md do orbita-platform
+confidence: high
 scope: global
 ---
 
@@ -75,11 +75,14 @@ como disciplina.
   outlet_promo, ainda não executado (devem falhar: tag inexistente, fora do padrão, ou não
   publicada em staging).
 
-## Em aberto (outlet_promo, conta pessoal Free)
+## Confirmado no outlet_promo (2026-10-21, primeiro lançamento, v0.0.1)
 
-Não se sabe se Environments com secrets funcionam na conta pessoal (o orbita é organização).
-Plano: confirmar ao criar o primeiro Environment e, se falhar, não cair para secret de repositório
-sem decidir com o dono.
+- Environment com secrets funciona em repo privado de organização no plano Free; `gh secret list --env prod` e `gh variable list --env prod` conferem antes do PR.
+- Com "Create a merge commit", `verify` passou, `version` criou a tag e a Release `v0.0.1` e `prod` publicou no mesmo run. A tag aponta para o SHA do merge em `master`.
+- Se `prod` falha depois de `version`, tag e Release já existem. `gh run rerun <id> --failed` refaz só o job vermelho e reaproveita a mesma versão; não apague a tag.
+- `ci` e `db` rodam também no evento `pull_request` do PR `develop`→`master` (não só no deploy), mas o preview não dispara.
+- `gh variable list` imprime os valores das vars; `gh secret list` não. Para "conferir nomes", use `| cut -f1`.
+- Falha do smoke logo após o deploy: ver [[Firebase Hosting no GitHub Actions - action-hosting-deploy e firebase.json Têm Armadilhas]].
 
 ## Conexões
 - [[Automação de Release - Tag e Build Têm Que Estar no Mesmo Job]]

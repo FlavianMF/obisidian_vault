@@ -6,8 +6,8 @@ created: 2026-10-19
 provenance: outlet_promo
 project: outlet_promo
 seen_in: [outlet_promo]
-verified: 2026-10-19 via README/docs da FirebaseExtended/action-hosting-deploy v0.11.0 e FAQ do Flutter Web (plano da fase 6 do outlet_promo); ainda não executado contra projeto Firebase real
-confidence: low
+verified: 2026-10-21 via run 39619762122 do outlet_promo (deploy real em prod; smoke 404 no 1º run e verde no re-run); antes 2026-10-19 via docs da FirebaseExtended/action-hosting-deploy v0.11.0
+confidence: medium
 scope: global
 ---
 
@@ -45,11 +45,20 @@ scope: global
 - Um app que **não** deve ser PWA/indexado (ex.: painel admin): sem `<link rel="manifest">`, sem
   `manifest.json` publicado (rewrite devolve 404) e `X-Robots-Tag: noindex, nofollow` como prova.
 
+## Smoke logo após o deploy dá 404 em site novo
+
+No primeiro deploy `live` de dois sites Hosting recém-criados, o smoke rodou ~0,1 s depois do `firebase deploy`
+e recebeu 404 em todas as rotas (`FALHOU consumer /: status 404, esperado 200`). Segundos depois o `curl`
+devolvia 200 com todos os headers e `check_hosting.sh` passava. Causa provável (inferida dos timestamps):
+a versão ainda não propagou no CDN. O job já tinha publicado migrations e Hosting; só o step de smoke ficou vermelho.
+Solução: `gh run rerun <id> --failed`, ou, no workflow, esperar/repetir o smoke algumas vezes antes de falhar.
+
 ## O que NÃO funcionou
 
-Nada executado ainda. Descartado por leitura de doc: confiar no `ignore` padrão (esconde
-`.well-known`), no rewrite padrão de SPA (mascara 404) e no cache padrão de 1 h para build
-sem hash. Um smoke de hosting que cheque esses headers/status é parte do plano.
+- Smoke executado imediatamente após o deploy em site novo: 404 (acima). Re-run do job resolveu.
+- Descartado por leitura de doc, ainda não exercitado: confiar no `ignore` padrão (esconde
+  `.well-known`), no rewrite padrão de SPA (mascara 404) e no cache padrão de 1 h para build
+  sem hash. O smoke de headers/status cobre esses pontos e passou em prod.
 
 ## Conexões
 - [[sentry_flutter e Firebase no Web Injetam Script de CDN - CSP e Scrub em Dart Não Cobrem]]
