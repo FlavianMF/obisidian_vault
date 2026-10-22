@@ -331,7 +331,11 @@ one decision is invalid, and both log to `review.jsonl` with `stage` and `note`.
   same; `update` needs `body_file` (the whole note, `verified:` renewed, at least 80% of the old
   lines kept, no secret); `retire` needs `reason` and sets `status: superseded`; `merge` needs
   `reason` and `into` (another note), retires the note and adds `supersedes` to `into`. Writes go
-  through vault_sync.py in one commit. Do not decide for the user: show the plan and wait.
+  through vault_sync.py in one commit. If vault_sync.py refuses, the command exits 1 with `REFUSED`
+  and the reason, the vault returns to its previous state, and each edited note logs `outcome:
+  refused` with `reason` (`keep` decisions stay logged). If the commit is local and the push is
+  pending, the outcome is normal, the event carries `detail`, and the text prints it: rerun `sb
+  sync`. Do not decide for the user: show the plan and wait.
 
 ## Guardrails
 
