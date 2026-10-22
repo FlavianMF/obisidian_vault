@@ -46,9 +46,9 @@ Cada etapa é pequena e reversível ([[Plano de Fase em Etapas Mescláveis]]).
 | Etapa | Entrega | Critério de saída |
 |---|---|---|
 | A0 (feita em 2026-10-22) | 22 notas de literatura, nota [[Agentic RAG]] e este estudo | Fontes no vault |
-| A1 | `sb search --json`: `path`, `title`, `type`, `summary`, `coverage`, `confidence`, `terms`. A saída TSV atual não muda | Testes no `test_sb.py`; contrato do `vault_rank.sh` intacto |
-| A2 | Protocolo de busca agêntica no Behavior 1 do `SKILL.md` (regras binárias, §4) | Texto aprovado pelo usuário |
-| A3 | Adaptador `rewrite` no `run_eval.py`: 2 a 3 reformulações por query, guardadas em `00_META/eval/rewrites.jsonl`, unidas por reciprocal rank fusion | success@5 e FP medidos no `dev`, comparados com o `rank` |
+| A1 (entregue em 2026-10-22) | `sb search --json`: `path`, `title`, `type`, `summary`, `coverage`, `confidence`, `terms`. A saída TSV atual não muda | Testes no `test_sb.py`; contrato do `vault_rank.sh` intacto |
+| A2 (entregue em 2026-10-22, sem corte por `coverage`) | Protocolo de busca agêntica no Behavior 1 do `SKILL.md` (regras binárias, §4) | Texto aprovado pelo usuário |
+| A3 (entregue em 2026-10-22; não cumpriu o piso de tokens por acerto, ver [[PRD-003 - Agentic RAG no Second Brain]]) | Adaptador `rewrite` no `run_eval.py`: 2 a 3 reformulações por query, guardadas em `00_META/eval/rewrites.jsonl`, unidas por reciprocal rank fusion | success@5 e FP medidos no `dev`, comparados com o `rank` |
 | A4 | Adaptador `rerank`: o top-20 do `rank` passa por um julgamento de LLM sobre título e `summary` (CRAG-lite) | Mesmo gate; tokens por acerto não piora além do combinado |
 | A5 | Decidir o papel do L1 com os números da A3 e da A4 (§5, D-A1) | Decisão escrita |
 | A6 (condicional) | Perguntas globais pelos MOCs, como resumo de comunidade ([[Edge et al 2024 - GraphRAG]]) | Só se aparecer demanda real |

@@ -297,3 +297,29 @@ decida se rebaixa ou documenta a evidência.
 2. **F0b** (confirmar): restaurar `ecc@ecc: false` no escopo `user` e remover `ecc-common`; medir M1 com
    `usage_baseline.sh` numa sessão nova.
 3. **F1a**: coluna `summary` no manifest; reexecutar o `run_eval.py` e comparar com esta tabela.
+
+## Atualização 2026-10-22: A3 do PRD-003, `rewrite` (Haiku) contra `rank`, split `dev`
+
+Contexto: [[PRD-003 - Agentic RAG no Second Brain]], fase A3. As reformulações foram geradas uma vez com `claude-haiku-5-5`: 3 por query, 32 queries, 32 chamadas, 0 falhas. Elas estão em `00_META/eval/rewrites.jsonl` (commit `ae03cd4`). O `rewrite` roda o `vault_rank.sh` na query original e nas 3 variantes, com o mesmo limiar por variante, e funde por RRF (k = 60). Split `dev`, k = 5. O split `test` não rodou: ele depende de aprovação do usuário.
+
+| limiar | `rank` s@5 (IC95) | `rank` FP | `rank` tok/acerto | `rewrite` s@5 (IC95) | `rewrite` FP | `rewrite` tok/acerto |
+|---|---|---|---|---|---|---|
+| 0 | 0,89 (0,74–1,00) | 1,00 | 4540 | 0,89 (0,74–1,00) | 1,00 | 5685 |
+| 0,25 | 0,84 (0,68–1,00) | 0,46 | 2353 | 0,89 (0,74–1,00) | 0,62 | 2798 |
+| 0,30 | 0,79 (0,58–0,95) | 0,38 | 1962 | 0,84 (0,68–1,00) | 0,46 | 2624 |
+| 0,35 | 0,74 (0,53–0,89) | 0,15 | 1295 | 0,84 (0,68–1,00) | 0,15 | 1354 |
+| 0,40 | 0,63 (0,42–0,84) | 0,00 | 997 | 0,79 (0,58–0,95) | 0,00 | 1052 |
+| 0,45 | 0,53 (0,32–0,74) | 0,00 | 836 | 0,74 (0,53–0,89) | 0,00 | 899 |
+| 0,50 | 0,42 (0,21–0,63) | 0,00 | 828 | 0,53 (0,32–0,74) | 0,00 | 942 |
+
+A linha de base do `rank` mudou desde 2026-10-14 (no limiar 0,30, o FP foi de 0,31 para 0,38), porque o vault cresceu. Compare sempre com o `rank` da mesma execução. A linha 0,35 foi reproduzida pela sessão principal.
+
+**Veredito contra os pisos do PRD-003: não cumpre.** Os pisos não foram afrouxados.
+
+- success@5 ≥ 0,80 e FP ≤ 0,20 no mesmo limiar: o `rewrite` cumpre em 0,35 (0,84 e 0,15). O `rank` não cumpre em nenhum limiar.
+- tokens por acerto ≤ `rank`: o `rewrite` falha em todos os limiares. Em 0,35, gasta 1354 contra 1295, cerca de 5% a mais.
+- Os IC95 se sobrepõem em todos os limiares (n = 32). O ganho em success@5 não é estatisticamente significativo.
+
+Por query: o `rewrite` acerta e o `rank` erra em `q026` (limiares 0,30 e 0,35) e em `q019` (0,35). O contrário não ocorre. Em 0,30, o `rewrite` tem um falso positivo a mais (`q037`).
+
+**Leitura.** A reescrita nunca perdeu um acerto do `rank` e recuperou duas lacunas de vocabulário. Isso sustenta a regra 4 do Behavior 1 (reescrever em PT e EN antes de buscar), que não depende de limiar. O L1 continua em sombra, como decidido (D-A1). Próximos passos possíveis, todos com aprovação do usuário: rodar o split `test` uma vez no limiar 0,35, ou aumentar o golden set para 60 queries antes de qualquer decisão sobre o L1.

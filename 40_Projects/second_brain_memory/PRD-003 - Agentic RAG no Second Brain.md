@@ -12,7 +12,7 @@ scope: project
 
 # PRD-003 — Agentic RAG no Second Brain
 
-**Status**: DRAFT, decisões fechadas em 2026-10-22 · Origem: [[Estudo - Agentic RAG no Second Brain]] · Conceito: [[Agentic RAG]] · Contexto: [[RFC-001 - Memória de Agentes sobre o Second Brain com Orçamento de Tokens]].
+**Status**: COMPLETE em 2026-10-22 (A1–A3 no `master`; veredito da A3 negativo, ver Resultado) · Origem: [[Estudo - Agentic RAG no Second Brain]] · Conceito: [[Agentic RAG]] · Contexto: [[RFC-001 - Memória de Agentes sobre o Second Brain com Orçamento de Tokens]].
 
 ## Problem Statement
 
@@ -136,9 +136,9 @@ Fases 1 a 3 abaixo. O MVP está completo quando o `run_eval.py` reportar `rank` 
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 1 | A1 — `sb search --json` | Saída estruturada para o agente julgar pelo manifest | complete (`7f4e0c4` em `feat/agentic-rag`, 225 testes OK, revisado em 2026-10-22) | - | - | `.claude/PRPs/plans/a1-sb-search-json.plan.md` (worktree) |
-| 2 | A2 — Protocolo de busca agêntica | Regras binárias no Behavior 1 do `SKILL.md` | complete (`9d100c3`; texto aprovado pelo usuário em 2026-10-22, sem corte por `coverage` na regra 5) | - | 1 | `.claude/PRPs/plans/a2-protocolo-busca.plan.md` (worktree) |
-| 3 | A3 — Adaptador `rewrite` | `gen_rewrites.py` + `rewrites.jsonl` + `RewriteAdapter` com RRF + medição | in-progress | - | 1 | `.claude/PRPs/plans/a3-rewrite-adapter.plan.md` (worktree) |
+| 1 | A1 — `sb search --json` | Saída estruturada para o agente julgar pelo manifest | complete (`e2d3526` no `master`, 225 testes OK, revisado em 2026-10-22) | - | - | `.claude/PRPs/plans/a1-sb-search-json.plan.md` (worktree) |
+| 2 | A2 — Protocolo de busca agêntica | Regras binárias no Behavior 1 do `SKILL.md` | complete (`ccefcfb` no `master`; texto aprovado pelo usuário em 2026-10-22, sem corte por `coverage` na regra 5) | - | 1 | `.claude/PRPs/plans/a2-protocolo-busca.plan.md` (worktree) |
+| 3 | A3 — Adaptador `rewrite` | `gen_rewrites.py` + `rewrites.jsonl` + `RewriteAdapter` com RRF + medição | complete (`c430a99` e `ae03cd4` no `master`; veredito negativo, ver Resultado) | - | 1 | `.claude/PRPs/plans/a3-rewrite-adapter.plan.md` (worktree) |
 
 ### Phase Details
 
@@ -207,5 +207,15 @@ O vault já tem os blocos: manifests com `summary`, ranqueador único com cobert
 
 ---
 
+## Resultado (2026-10-22)
+
+As três fases entraram no `master` por fast-forward (`e2d3526`..`ae03cd4`) e foram enviadas ao remoto.
+
+A hipótese **não passou** nos pisos escritos antes da medição. No limiar 0,35, o `rewrite` faz success@5 = 0,84 e FP = 0,15, o que cumpre os dois primeiros pisos. Mas gasta 1354 tokens por acerto contra 1295 do `rank`, cerca de 5% a mais, e falha o terceiro. Os IC95 se sobrepõem (n = 32). Detalhe e tabela por limiar em [[F0 - Linha de Base de Tokens e Golden Set MVP]].
+
+Consequências: o L1 continua em sombra (D-A1). O protocolo do Behavior 1 vale, porque não depende de limiar, e a reescrita nunca perdeu um acerto do `rank`. Rodar o split `test` e crescer o golden set ficam para decisão do usuário.
+
+---
+
 *Generated: 2026-10-22*
-*Status: DRAFT - needs validation*
+*Status: COMPLETE - hipótese não confirmada nos pisos*
