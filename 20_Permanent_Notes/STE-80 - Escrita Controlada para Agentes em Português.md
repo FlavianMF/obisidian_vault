@@ -106,7 +106,9 @@ contraria as regras 4.2 e 2.3 do STE. Há dois caminhos:
   notas). A própria caveman já exige prosa normal nesses casos.
 
 A escolha é do usuário. As duas regras não podem valer ao mesmo tempo sobre artigo e
-fragmento.
+fragmento. **Decisão do usuário (2026-10-22): STE-80 em tudo.** O plugin injeta a regra 14:
+"frases completas, com artigos", e essa regra vence a caveman. A caveman continua valendo para
+cortar cerimônia. A chave `override_caveman` desliga essa precedência.
 
 ## O que NÃO funcionou
 
