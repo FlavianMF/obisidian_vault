@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vault_rank.sh [-k N] [-m MIN] [-c COV] [-t TERMS] <query...>      (sem argumentos, lê a query do stdin)
+# vault_rank.sh [-k N] [-m MIN] [-c COV] [-t TERMS] [-n] <query...>      (sem argumentos, lê a query do stdin)
 #
 # Ranqueador único do second brain (RFC-001 §4.2): o L1, o note_candidates.sh e o
 # adaptador `rank` do run_eval.py chamam este script, para o golden set medir o código
@@ -8,6 +8,8 @@
 # Contract (keep stable):
 #   - reads only 00_META/manifests/by_type/*.md (override: SECOND_BRAIN_MANIFEST_DIR);
 #   - prints at most K lines (default 5), TSV: score<TAB>path<TAB>title, best first;
+#     -n appends one more column, the number of query terms (the denominator of coverage), so a caller
+#     can tell a coverage of 1.0 over one term from one over six; without -n the columns do not change;
 #   - only rows with score > MIN (default 0); prints nothing when no term matches;
 #   - the query reaches awk through ENVIRON, never `-v` (-v interprets backslashes);
 #   - accents and case are folded on both sides (mawk's tolower is ASCII-only);
@@ -21,12 +23,14 @@ k=5
 min=0
 cov=0
 terms_min=1
-while getopts "k:m:c:t:" opt; do
+show_terms=0
+while getopts "k:m:c:t:n" opt; do
   case "$opt" in
     k) k="$OPTARG" ;;
     m) min="$OPTARG" ;;
     c) cov="$OPTARG" ;;
     t) terms_min="$OPTARG" ;;
+    n) show_terms=1 ;;
     *) exit 0 ;;
   esac
 done
@@ -52,7 +56,7 @@ shopt -s nullglob
 files=("$manifest_dir"/*.md)
 [ "${#files[@]}" -gt 0 ] || exit 0
 
-export VR_QUERY="$query" VR_MIN="$min" VR_COV="$cov" VR_TERMS="$terms_min"
+export VR_QUERY="$query" VR_MIN="$min" VR_COV="$cov" VR_TERMS="$terms_min" VR_SHOW_TERMS="$show_terms"
 
 awk -F'|' '
   function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
@@ -104,7 +108,11 @@ awk -F'|' '
         if (w) { idf = log((nrows + 1) / (df[t] + 0.5)); score += w * idf; hit += idf }
       }
       coverage = total > 0 ? hit / total : 0
-      if (score > min && coverage >= mincov) printf "%.3f\t%s\t%s\t%.3f\t%s\n", score, row_path[r], row_title[r], coverage, row_conf[r]
+      if (score > min && coverage >= mincov) {
+        printf "%.3f\t%s\t%s\t%.3f\t%s", score, row_path[r], row_title[r], coverage, row_conf[r]
+        if (ENVIRON["VR_SHOW_TERMS"] == "1") printf "\t%d", nt
+        printf "\n"
+      }
     }
   }
 ' "${files[@]}" 2>/dev/null \

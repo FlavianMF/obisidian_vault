@@ -48,6 +48,11 @@ class RankContractTest(unittest.TestCase):
         self.assertEqual(rows[0][4], "medium")
         self.assertTrue(0.0 < float(rows[0][3]) <= 1.0)
 
+    def test_n_flag_appends_the_query_term_count_and_default_output_is_unchanged(self):
+        self.assertEqual(self.rank("-n", "importar issues jira")[0][5], "3")
+        self.assertEqual(self.rank("-n", "importar jira ecc prd")[0][5], "2")  # three-letter words are not terms
+        self.assertEqual(len(self.rank("importar issues jira")[0]), 5)
+
     def test_min_coverage_filters_weak_matches(self):
         self.assertTrue(self.rank("importar issues jira"))
         self.assertEqual(self.rank("-c", "0.99", "importar zzzzqqqq jira"), [])
