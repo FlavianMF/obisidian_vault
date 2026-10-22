@@ -14,7 +14,7 @@ from pathlib import Path
 import candidates
 import review
 import sb
-from test_vault_sync import VaultFixture, git
+from test_vault_sync import GEN, VaultFixture, git
 
 SB = Path(sb.__file__)
 FAKE = "gh" + "p_" + "A1b2C3d4E5f6G7h8I9j0K1l2"
@@ -93,6 +93,83 @@ class ProposalAndBatchTest(ReviewFixture):
     def test_nothing_pending(self):
         self.assertEqual(review.capture_next(self.vault, self.state, limit=5, project="", kind="", source="",
                                              fresh=False, as_json=False), "review: nothing pending\n")
+
+
+class DuplicateProposalTest(ReviewFixture):
+    """drop is the dearest proposal to get wrong (it rejects a good candidate), so each guard has its own case."""
+
+    TITLE = "Calibração de Câmera Estéreo"
+
+    def note(self, title=None, **kwargs):
+        """A note in the vault with the manifests regenerated; returns its vault-relative path."""
+        rel = self.write(title or self.TITLE, tags="visao, opencv", **kwargs)
+        subprocess.run(["python3", str(GEN), "--vault-path", str(self.vault)], check=True, capture_output=True)
+        return rel
+
+    def cand(self, title=None, kind="trap", project="projeto_x", source="agent"):
+        return candidates.Candidate("c", candidates.utcnow(), kind, title or self.TITLE, "", project, source)
+
+    def propose(self, cand):
+        return review.propose(cand, review.matches_for(self.vault, cand), self.vault)
+
+    def test_a_duplicate_from_a_project_the_note_already_records_is_dropped_with_the_reason(self):
+        for opts in ({"provenance": "manual", "seen_in": ["projeto_x"]}, {"provenance": "projeto_x"}):
+            with self.subTest(**opts):
+                rel = self.note(kind="trap", **opts)
+                verdict, detail = self.propose(self.cand())
+                self.assertEqual(verdict, "drop")
+                self.assertIn(f"já coberto pela nota {rel}", detail)
+
+    def test_next_json_exposes_the_duplicate_reason(self):
+        rel = self.note(kind="trap", seen_in=["projeto_x"])
+        self.add(title=self.TITLE, kind="trap")
+        item = json.loads(review.capture_next(self.vault, self.state, limit=5, project="", kind="", source="",
+                                              fresh=False, as_json=True))["batch"][0]
+        self.assertEqual(item["proposal"], "drop")
+        self.assertIn(f"já coberto pela nota {rel}", item["proposal_detail"])
+        self.assertEqual(item["similar"][0]["terms"], 3)
+
+    def test_full_coverage_over_one_search_term_is_neither_dropped_nor_absorbed(self):
+        # 8417deba: "Grilling antes do ECC prp-prd" keeps one term ("ecc", "prp" and "prd" have three letters)
+        rel = self.note(title="Grilling antes de agentes", kind="trap", seen_in=["projeto_x"])
+        cand = self.cand(title="Grilling antes do ECC prp-prd")
+        top = review.matches_for(self.vault, cand)[0]
+        self.assertEqual((top.path, top.coverage, top.terms), (rel, 1.0, 1))
+        verdict, detail = self.propose(cand)
+        self.assertEqual(verdict, "save")
+        self.assertIn("1 termo", detail)
+
+    def test_a_new_project_is_absorbed_not_dropped(self):
+        rel = self.note(provenance="manual", seen_in=["aijail"], kind="trap")
+        self.assertEqual(self.propose(self.cand()), ("absorb", rel))
+
+    def test_a_known_project_below_the_drop_coverage_is_absorbed(self):
+        rel = self.note(kind="trap", seen_in=["projeto_x"])
+        for coverage in (0.5, review.DROP_COVERAGE - 0.01):
+            self.assertEqual(review.propose(self.cand(), [review.Match(rel, "t", coverage, 5)], self.vault),
+                             ("absorb", rel))
+        self.assertEqual(review.propose(self.cand(), [review.Match(rel, "t", review.DROP_COVERAGE, 5)], self.vault)[0],
+                         "drop")
+
+    def test_a_note_of_another_kind_is_absorbed_not_dropped(self):
+        rel = self.note(kind="pattern", seen_in=["projeto_x"])
+        self.assertEqual(self.propose(self.cand(kind="trap")), ("absorb", rel))
+
+    def test_without_the_vault_a_duplicate_stays_an_absorb(self):
+        rel = self.note(kind="trap", seen_in=["projeto_x"])
+        cand = self.cand()
+        self.assertEqual(review.propose(cand, review.matches_for(self.vault, cand)), ("absorb", rel))
+
+    def test_a_candidate_without_project_is_never_dropped_as_duplicate(self):
+        rel = self.note(kind="trap", provenance="", seen_in=[""])
+        self.assertEqual(self.propose(self.cand(project="")), ("absorb", rel))
+
+    def test_observer_noise_is_still_dropped_and_weak_overlap_is_still_saved(self):
+        noise = self.cand(title="Read grande de x.jsonl", source="observer")._replace(summary="ecc-observer-analysis")
+        self.assertEqual(self.propose(noise)[0], "drop")
+        self.note(kind="trap", seen_in=["projeto_x"])
+        self.assertEqual(self.propose(self.cand(title="Receita de Pão de Queijo Mineiro")), ("save", ""))
+        self.assertEqual(review.propose(self.cand(), [review.Match("n.md", "t", 0.2, 5)], self.vault), ("save", ""))
 
 
 class DryRunTest(ReviewFixture):

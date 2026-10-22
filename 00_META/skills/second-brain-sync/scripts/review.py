@@ -31,6 +31,8 @@ BATCH_DEFAULT = 5
 NOTE_DIR = "20_Permanent_Notes"
 STATE_FILE = "review/capture.json"
 MIN_KEEP_RATIO = 0.8
+MIN_COVERAGE_TERMS = 3  # coverage over fewer query terms is 0 or 1 by construction, so it proves nothing
+DROP_COVERAGE = 0.7
 MAX_BODY_BYTES = 64 * 1024
 NOISE = re.compile(r"ecc-observer-analysis|\.observer-tmp")
 TAG = re.compile(r"^[a-z0-9][a-z0-9_.-]*$")
@@ -43,6 +45,7 @@ class Match(NamedTuple):
     path: str
     title: str
     coverage: float
+    terms: int = 0  # query terms behind the coverage; 0 means unknown
 
 
 class Plan(NamedTuple):
@@ -92,7 +95,7 @@ def matches_for(vault: Path, cand: candidates.Candidate, limit: int = 3) -> list
     """Notes that already cover the title, from the same ranker as the L1 hint (no logging side effect)."""
     env = {**os.environ, "SECOND_BRAIN_MANIFEST_DIR": str(vault / "00_META/manifests/by_type")}
     done = subprocess.run(
-        ["bash", str(HERE / "vault_rank.sh"), "-k", str(limit), "-c", "0", "-t", "1", "--", cand.title],
+        ["bash", str(HERE / "vault_rank.sh"), "-k", str(limit), "-c", "0", "-t", "1", "-n", "--", cand.title],
         capture_output=True, text=True, env=env, check=False, stdin=subprocess.DEVNULL,
     )
     found = []
@@ -100,19 +103,49 @@ def matches_for(vault: Path, cand: candidates.Candidate, limit: int = 3) -> list
         parts = line.split("\t")
         if len(parts) >= 4:
             try:
-                found.append(Match(parts[1], parts[2], float(parts[3])))
+                found.append(Match(parts[1], parts[2], float(parts[3]), int(parts[5]) if len(parts) > 5 else 0))
             except ValueError:
                 continue
     return found
 
 
-def propose(cand: candidates.Candidate, found: list[Match]) -> tuple[str, str]:
-    """(verdict, detail): drop for known noise, absorb when an existing note covers it, else save."""
+def duplicate_reason(vault: Path, cand: candidates.Candidate, top: Match) -> str:
+    """Why `top` already holds the candidate, or "" unless that is certain: a drop rejects a good candidate when wrong.
+
+    Certain means the note has the candidate's kind, already records the candidate's project (seen_in, provenance
+    or project, so the candidate came from the session that wrote the note) and covers at least DROP_COVERAGE.
+    """
+    if top.coverage < DROP_COVERAGE or not cand.project:
+        return ""
+    try:
+        data, _, _ = frontmatter.read_note(vault / top.path)
+    except (OSError, UnicodeDecodeError):
+        return ""
+    if data.get("type") != cand.kind:
+        return ""
+    seen = data.get("seen_in", [])
+    known = set(seen if isinstance(seen, list) else [str(seen)])
+    known.update(str(data.get(key) or "") for key in ("provenance", "project"))
+    if not {cand.project, slug(cand.project)} & known:
+        return ""
+    return f"já coberto pela nota {top.path} (cobertura {top.coverage:.2f}; o projeto {cand.project} já consta nela)"
+
+
+def propose(cand: candidates.Candidate, found: list[Match], vault: Path | None = None) -> tuple[str, str]:
+    """(verdict, detail): drop for noise or a certain duplicate, absorb when a note covers it, else save.
+
+    Without `vault` the note's frontmatter cannot be read, so a duplicate is never certain and stays an absorb.
+    """
     if cand.source == "observer" and NOISE.search(f"{cand.title} {cand.summary}"):
         return "drop", "noise from the ECC observer's own temp files"
-    if found and found[0].coverage >= vault_sync.dup_coverage():
-        return "absorb", found[0].path
-    return "save", ""
+    if not found or found[0].coverage < vault_sync.dup_coverage():
+        return "save", ""
+    top = found[0]
+    if top.terms < MIN_COVERAGE_TERMS:
+        return "save", (f"cobertura {top.coverage:.2f} em {top.path} calculada sobre {top.terms} termo(s) da busca: "
+                        "pouco para provar que já está coberto")
+    reason = duplicate_reason(vault, cand, top) if vault else ""
+    return ("drop", reason) if reason else ("absorb", top.path)
 
 
 def pending(state_dir: Path, *, project: str = "", kind: str = "", source: str = "") -> list[candidates.Candidate]:
@@ -162,7 +195,7 @@ def format_batch(vault: Path, state_dir: Path, review_id: str, batch: list, tota
     lines = [f"review {review_id}: {len(batch)} of {total} pending"]
     for n, cand in enumerate(batch, start=1):
         found = matches_for(vault, cand)
-        verdict, detail = propose(cand, found)
+        verdict, detail = propose(cand, found, vault)
         has_draft = "yes" if candidates.read_draft(state_dir, cand.id) is not None else "no"
         lines.append(f"[{n}] {cand.id}  {cand.kind}  {cand.source}  {cand.project or '-'}  "
                      f"{cand.age_days}d (left {cand.days_left}d)  draft: {has_draft}")
@@ -185,7 +218,7 @@ def capture_next(vault: Path, state_dir: Path, *, limit: int, project: str, kind
     out = []
     for cand in batch:
         found = matches_for(vault, cand)
-        verdict, detail = propose(cand, found)
+        verdict, detail = propose(cand, found, vault)
         out.append({**cand._asdict(), "ts": cand.ts.isoformat(), "days_left": cand.days_left,
                     "has_draft": candidates.read_draft(state_dir, cand.id) is not None,
                     "similar": [m._asdict() for m in found], "proposal": verdict, "proposal_detail": detail})

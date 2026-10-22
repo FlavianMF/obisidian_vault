@@ -20,7 +20,7 @@ SB = SCRIPTS / "sb.py"
 
 NOTE = """---
 title: {title}
-type: pattern
+type: {kind}
 tags: [{tags}]
 created: 2026-10-14
 provenance: {provenance}
@@ -36,9 +36,11 @@ Nada falhou neste teste.
 """
 
 
-def make_note(title, tags="jira, rest", provenance="projeto_x", confidence="low"):
+def make_note(title, tags="jira, rest", provenance="projeto_x", confidence="low", kind="pattern", seen_in=None):
     extra = f"confidence: {confidence}\n" if confidence else ""
-    return NOTE.format(title=title, tags=tags, provenance=provenance, extra=extra)
+    if seen_in is not None:
+        extra += f"seen_in: [{', '.join(seen_in)}]\n"
+    return NOTE.format(title=title, tags=tags, provenance=provenance, extra=extra, kind=kind)
 
 
 def git(cwd, *args):
