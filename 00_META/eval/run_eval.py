@@ -10,6 +10,7 @@ Métodos (adaptadores `search(query, k) -> [path, ...]`):
   rank    chama `vault_rank.sh` (o ranqueador de produção; nada reimplementado aqui)
   random  k notas aleatórias dos manifests (baseline degenerado; média de --draws sorteios)
   fixed   as k primeiras notas por ordem de path (baseline degenerado constante)
+  rewrite query original + reformulações de rewrites.jsonl, cada uma pelo vault_rank.sh com o mesmo limiar, fundidas por RRF (k=60)
 
 Custo em tokens (estimativa fixa, chars / 3,5; trocar por tokenizer real depois): saída do
 método (linhas `título — path`) + corpo das notas que o agente abriria, em ordem de ranking,
@@ -23,6 +24,7 @@ import argparse
 import json
 import math
 import random
+import re
 import statistics
 import subprocess
 import sys
@@ -39,6 +41,12 @@ CHARS_PER_TOKEN = 3.5
 KINDS = {"lexical", "paraphrase", "multihop", "negative"}
 REQUIRED = {"id", "query", "kind", "relevant", "split", "status"}
 BOOTSTRAP_RESAMPLES = 2000
+REWRITES = Path(__file__).resolve().parent / "rewrites.jsonl"
+RRF_K = 60
+RRF_DEPTH = 10
+REWRITES_MIN = 2
+REWRITES_MAX = 3
+REWRITE_REQUIRED = {"id", "query", "rewrites", "model", "created"}
 
 
 @dataclass(frozen=True)
@@ -131,6 +139,89 @@ class FixedAdapter:
         return self._paths[:k]
 
 
+def rrf_fuse(rankings: list[list[str]], k_rrf: int = RRF_K) -> list[str]:
+    """Reciprocal rank fusion: score(d) = Σ 1/(k_rrf + posição), posição a partir de 1.
+
+    Desempate determinístico: melhor posição em qualquer variante, depois a variante de menor
+    índice (a query original é a 0), depois o path.
+    """
+    scores: dict[str, float] = {}
+    best: dict[str, tuple[int, int]] = {}
+    for variant, ranking in enumerate(rankings):
+        for pos, path in enumerate(ranking, 1):
+            scores[path] = scores.get(path, 0.0) + 1.0 / (k_rrf + pos)
+            best[path] = min(best.get(path, (pos, variant)), (pos, variant))
+    return sorted(scores, key=lambda p: (-scores[p], best[p], p))
+
+
+def validate_rewrite_row(row: dict, where: str) -> None:
+    """Falha alto em linha malformada de rewrites.jsonl (usado pelo eval e pelo gerador)."""
+    missing = REWRITE_REQUIRED - row.keys()
+    if missing:
+        raise ValueError(f"{where} faltam campos {sorted(missing)}")
+    rewrites = row["rewrites"]
+    if not isinstance(rewrites, list) or not all(isinstance(r, str) and r.strip() for r in rewrites):
+        raise ValueError(f"{where} rewrites inválidas: precisa ser lista de strings não vazias")
+    folded = [r.strip().casefold() for r in rewrites]
+    if not REWRITES_MIN <= len(rewrites) <= REWRITES_MAX:
+        raise ValueError(f"{where} rewrites inválidas: {len(rewrites)} itens, esperado {REWRITES_MIN} a {REWRITES_MAX}")
+    if len(set(folded)) != len(folded):
+        raise ValueError(f"{where} rewrites inválidas: duplicatas")
+    if str(row["query"]).strip().casefold() in folded:
+        raise ValueError(f"{where} rewrites inválidas: reformulação igual à query")
+    if not isinstance(row["model"], str) or not row["model"].strip():
+        raise ValueError(f"{where} model vazio")
+    if not isinstance(row["created"], str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", row["created"]):
+        raise ValueError(f"{where} created inválido {row['created']!r}; esperado AAAA-MM-DD")
+
+
+def load_rewrites(path: Path, queries: list[Query], known_ids: set[str]) -> dict[str, list[str]]:
+    """Mapa texto da query -> reformulações. Falha alto se faltar linha ou se a query divergir."""
+    rows: dict[str, dict] = {}
+    for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        where = f"{path.name}:{lineno}"
+        validate_rewrite_row(row, where)
+        if row["id"] in rows:
+            raise ValueError(f"{where} id duplicado {row['id']}")
+        if row["id"] not in known_ids:
+            raise ValueError(f"{where} id desconhecido {row['id']}")
+        rows[row["id"]] = row
+    out: dict[str, list[str]] = {}
+    for q in queries:
+        if q.id not in rows:
+            raise ValueError(f"{q.id}: falta linha em {path.name}; rode gen_rewrites.py --split ...")
+        if rows[q.id]["query"] != q.text:
+            raise ValueError(f"{q.id}: query diverge do golden set")
+        out[q.text] = rows[q.id]["rewrites"]
+    return out
+
+
+class RewriteAdapter:
+    name = "rewrite"
+    stochastic = False
+
+    def __init__(
+        self,
+        rewrites: dict[str, list[str]],
+        min_coverage: float = 0.0,
+        min_terms: int = 1,
+        search_fn=None,
+        depth: int = RRF_DEPTH,
+    ) -> None:
+        self._rewrites = rewrites
+        self._search = search_fn or RankAdapter(min_coverage, min_terms).search
+        self._depth = depth
+
+    def search(self, query: str, k: int) -> list[str]:
+        if query not in self._rewrites:
+            raise ValueError(f"sem reformulação para a query {query!r}")
+        variants = [query, *self._rewrites[query]]
+        return rrf_fuse([self._search(v, max(k, self._depth)) for v in variants])[:k]
+
+
 def dcg(gains: list[int]) -> float:
     return sum(g / math.log2(i + 2) for i, g in enumerate(gains))
 
@@ -213,9 +304,26 @@ def render(results: dict[str, dict], k: int) -> str:
     return "\n".join(lines)
 
 
-def build_adapters(names: list[str], min_coverage: float = 0.0, min_terms: int = 1) -> list:
+def _rewrites_for(path: Path, queries: list[Query]) -> dict[str, list[str]]:
+    if not path.is_file():
+        raise SystemExit(f"{path.name} não existe; rode 00_META/eval/gen_rewrites.py --split <split>")
+    return load_rewrites(path, queries, {q.id for q in load_golden(split="all")})
+
+
+def build_adapters(
+    names: list[str],
+    min_coverage: float = 0.0,
+    min_terms: int = 1,
+    queries: list[Query] | None = None,
+    rewrites_path: Path = REWRITES,
+) -> list:
     paths = manifest_paths()
-    available = {"rank": lambda: RankAdapter(min_coverage, min_terms), "random": lambda: RandomAdapter(paths), "fixed": lambda: FixedAdapter(paths)}
+    available = {
+        "rank": lambda: RankAdapter(min_coverage, min_terms),
+        "random": lambda: RandomAdapter(paths),
+        "fixed": lambda: FixedAdapter(paths),
+        "rewrite": lambda: RewriteAdapter(_rewrites_for(rewrites_path, queries or []), min_coverage, min_terms),
+    }
     unknown = [n for n in names if n not in available]
     if unknown:
         raise SystemExit(f"método desconhecido: {unknown}; opções: {sorted(available)}")
@@ -228,8 +336,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--split", choices=["dev", "test", "all"], default="dev")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--draws", type=int, default=200, help="sorteios por query para métodos aleatórios")
-    parser.add_argument("--min-coverage", type=float, default=0.0, help="limiar de silêncio do rank (campo coverage)")
+    parser.add_argument("--min-coverage", type=float, default=0.0, help="limiar de silêncio do rank e do rewrite (por variante, campo coverage)")
     parser.add_argument("--min-terms", type=int, default=1, help="mínimo de termos úteis na query do rank")
+    parser.add_argument("--rewrites", type=Path, default=REWRITES, help="reformulações do adaptador rewrite")
     parser.add_argument("--no-save", action="store_true")
     args = parser.parse_args(argv)
 
@@ -237,7 +346,7 @@ def main(argv: list[str] | None = None) -> int:
     if not queries:
         raise SystemExit("nenhuma query ativa neste split")
     results: dict[str, dict] = {}
-    for adapter in build_adapters(args.methods.split(","), args.min_coverage, args.min_terms):
+    for adapter in build_adapters(args.methods.split(","), args.min_coverage, args.min_terms, queries, args.rewrites):
         started = time.perf_counter()
         results[adapter.name] = evaluate(adapter, queries, args.k, args.draws)
         results[adapter.name]["summary"]["seconds"] = round(time.perf_counter() - started, 2)

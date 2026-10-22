@@ -112,6 +112,126 @@ class RankerContractTest(unittest.TestCase):
         rnd = ev.RandomAdapter(paths)
         self.assertNotEqual(rnd.search("a", 5), rnd.search("a", 5))
 
+class RrfTest(unittest.TestCase):
+    def test_fuse_orders_by_summed_reciprocal_rank(self):
+        out = ev.rrf_fuse([["a", "b", "c"], ["b", "a", "d"], ["b", "e"]])
+        self.assertEqual(out, ["b", "a", "e", "c", "d"])
+        self.assertAlmostEqual(1 / 61 + 1 / 62 + 1 / 61, 2 / 61 + 1 / 62)
+
+    def test_tie_breaks_by_lowest_variant_index(self):
+        self.assertEqual(ev.rrf_fuse([["x"], ["y"]]), ["x", "y"])
+        self.assertEqual(ev.rrf_fuse([["y"], ["x"]]), ["y", "x"])
+
+    def test_empty_inputs(self):
+        self.assertEqual(ev.rrf_fuse([]), [])
+        self.assertEqual(ev.rrf_fuse([[], []]), [])
+
+
+class RewriteAdapterTest(unittest.TestCase):
+    def test_calls_original_and_each_rewrite_with_depth(self):
+        calls = []
+
+        def fake(query, k):
+            calls.append((query, k))
+            return ["a.md", "b.md", "c.md"]
+
+        adapter = ev.RewriteAdapter({"q": ["r1", "r2"]}, search_fn=fake)
+        out = adapter.search("q", 2)
+        self.assertEqual(calls, [("q", 10), ("r1", 10), ("r2", 10)])
+        self.assertLessEqual(len(out), 2)
+
+    def test_silence_when_all_variants_empty(self):
+        adapter = ev.RewriteAdapter({"q": ["r1", "r2"]}, search_fn=lambda q, k: [])
+        self.assertEqual(adapter.search("q", 5), [])
+
+    def test_threshold_goes_to_inner_rank_adapter(self):
+        adapter = ev.RewriteAdapter({"q": ["r"]}, min_coverage=0.35, min_terms=2)
+        self.assertEqual(adapter._search.__self__._flags, ["-c", "0.35", "-t", "2"])
+
+    def test_unknown_query_fails_loudly(self):
+        adapter = ev.RewriteAdapter({"q": ["r"]}, search_fn=lambda q, k: [])
+        with self.assertRaisesRegex(ValueError, "sem reformulação"):
+            adapter.search("outra", 5)
+
+
+def _rw_row(id_, query, rewrites=("r1", "r2", "r3"), created="2026-10-22"):
+    return {"id": id_, "query": query, "rewrites": list(rewrites), "model": "claude-haiku-x", "created": created}
+
+
+class LoadRewritesTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "rewrites.jsonl"
+        self.queries = [ev.Query("q1", "texto q1", "lexical", {"a.md": 2}), ev.Query("q2", "texto q2", "lexical", {"a.md": 2})]
+        self.known = {"q1", "q2", "q3"}
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, *rows):
+        self.path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    def load(self, queries=None):
+        return ev.load_rewrites(self.path, self.queries if queries is None else queries, self.known)
+
+    def test_valid_file_returns_map_by_text(self):
+        self.write(_rw_row("q1", "texto q1"), _rw_row("q2", "texto q2"))
+        self.assertEqual(self.load()["texto q1"], ["r1", "r2", "r3"])
+
+    def test_extra_row_from_other_split_is_accepted(self):
+        self.write(_rw_row("q1", "texto q1"), _rw_row("q3", "texto q3"))
+        self.assertEqual(self.load(self.queries[:1]), {"texto q1": ["r1", "r2", "r3"]})
+
+    def test_missing_line(self):
+        self.write(_rw_row("q1", "texto q1"))
+        with self.assertRaisesRegex(ValueError, "falta linha"):
+            self.load()
+
+    def test_query_diverges(self):
+        self.write(_rw_row("q1", "outro texto"), _rw_row("q2", "texto q2"))
+        with self.assertRaisesRegex(ValueError, "diverge"):
+            self.load()
+
+    def test_duplicate_id(self):
+        self.write(_rw_row("q1", "texto q1"), _rw_row("q1", "texto q1"))
+        with self.assertRaisesRegex(ValueError, "duplicado"):
+            self.load()
+
+    def test_unknown_id(self):
+        self.write(_rw_row("q1", "texto q1"), _rw_row("q2", "texto q2"), _rw_row("q99", "x"))
+        with self.assertRaisesRegex(ValueError, "desconhecido"):
+            self.load()
+
+    def test_bad_rewrite_counts_and_content(self):
+        for bad in (["r1"], ["r1", "r2", "r3", "r4"], ["r1", "R1"], ["r1", "texto q1"], ["r1", " "]):
+            self.write(_rw_row("q1", "texto q1", bad), _rw_row("q2", "texto q2"))
+            with self.assertRaisesRegex(ValueError, "rewrites inválidas"):
+                self.load()
+
+    def test_bad_created_and_missing_fields(self):
+        self.write(_rw_row("q1", "texto q1", created="22/10/2026"), _rw_row("q2", "texto q2"))
+        with self.assertRaisesRegex(ValueError, "created"):
+            self.load()
+        self.write({"id": "q1"})
+        with self.assertRaisesRegex(ValueError, "faltam campos"):
+            self.load()
+
+
+class BuildAdaptersRewriteTest(unittest.TestCase):
+    def test_missing_file_exits_with_hint(self):
+        with self.assertRaisesRegex(SystemExit, "gen_rewrites.py"):
+            ev.build_adapters(["rewrite"], rewrites_path=Path("/nonexistent/rewrites.jsonl"), queries=[])
+
+    def test_rank_does_not_need_file(self):
+        self.assertEqual([a.name for a in ev.build_adapters(["rank"])], ["rank"])
+
+
+@unittest.skipUnless(ev.REWRITES.is_file(), "rewrites.jsonl ainda não gerado")
+class RealRewritesTest(unittest.TestCase):
+    def test_real_file_valid_for_dev(self):
+        ids = {q.id for q in ev.load_golden(split="all")}
+        ev.load_rewrites(ev.REWRITES, ev.load_golden(split="dev"), ids)
+
 
 if __name__ == "__main__":
     unittest.main()
