@@ -136,8 +136,8 @@ Fases 1 a 3 abaixo. O MVP está completo quando o `run_eval.py` reportar `rank` 
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 1 | A1 — `sb search --json` | Saída estruturada para o agente julgar pelo manifest | in-progress | - | - | `.claude/PRPs/plans/a1-sb-search-json.plan.md` (worktree) |
-| 2 | A2 — Protocolo de busca agêntica | Regras binárias no Behavior 1 do `SKILL.md` | pending | - | 1 | - |
+| 1 | A1 — `sb search --json` | Saída estruturada para o agente julgar pelo manifest | complete (`7f4e0c4` em `feat/agentic-rag`, 225 testes OK, revisado em 2026-10-22) | - | - | `.claude/PRPs/plans/a1-sb-search-json.plan.md` (worktree) |
+| 2 | A2 — Protocolo de busca agêntica | Regras binárias no Behavior 1 do `SKILL.md` | in-progress | - | 1 | `.claude/PRPs/plans/a2-protocolo-busca.plan.md` (worktree) |
 | 3 | A3 — Adaptador `rewrite` | `gen_rewrites.py` + `rewrites.jsonl` + `RewriteAdapter` com RRF + medição | pending | - | 1 | - |
 
 ### Phase Details
