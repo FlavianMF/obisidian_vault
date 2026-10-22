@@ -4,6 +4,8 @@ type: trap
 tags: [linux, sudo, provisioning, dotfiles, permissions, multi-user, nvm]
 created: 2026-09-28
 provenance: aijail
+seen_in: [aijail, obsidian_vault]
+verified: 2026-10-22 via candidato do agente em obsidian_vault, não reproduzido na revisão
 ---
 
 # Script de Provisionamento com sudo Resolve $HOME Certo Mas Deixa Arquivos Root-Owned
@@ -35,6 +37,12 @@ de *outra* conta pra rodar `npm install -g`. Cada conta de usuário deveria ter
 seu próprio nvm (`curl ... | bash` como aquele usuário, não como root) — aí o
 prefix do npm fica dentro do próprio `$HOME`, sem exigir sudo e sem repetir o
 mesmo problema de ownership pra qualquer pacote global que o usuário instalar
+depois.
+
+**Variante com `install -D` (2026-10-22, obsidian_vault)**: `sudo install -D -o USER ...`
+só ajusta o dono do **arquivo final**. Os diretórios pai que o `-D` cria ficam
+`root:root`. Ler funciona, mas `sb.py candidate add` e `prune --apply` falham ao gravar
+nesse diretório. Crie o diretório antes com `mkdir -p` como o usuário, ou rode `chown -R`
 depois.
 
 ## ✅ Resolvido em dotfiles (2026-09-28)
