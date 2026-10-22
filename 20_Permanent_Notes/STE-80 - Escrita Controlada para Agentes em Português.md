@@ -95,6 +95,13 @@ escrito como contagem ([[Regra Gradual é Ignorada pelo Agente, Regra Binária �
    duas condições (sem estilo, STE-80) e 2 execuções cada. Cada prompt tem uma lista de fatos
    esperados. O critério de aceite é o da definição operacional acima.
 
+**Estado (2026-10-22, verificado por `make test` no worktree):** as camadas 1 a 4 existem como o
+plugin `ste80@dotfiles-local`, no branch `feat/ste80-plugin` dos dotfiles
+(`claude/marketplace/ste80/`). A instrução fica no hook do plugin, não no `AGENTS.md`, porque o
+`~/.claude/CLAUDE.md` importa o `AGENTS.md` e o liga/desliga deixaria de valer. O padrão é
+`enforce: shadow`. A camada 5 (eval com fatos) ainda não existe. O Codex e o OpenCode ainda não
+recebem as regras.
+
 ## Conflito com a skill caveman
 
 A skill caveman já declara "ASD-STE100 is the floor". Ela pede 20 palavras, voz ativa,
