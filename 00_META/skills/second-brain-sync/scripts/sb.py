@@ -11,6 +11,8 @@ single writer and delegates every guard to vault_sync.py.
                             queue of note candidates (local state, 30-day TTL); never writes the vault
   sb observe record|summarize
                             deterministic observer: tool-call metadata log (PostToolUse), candidates (Stop)
+  sb review capture next|apply|drop
+                            review the candidate queue; dry run unless --apply, writes only via vault_sync.py
   sb sync --note ... --project-name P --message M [--verdict V] [--reason R]
                             vault_sync.py with the vault path preset; the guards live there
 
@@ -33,6 +35,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import candidates  # noqa: E402
 import observe  # noqa: E402
+import review  # noqa: E402
 import generate_manifests as gm  # noqa: E402
 from lib import frontmatter, secret_scan  # noqa: E402
 
@@ -342,6 +345,26 @@ def run_candidate(args, state_dir: Path) -> int:
     return 0
 
 
+def run_review(args, vault: Path, state_dir: Path) -> int:
+    """`sb review capture next|apply|drop`: the session's agent drafts, the user approves, vault_sync.py writes."""
+    if args.action == "next":
+        sys.stdout.write(review.capture_next(vault, state_dir, limit=args.limit, project=args.project, kind=args.kind,
+                                             source=args.source, fresh=args.fresh, as_json=args.json))
+        return 0
+    if args.action == "apply":
+        try:
+            raw = json.loads(Path(args.decisions).expanduser().read_text(encoding="utf-8"))
+        except (OSError, ValueError) as err:
+            sys.stderr.write(f"sb review: cannot read the decisions file ({err.__class__.__name__})\n")
+            return 2
+        code, text = review.run_apply(vault, state_dir, raw, apply=args.apply)
+    else:
+        code, text = review.run_drop(state_dir, pattern=args.match, source=args.source, reason=args.reason,
+                                     apply=args.apply)
+    (sys.stdout if code == 0 else sys.stderr).write(text)
+    return code
+
+
 def run_observe(args, state_dir: Path) -> int:
     if args.action == "record":
         try:
@@ -444,6 +467,24 @@ def build_parser() -> argparse.ArgumentParser:
     obs_sum.add_argument("--session", required=True)
     obs_sum.add_argument("--project", default="", help="default: the git repo name")
     obs_sum.add_argument("--transcript", default="", help="transcript path, read for numeric usage only")
+    rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
+    stage = rev.add_subparsers(dest="stage", required=True).add_parser("capture", help="candidates to notes")
+    act = stage.add_subparsers(dest="action", required=True)
+    rev_next = act.add_parser("next", help="a batch with a proposal for each candidate; resumes an open batch")
+    rev_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
+    rev_next.add_argument("--project", default="")
+    rev_next.add_argument("--kind", default="", choices=("",) + candidates.KINDS)
+    rev_next.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
+    rev_next.add_argument("--fresh", action="store_true", help="ignore the open batch")
+    rev_next.add_argument("--json", action="store_true")
+    rev_apply = act.add_parser("apply", help="validate a decisions file; with --apply, write through vault_sync.py")
+    rev_apply.add_argument("--decisions", required=True, help="JSON list of {id, verdict, ...}")
+    rev_apply.add_argument("--apply", action="store_true")
+    rev_drop = act.add_parser("drop", help="reject a class of candidates with one logged reason")
+    rev_drop.add_argument("--match", required=True, help="regex searched in the title")
+    rev_drop.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
+    rev_drop.add_argument("--reason", required=True)
+    rev_drop.add_argument("--apply", action="store_true")
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
 
@@ -462,6 +503,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_candidate(args, state_dir)
     if args.command == "observe":
         return run_observe(args, state_dir)
+    if args.command == "review":
+        return run_review(args, vault, state_dir)
     if args.command == "search":
         return run_search(vault, " ".join(args.query), args.k)
     issues = run_doctor(vault, args.stale_days, args.today or dt.date.today())
