@@ -136,7 +136,7 @@ Fases 1 a 3 abaixo. O MVP está completo quando o `run_eval.py` reportar `rank` 
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 1 | A1 — `sb search --json` | Saída estruturada para o agente julgar pelo manifest | pending | - | - | - |
+| 1 | A1 — `sb search --json` | Saída estruturada para o agente julgar pelo manifest | in-progress | - | - | `.claude/PRPs/plans/a1-sb-search-json.plan.md` (worktree) |
 | 2 | A2 — Protocolo de busca agêntica | Regras binárias no Behavior 1 do `SKILL.md` | pending | - | 1 | - |
 | 3 | A3 — Adaptador `rewrite` | `gen_rewrites.py` + `rewrites.jsonl` + `RewriteAdapter` com RRF + medição | pending | - | 1 | - |
 
@@ -169,7 +169,7 @@ Decisão do usuário (2026-10-22): cada plano é escrito por um agente **Opus no
 
 **Ambiente.** Worktree `~/obsidian_vault-wt/agentic-rag` na branch `feat/agentic-rag`, criada a partir do `master`. O checkout principal `~/obsidian_vault` fica no `master` para o `sb sync` continuar a funcionar. Um commit por fase, em Conventional Commits, sem `Co-Authored-By`. No fim, merge fast-forward no `master` e push, feito pela sessão principal.
 
-**Planos.** Em `<worktree>/.claude/PRPs/plans/a<N>-<nome>.plan.md` (o vault ignora `.claude/`, então o plano não entra no git).
+**Planos.** Em `<worktree>/.claude/PRPs/plans/a<N>-<nome>.plan.md` O `.gitignore` do vault não cobre `.claude/`. A linha `/.claude/PRPs/` em `.git/info/exclude` (local, vale para todos os worktrees) mantém os planos fora do git e do `sb sync` (corrigido em 2026-10-22, apontado pelo planejador da A1).
 
 **Brief do planejador (Opus), por fase:**
 
