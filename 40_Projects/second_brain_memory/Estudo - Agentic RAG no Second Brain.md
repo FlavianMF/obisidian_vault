@@ -11,7 +11,9 @@ scope: project
 
 # Estudo — Agentic RAG no Second Brain
 
-**Status**: Aguardando decisão do usuário · **Data**: 2026-10-22 · Conceito e fontes em [[Agentic RAG]].
+**Status**: Decisões fechadas em 2026-10-22; A1–A3 viraram o [[PRD-003 - Agentic RAG no Second Brain]] · **Data**: 2026-10-22 · Conceito e fontes em [[Agentic RAG]].
+
+> **Atualização 2026-10-22:** o usuário fechou D-A1 = (a), L1 em sombra; D-A2 = Haiku aceito na A3; D-A3 = ordem A1, A2, A3. Piso da A3: os mesmos do gate do L1.
 
 ## 1. Por que agora
 
