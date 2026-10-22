@@ -121,10 +121,106 @@ class TtlTest(QueueFixture):
         self.assertEqual(candidates.summary_line(self.state), "0 pending")
 
 
+class ReviewMemoryTest(QueueFixture):
+    def review(self, cid, outcome):
+        self.state.mkdir(parents=True, exist_ok=True)
+        with (self.state / candidates.REVIEW_LOG).open("a") as log:
+            log.write(json.dumps({"id": cid, "outcome": outcome}) + "\n")
+
+    def test_a_temp_file_suffix_in_the_title_does_not_change_the_id(self):
+        a = candidates.candidate_id("pattern", "Read grande de ecc-observer-analysis.jsonl.QT9hkj", "p")
+        b = candidates.candidate_id("pattern", "Read grande de ecc-observer-analysis.jsonl.XJB6zi", "p")
+        self.assertEqual(a, b)
+        self.assertNotEqual(candidates.candidate_id("trap", "usar build.gradle", "p"),
+                            candidates.candidate_id("trap", "usar build.groovy", "p"))
+
+    def test_observer_noise_with_different_suffixes_is_queued_once(self):
+        first = self.add("Releitura repetida de x.jsonl.QT9hkj", kind="trap", source="observer")
+        second = self.add("Releitura repetida de x.jsonl.lAUVTH", kind="trap", source="observer")
+        self.assertEqual((first[1], second[1]), (True, False))
+
+    def test_a_decided_candidate_leaves_the_list_and_is_not_queued_again(self):
+        cid, _ = self.add()
+        self.review(cid, "rejected")
+        self.assertEqual(candidates.load(self.state)[0], [])
+        self.assertEqual(len(candidates.load(self.state, include_decided=True)[0]), 1)
+        self.assertEqual(self.add(), (cid, False))
+        self.assertTrue(candidates.was_decided(self.state, cid))
+        self.assertEqual(candidates.summary_line(self.state), "0 pending")
+
+    def test_applied_also_counts_as_decided(self):
+        cid, _ = self.add()
+        self.review(cid, "applied")
+        self.assertEqual(candidates.load(self.state)[0], [])
+
+    def test_refused_and_skipped_outcomes_keep_the_candidate_pending(self):
+        cid, _ = self.add()
+        self.review(cid, "refused")
+        self.review(cid, "skipped")
+        self.assertEqual([i.id for i in candidates.load(self.state)[0]], [cid])
+
+    def test_a_garbled_review_log_line_is_ignored(self):
+        cid, _ = self.add()
+        (self.state / candidates.REVIEW_LOG).write_text("not json\n[]\n")
+        self.assertEqual([i.id for i in candidates.load(self.state)[0]], [cid])
+
+
+class DraftTest(QueueFixture):
+    def test_draft_is_stored_with_mode_0600_in_a_0700_directory(self):
+        cid, created = self.add(body="# Corpo\n\nTexto do rascunho.\n")
+        path = candidates.draft_path(self.state, cid)
+        self.assertEqual((created, candidates.read_draft(self.state, cid)), (True, "# Corpo\n\nTexto do rascunho.\n"))
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+        self.assertEqual(stat.S_IMODE(path.parent.stat().st_mode), 0o700)
+
+    def test_draft_with_a_secret_queues_nothing_and_never_echoes_it(self):
+        token = fake_token()
+        with self.assertRaises(candidates.QueueError) as raised:
+            self.add(body=f"chave {token}")
+        self.assertNotIn(token, str(raised.exception))
+        self.assertEqual(candidates.load(self.state)[0], [])
+        self.assertFalse((self.state / candidates.DRAFT_DIR).exists())
+
+    def test_oversized_draft_is_refused(self):
+        with self.assertRaises(candidates.QueueError):
+            self.add(body="x" * (candidates.MAX_DRAFT_BYTES + 1))
+
+    def test_a_duplicate_does_not_overwrite_the_first_draft(self):
+        cid, _ = self.add(body="primeiro")
+        self.add(body="segundo")
+        self.assertEqual(candidates.read_draft(self.state, cid), "primeiro")
+
+    def test_prune_apply_removes_the_draft_of_an_expired_candidate(self):
+        entry = self.entry("Velho", 40)
+        self.write_raw([entry])
+        candidates.write_draft(self.state, entry["id"], "rascunho velho")
+        candidates.prune(self.state, apply=False)
+        self.assertIsNotNone(candidates.read_draft(self.state, entry["id"]))
+        candidates.prune(self.state, apply=True)
+        self.assertIsNone(candidates.read_draft(self.state, entry["id"]))
+
+
 class CliTest(QueueFixture):
-    def run_sb(self, *args):
+    def run_sb(self, *args, stdin=None):
         env = dict(os.environ, SECOND_BRAIN_STATE_DIR=str(self.state))
-        return subprocess.run([sys.executable, str(SB), "candidate", *args], capture_output=True, text=True, env=env)
+        return subprocess.run([sys.executable, str(SB), "candidate", *args], capture_output=True, text=True, env=env,
+                              input=stdin)
+
+    def test_body_file_from_stdin_is_kept_and_a_reviewed_candidate_says_so(self):
+        done = self.run_sb("add", "--kind", "trap", "--title", "Com rascunho", "--project", "p", "--body-file", "-",
+                           stdin="corpo vindo do stdin\n")
+        self.assertEqual(done.returncode, 0)
+        cid = done.stdout.split(": ")[1].strip()
+        self.assertEqual(candidates.read_draft(self.state, cid), "corpo vindo do stdin\n")
+        (self.state / candidates.REVIEW_LOG).write_text(json.dumps({"id": cid, "outcome": "rejected"}) + "\n")
+        again = self.run_sb("add", "--kind", "trap", "--title", "Com rascunho", "--project", "p")
+        self.assertIn("already reviewed", again.stdout)
+
+    def test_body_file_with_a_secret_exits_two(self):
+        token = fake_token()
+        done = self.run_sb("add", "--kind", "trap", "--title", "t", "--body-file", "-", stdin=token)
+        self.assertEqual(done.returncode, 2)
+        self.assertNotIn(token, done.stdout + done.stderr)
 
     def test_add_then_list_then_prune_dry_run(self):
         added = self.run_sb("add", "--kind", "trap", "--title", "Hook sem aspas", "--summary", "s", "--project", "dotfiles")

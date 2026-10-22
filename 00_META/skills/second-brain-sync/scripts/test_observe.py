@@ -54,6 +54,12 @@ class RecordTest(ObserveFixture):
         self.assertFalse(observe.record(self.state, payload(agent_id="sub1")))
         self.assertFalse(observe.log_path(self.state, "s1").exists())
 
+    def test_the_ecc_observer_temp_files_are_skipped(self):
+        for path in ("/tmp/ecc-observer-analysis.jsonl.QT9hkj", "/home/u/proj/.observer-tmp/x.json"):
+            with self.subTest(path):
+                self.assertFalse(observe.record(self.state, payload(path=path)))
+        self.assertTrue(observe.record(self.state, payload(path="/repo/observer_notes.md")))
+
     def test_session_id_cannot_escape_the_log_directory(self):
         observe.record(self.state, payload(session="../../evil"))
         files = list((self.state / observe.LOG_DIR).iterdir())

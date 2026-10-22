@@ -25,6 +25,12 @@ TTL_DAYS = 30
 WARN_DAYS = 7
 MAX_TITLE = 120
 MAX_SUMMARY = 500
+REVIEW_LOG = "review.jsonl"  # written by review.py; read here so a reviewed candidate never comes back
+DRAFT_DIR = "drafts"  # optional note body that travels with a candidate
+MAX_DRAFT_BYTES = 16 * 1024
+DECIDED_OUTCOMES = ("applied", "rejected")
+# mktemp-style suffix (`.QT9hkj`): six letters/digits with mixed case or a digit, so `.gradle` and `.json` stay.
+TEMP_SUFFIX = re.compile(r"\.(?=[A-Za-z0-9]*[A-Z0-9])(?=[A-Za-z0-9]*[a-z])[A-Za-z0-9]{6}\b")
 
 
 class Candidate(NamedTuple):
@@ -62,8 +68,51 @@ def normalize(text: str) -> str:
 
 
 def candidate_id(kind: str, title: str, project: str) -> str:
-    key = f"{kind}|{normalize(title).casefold()}|{project.casefold()}"
+    """Stable id; a random temp-file suffix in the title does not change it."""
+    key = f"{kind}|{TEMP_SUFFIX.sub('', normalize(title)).casefold()}|{project.casefold()}"
     return hashlib.sha1(key.encode("utf-8")).hexdigest()[:8]
+
+
+def decided_ids(state_dir: Path) -> set[str]:
+    """Ids the review already turned into a note or rejected (review.jsonl is append-only)."""
+    decided: set[str] = set()
+    for line in read_lines(state_dir / REVIEW_LOG):
+        try:
+            raw = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(raw, dict) and raw.get("outcome") in DECIDED_OUTCOMES and isinstance(raw.get("id"), str):
+            decided.add(raw["id"])
+    return decided
+
+
+def was_decided(state_dir: Path, cid: str) -> bool:
+    return cid in decided_ids(state_dir)
+
+
+def draft_path(state_dir: Path, cid: str) -> Path:
+    return state_dir / DRAFT_DIR / f"{re.sub(r'[^A-Za-z0-9]', '', cid)}.md"
+
+
+def read_draft(state_dir: Path, cid: str) -> str | None:
+    try:
+        return draft_path(state_dir, cid).read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def remove_draft(state_dir: Path, cid: str) -> None:
+    draft_path(state_dir, cid).unlink(missing_ok=True)
+
+
+def write_draft(state_dir: Path, cid: str, body: str) -> None:
+    target = draft_path(state_dir, cid)
+    target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, tmp = tempfile.mkstemp(dir=target.parent, prefix=".draft-")
+    with os.fdopen(fd, "w", encoding="utf-8") as out:
+        out.write(body)
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, target)
 
 
 @contextmanager
@@ -97,14 +146,15 @@ def read_lines(path: Path) -> list[str]:
         return []
 
 
-def load(state_dir: Path) -> tuple[list[Candidate], int]:
-    """All parsable candidates, plus how many lines could not be parsed."""
+def load(state_dir: Path, include_decided: bool = False) -> tuple[list[Candidate], int]:
+    """Parsable candidates that no review has decided yet, plus how many lines could not be parsed."""
     items, bad = [], 0
+    decided = set() if include_decided else decided_ids(state_dir)
     for line in read_lines(queue_path(state_dir)):
         item = parse_line(line)
         if item is None:
             bad += 1
-        else:
+        elif item.id not in decided:
             items.append(item)
     return items, bad
 
@@ -113,8 +163,13 @@ def live(items: list[Candidate]) -> list[Candidate]:
     return [i for i in items if i.days_left > 0]
 
 
-def add(state_dir: Path, *, kind: str, title: str, summary: str, project: str, source: str = "agent") -> tuple[str, bool]:
-    """Append a candidate. Returns (id, created); an identical live candidate is not queued twice."""
+def add(state_dir: Path, *, kind: str, title: str, summary: str, project: str, source: str = "agent",
+        body: str | None = None) -> tuple[str, bool]:
+    """Append a candidate. Returns (id, created).
+
+    Not queued again: an identical live candidate, or one the review already decided (`was_decided`).
+    `body` is an optional note draft that travels with the candidate (stored 0600, same lifetime).
+    """
     title, summary, project = normalize(title), normalize(summary), normalize(project)
     if kind not in KINDS:
         raise QueueError(f"kind must be one of {', '.join(KINDS)}")
@@ -124,16 +179,22 @@ def add(state_dir: Path, *, kind: str, title: str, summary: str, project: str, s
         raise QueueError(f"title is over {MAX_TITLE} characters")
     if len(summary) > MAX_SUMMARY:
         raise QueueError(f"summary is over {MAX_SUMMARY} characters")
-    findings = secret_scan.scan_text(f"{title}\n{summary}")
+    if body is not None and len(body.encode("utf-8")) > MAX_DRAFT_BYTES:
+        raise QueueError(f"draft is over {MAX_DRAFT_BYTES // 1024} KB")
+    findings = secret_scan.scan_text(f"{title}\n{summary}\n{body or ''}")
     if findings:
         labels = ", ".join(sorted({f.label for f in findings}))
         raise QueueError(f"looks like a secret ({labels}); nothing was queued")
     cid = candidate_id(kind, title, project)
     path = queue_path(state_dir)
     with locked(path):
+        if cid in decided_ids(state_dir):
+            return cid, False
         items, _ = load(state_dir)
         if any(i.id == cid and i.days_left > 0 for i in items):
             return cid, False
+        if body:
+            write_draft(state_dir, cid, body)
         entry = {"id": cid, "ts": utcnow().isoformat(timespec="seconds"), "kind": kind, "title": title,
                  "summary": summary, "project": project, "source": source}
         fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
@@ -159,6 +220,8 @@ def prune(state_dir: Path, *, apply: bool) -> list[Candidate]:
                 out.write("".join(line + "\n" for line in kept))
             os.chmod(tmp, 0o600)
             os.replace(tmp, path)
+            for item in expired:
+                remove_draft(state_dir, item.id)
     return expired
 
 

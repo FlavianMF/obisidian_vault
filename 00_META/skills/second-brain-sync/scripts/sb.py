@@ -293,16 +293,35 @@ def run_search(vault: Path, query: str, k: int) -> int:
 
 # ---------------------------------------------------------------- cli
 
+def read_body(source: str) -> str | None:
+    """Draft body for `candidate add --body-file`: a path, or `-` for stdin; capped before it is decoded."""
+    if not source:
+        return None
+    limit = candidates.MAX_DRAFT_BYTES + 1
+    try:
+        raw = sys.stdin.buffer.read(limit) if source == "-" else Path(source).expanduser().open("rb").read(limit)
+    except OSError as err:
+        raise candidates.QueueError(f"cannot read the draft ({err.strerror or 'error'})") from None
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise candidates.QueueError("draft is not valid UTF-8") from None
+
+
 def run_candidate(args, state_dir: Path) -> int:
     if args.action == "add":
         project = args.project or detect_project()
         try:
+            body = read_body(args.body_file)
             cid, created = candidates.add(state_dir, kind=args.kind, title=args.title, summary=args.summary,
-                                          project=project, source=args.source)
+                                          project=project, source=args.source, body=body)
         except candidates.QueueError as err:
             sys.stderr.write(f"sb candidate: {err}\n")
             return 2
-        sys.stdout.write(f"{'queued' if created else 'already queued'}: {cid}\n")
+        if created:
+            sys.stdout.write(f"queued: {cid}\n")
+        else:
+            sys.stdout.write(f"{'already reviewed' if candidates.was_decided(state_dir, cid) else 'already queued'}: {cid}\n")
         return 0
     if args.action == "list":
         items, bad = candidates.load(state_dir)
@@ -412,6 +431,8 @@ def build_parser() -> argparse.ArgumentParser:
     cand_add.add_argument("--summary", default="", help=f"up to {candidates.MAX_SUMMARY} characters, no secrets")
     cand_add.add_argument("--project", default="", help="default: the git repo name")
     cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc", "observer"))
+    cand_add.add_argument("--body-file", default="", help="note draft to keep with the candidate: a path or - for stdin "
+                          f"(up to {candidates.MAX_DRAFT_BYTES // 1024} KB, no secrets)")
     cand_list = cand_sub.add_parser("list", help="pending candidates, oldest first")
     cand_list.add_argument("--json", action="store_true")
     cand_prune = cand_sub.add_parser("prune", help="drop candidates older than 30 days (dry run by default)")

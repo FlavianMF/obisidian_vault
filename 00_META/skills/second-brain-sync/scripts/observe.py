@@ -24,7 +24,10 @@ REREAD_MIN = 3  # same file read this many times in one session
 BIG_READ_CHARS = 40_000
 EXPENSIVE_TURN_TOKENS = 30_000  # cache_creation_input_tokens of one assistant message
 MAX_CANDIDATES = 3
-SKIP_PATH = re.compile(r"(^|/)(secrets|\.ssh|\.aws|\.gnupg)(/|$)|(^|/)\.env[^/]*$")
+SKIP_PATH = re.compile(
+    r"(^|/)(secrets|\.ssh|\.aws|\.gnupg)(/|$)|(^|/)\.env[^/]*$"
+    r"|ecc-observer-analysis|(^|/)\.observer-tmp(/|$)"  # the ECC observer's own temp files: 63 of 141 candidates were noise
+)
 SAFE_SESSION = re.compile(r"[^A-Za-z0-9_-]")
 
 
