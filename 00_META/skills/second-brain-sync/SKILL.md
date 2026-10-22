@@ -315,6 +315,24 @@ queue reaches the vault until a person reviews it.
    --reason "..."` (dry run first). A refused sync leaves the candidates pending: fix and rerun.
    Every decision is recorded in `~/.local/state/second-brain/review.jsonl`.
 
+**`sb review promote` and `sb review stock` (review of notes already in the vault; only when the
+user asks for it).** Both are dry runs unless `--apply`, both refuse the whole decisions file when
+one decision is invalid, and both log to `review.jsonl` with `stage` and `note`.
+- `promote next` lists notes with `scope: global`, `confidence` medium or high and `seen_in` in 2+
+  projects that Agent-Instruction.md does not link yet. `promote apply --decisions FILE` takes
+  `{note, verdict: promote|reject, reason?}`; `reject` needs `reason` and the note never comes back.
+  A `promote` only records the decision and prints the line to paste: editing Agent-Instruction.md
+  stays manual.
+- `stock next` lists pattern, trap, decision and concept notes that are stale (`verified`, else
+  `created`, older than `--stale-days`, default 180), unconfirmed (`confidence: low`, never
+  reproduced, older than 30 days), duplicated by title, or with a link that resolves to nothing.
+  A batch in progress resumes (`--fresh` ignores it). `stock apply --decisions FILE` takes `{note,
+  verdict: keep|update|merge|retire, ...}`: `keep` is quiet for 180 days while the text stays the
+  same; `update` needs `body_file` (the whole note, `verified:` renewed, at least 80% of the old
+  lines kept, no secret); `retire` needs `reason` and sets `status: superseded`; `merge` needs
+  `reason` and `into` (another note), retires the note and adds `supersedes` to `into`. Writes go
+  through vault_sync.py in one commit. Do not decide for the user: show the plan and wait.
+
 ## Guardrails
 
 - Never `--force` push. Never rewrite vault history.

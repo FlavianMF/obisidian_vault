@@ -177,7 +177,7 @@ fim da tarefa / sob demanda: `sb review`
 | I1 (entregue em 2026-10-15) | Esqueleto do `sb` (`status`, `doctor`, `search`) por cima dos scripts atuais, sem mudar comportamento; varredura de segredos e campo `status`/`supersedes` no schema | testes dos subcomandos; `doctor` acusa link quebrado, título duplicado e segredo falso | baixo |
 | I2 (entregue em 2026-10-15; o hook do dotfiles aguarda merge) | `sb sync` com `verdict` (Save, Improve then Save, Absorb, Drop) e seção "o que NÃO funcionou" no molde de `trap`; hooks de sync passam a chamar o `sb` | `sync.jsonl` registra o veredito | baixo |
 | I3 (entregue em 2026-10-15; sombra de 2026-10-15 a 2026-10-29; falta a rotina de retenção do homunculus, que espera existir `observations.jsonl`) | `sb candidate` (fila com TTL), regra no `AGENTS.md`, contagem na linha de status; **modo sombra** por 2 semanas | fila coleta sem alterar o vault | médio |
-| I4 | `sb review capture|promote|stock` interativo, `--dry-run` por padrão, estado retomável, `review.jsonl` com rejeições | ponta a ponta sobre vault de teste e sobre o real em dry-run | médio |
+| I4 (entregue em 2026-10-22) | `sb review capture|promote|stock` interativo, `--dry-run` por padrão, estado retomável, `review.jsonl` com rejeições | ponta a ponta sobre vault de teste e sobre o real em dry-run | médio |
 | I5 | Adaptador `sb export-ecc` e `sb import-ecc` (conforme a I0), com teste de ida e volta e de segredos | espelho validado pelo `ecc memory doctor` (se disponível) e import vira candidato | médio |
 | I6 | Medição e gate: taxa de aceitação dos candidatos, retrabalho em 60 dias, tempo e tokens da revisão | piso escrito **antes** de medir e aprovado pelo usuário | baixo |
 
