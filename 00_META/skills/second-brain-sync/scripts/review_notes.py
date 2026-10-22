@@ -287,12 +287,20 @@ def run_stock_apply(vault: Path, state_dir: Path, today: dt.date, raw: list, *, 
     if not apply:
         return 0, f"{len(plans)} decision(s) valid\ndry run: nothing written (add --apply)\n"
     edits = [e for _, group in plans for e in group]
-    sha = ""
+    done, detail = True, ""
     if edits:
-        done, sha, detail = review.sync_group(vault, state_dir, edits, "absorb",
-                                              f"docs(vault): review {len(edits)} note(s) in stock")
+        done, _, detail = review.sync_group(vault, state_dir, edits, "absorb",
+                                            f"docs(vault): review {len(edits)} note(s) in stock")
     for d, group in plans:
+        event = {"stage": "stock", "on": today.isoformat(), "note": d["note"], "reason": d.get("reason", "")}
+        if group and not done:
+            review.log_event(state_dir, {**event, "outcome": "refused", "reason": detail})
+            continue
         text = (vault / d["note"]).read_text(encoding="utf-8")
-        review.log_event(state_dir, {"stage": "stock", "note": d["note"], "outcome": OUTCOMES[d["verdict"]],
-                                     "sha": sha_of(text), "on": today.isoformat(), "reason": d.get("reason", "")})
-    return 0, "done\n"
+        event |= {"outcome": OUTCOMES[d["verdict"]], "sha": sha_of(text)}
+        if group and detail:
+            event["detail"] = detail
+        review.log_event(state_dir, event)
+    if not done:
+        return 1, f"REFUSED, nothing was written: {detail}\n"
+    return 0, f"done\n{detail}\n" if detail else "done\n"

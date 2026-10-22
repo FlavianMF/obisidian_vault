@@ -258,6 +258,35 @@ class StockApplyTest(NotesFixture):
         code, out = self.apply({"note": self.old, "verdict": "update", "body_file": short, "allow_rewrite": True})
         self.assertEqual(code, 0, out)
 
+    def test_a_write_that_vault_sync_refuses_is_undone_and_logged_as_refused(self):
+        solo = self.put("Solitária", seen=("projeto_x",), created="2026-01-01", verified="2026-01-02 via nota")
+        self.commit()
+        text = (self.vault / solo).read_text(encoding="utf-8")
+        head = self.head()
+        body = self.body_file("up.md", text.replace("confidence: medium", "confidence: high")
+                              .replace("2026-01-02 via nota", "2026-10-22 via nota"))
+        code, out = self.apply({"note": solo, "verdict": "update", "body_file": body},
+                               {"note": self.old, "verdict": "keep", "reason": "ainda vale"})
+        self.assertEqual(code, 1, out)
+        self.assertTrue(out.startswith("REFUSED"), out)
+        self.assertIn("without evidence", out)
+        self.assertEqual((self.head(), self.status()), (head, ""))
+        self.assertEqual((self.vault / solo).read_text(encoding="utf-8"), text)
+        self.assertEqual([(e["note"], e["outcome"]) for e in self.log()],
+                         [(solo, "refused"), (self.old, "kept")])
+        self.assertIn("without evidence", self.log()[0]["reason"])
+
+    def test_a_commit_whose_push_is_pending_is_logged_with_the_detail(self):
+        hook = self.vault / ".git/hooks/pre-push"
+        hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        hook.chmod(0o755)
+        code, out = self.apply({"note": self.old, "verdict": "update", "body_file": self.renewed()})
+        self.assertEqual(code, 0, out)
+        self.assertIn("push pending", out)
+        self.assertEqual(self.status(), "")
+        self.assertEqual(self.log()[-1]["outcome"], "updated")
+        self.assertIn("push pending", self.log()[-1]["detail"])
+
     def test_retire_needs_a_reason_and_sets_status_superseded(self):
         code, _ = self.apply({"note": self.old, "verdict": "retire"})
         self.assertEqual(code, 1)
