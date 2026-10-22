@@ -5,6 +5,7 @@ Credenciais abaixo são FALSAS e montadas em tempo de execução, para não exis
 
 import datetime as dt
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -253,6 +254,123 @@ class StatusAndSearchTest(VaultFixture):
             capture_output=True, text=True,
         )
         self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+
+class SearchJsonTest(VaultFixture):
+    EXPECTED_TSV = b'4.352\t20_Permanent_Notes/Subagentes Gastam Contexto.md\tSubagentes Gastam Contexto\t1.000\tmedium\n1.410\t20_Permanent_Notes/Contexto de Agentes.md\tContexto de Agentes\t0.324\t\n'
+
+    def _corpus(self):
+        self.note("Subagentes Gastam Contexto", title="Subagentes Gastam Contexto", type_="trap",
+                  extra="confidence: medium\n", body="Subagentes gastam contexto quando usam a|b no shell.\n")
+        self.note("Contexto de Agentes", title="Contexto de Agentes", type_="pattern", body="Agentes e contexto.\n")
+        self.note("Receita de Pão", title="Receita de Pão", type_="concept")
+        gm.write_manifests(self.vault)
+
+    def _sb(self, *args, vault=None, text=False):
+        vault = vault if vault is not None else self.vault
+        return subprocess.run([sys.executable, str(SB), "search", "--vault-path", str(vault), *args],
+                              capture_output=True, text=text)
+
+    def _json(self, *query, k="3", vault=None):
+        result = self._sb("--json", "-k", k, *query, vault=vault, text=True)
+        self.assertEqual(result.returncode, 0)
+        return json.loads(result.stdout)
+
+    def _ranker(self, query, k="3"):
+        env = {**os.environ, "SECOND_BRAIN_MANIFEST_DIR": str(self.vault / "00_META/manifests/by_type")}
+        return subprocess.run(["bash", str(SB.parent / "vault_rank.sh"), "-k", k, "--", query],
+                              capture_output=True, env=env, stdin=subprocess.DEVNULL)
+
+    def test_tsv_is_byte_identical_to_the_ranker(self):
+        self._corpus()
+        result = self._sb("-k", "3", "subagentes", "contexto")
+        rank = self._ranker("subagentes contexto")
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(result.stdout)
+        self.assertEqual(result.stdout, rank.stdout)
+
+    def test_tsv_snapshot_is_unchanged(self):
+        self._corpus()
+        self.assertEqual(self._sb("-k", "3", "subagentes", "contexto").stdout, self.EXPECTED_TSV)
+
+    def test_tsv_without_vault_is_silent(self):
+        result = self._sb("zzzzzzzz", vault=Path(self._tmp.name) / "nope")
+        self.assertEqual((result.returncode, result.stdout), (0, b""))
+
+    def test_json_fields_order_and_types(self):
+        self._corpus()
+        first = self._json("subagentes", "contexto")[0]
+        self.assertEqual(list(first), ["path", "title", "type", "summary", "coverage", "confidence", "score", "terms"])
+        self.assertEqual([type(v) for v in first.values()], [str, str, str, str, float, str, float, int])
+        self.assertTrue(0 <= first["coverage"] <= 1)
+        self.assertEqual(first["terms"], 2)
+
+    def test_json_matches_the_tsv_rows(self):
+        self._corpus()
+        rows = [line.split("\t") for line in self._ranker("subagentes contexto").stdout.decode().splitlines()]
+        hits = self._json("subagentes", "contexto")
+        self.assertEqual([h["path"] for h in hits], [r[1] for r in rows])
+        self.assertEqual([h["score"] for h in hits], [float(r[0]) for r in rows])
+        self.assertEqual([h["coverage"] for h in hits], [float(r[3]) for r in rows])
+        self.assertEqual([h["confidence"] for h in hits], [r[4] for r in rows])
+
+    def test_json_joins_type_and_summary_from_the_manifest(self):
+        self._corpus()
+        by_title = {h["title"]: h for h in self._json("subagentes", "contexto")}
+        trap = by_title["Subagentes Gastam Contexto"]
+        self.assertEqual((trap["type"], trap["confidence"]), ("trap", "medium"))
+        self.assertIn("a¦b", trap["summary"])
+        self.assertEqual(by_title["Contexto de Agentes"]["confidence"], "")
+
+    def test_json_no_match_prints_empty_list(self):
+        self._corpus()
+        result = self._sb("--json", "zzzzzzzz", text=True)
+        self.assertEqual((result.returncode, result.stdout), (0, "[]\n"))
+
+    def test_json_query_without_useful_terms_prints_empty_list(self):
+        self._corpus()
+        self.assertEqual(self._json("de uma com"), [])
+
+    def test_json_missing_vault_prints_empty_list(self):
+        result = self._sb("--json", "zzzzzzzz", vault=Path(self._tmp.name) / "nope", text=True)
+        self.assertEqual((result.returncode, result.stdout), (0, "[]\n"))
+
+    def test_json_respects_k(self):
+        self._corpus()
+        self.assertEqual(len(self._json("subagentes", "contexto", k="1")), 1)
+
+    def test_rank_json_keeps_a_hit_missing_from_the_manifest(self):
+        self.assertEqual(
+            sb.rank_json("1.500\tX.md\tX\t0.500\tlow\t2\n", {}),
+            [{"path": "X.md", "title": "X", "type": "", "summary": "", "coverage": 0.5, "confidence": "low",
+              "score": 1.5, "terms": 2}],
+        )
+
+    def test_rank_json_skips_malformed_lines(self):
+        self.assertEqual(sb.rank_json("lixo\n1.0\tA.md\tA\n", {}), [])
+
+    def test_read_manifest_rows_round_trip(self):
+        self._corpus()
+        rows = gm.read_manifest_rows(self.vault / "00_META/manifests/by_type")
+        self.assertEqual(len(rows), 3)
+        trap = rows["20_Permanent_Notes/Subagentes Gastam Contexto.md"]
+        body = "Subagentes gastam contexto quando usam a|b no shell.\n"
+        self.assertEqual((trap["type"], trap["confidence"]), ("trap", "medium"))
+        self.assertEqual(trap["summary"], gm.extract_summary(body).replace("|", "¦"))
+
+    def test_read_manifest_rows_strips_shard_suffix(self):
+        header = "| Path | Title | Tags | Created | Provenance | Confidence | Seen_in | Summary |\n"
+        sep = "|---|---|---|---|---|---|---|---|\n"
+        out = Path(self._tmp.name) / "by_type"
+        (out / "sub").mkdir(parents=True)
+        for name in ("pattern_2026H2.md", "pattern_unknown-2.md", "article-book-paper.md", "sub/other.md"):
+            stem = name.replace("/", "_")
+            (out / name).write_text(header + sep + f"| {stem} | T | a | 2026-10-01 | | | | S |\n", encoding="utf-8")
+        (out / "ignored.txt").write_text(header + sep + "| ignored.txt | T | a | 2026-10-01 | | | | S |\n")
+        rows = gm.read_manifest_rows(out)
+        self.assertEqual({p: r["type"] for p, r in rows.items()},
+                         {"pattern_2026H2.md": "pattern", "pattern_unknown-2.md": "pattern",
+                          "article-book-paper.md": "article-book-paper"})
 
 
 class SyncDoctorReportTest(VaultFixture):

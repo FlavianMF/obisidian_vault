@@ -280,7 +280,7 @@ Canonical copy lives at `~/obsidian_vault/00_META/Frontmatter-Schema.md`
 **`sb` (read-only health check).** `python3 ~/obsidian_vault/00_META/skills/second-brain-sync/scripts/sb.py`
 runs `status` (vault, git, hook switches, last sync), `doctor` (broken wikilinks, duplicate titles,
 frontmatter, secrets, stale notes; exits 1 on an error-level issue; add `--json` or `--limit N`) and
-`search <query>` (the L1 ranker). Run `doctor` before a large sync. A line with `sb-allow-secret` is
+`search <query>` (the L1 ranker; `search --json <query>` returns path, title, type, summary, coverage, confidence, score and terms per hit, to judge a note without opening it). Run `doctor` before a large sync. A line with `sb-allow-secret` is
 skipped by the secret scan, for a deliberate fake example.
 
 **`sb candidate` (queue of note candidates).** When you are corrected or find a reusable trap or

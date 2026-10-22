@@ -40,6 +40,8 @@ from lib import frontmatter  # noqa: E402
 MANIFEST_DIR_NAME = "00_META/manifests"
 SKILL_DIR_NAME = "00_META/skills"
 SHARD_THRESHOLD = 150
+MANIFEST_COLUMNS = ("path", "title", "tags", "created", "provenance", "confidence", "seen_in", "summary")
+SHARD_SUFFIX = re.compile(r"_(?:\d{4}H[12]|unknown)(?:-\d+)?$")
 EXCLUDE_DIR_PARTS = {".obsidian", ".git"}
 DEFAULT_VAULT_ROOT = Path(__file__).resolve().parents[4]
 STALE_TYPES = ("pattern", "trap")
@@ -210,6 +212,29 @@ def render_table(rows: list[dict[str, str]]) -> str:
             f"| {escape_cell(row['seen_in'])} | {escape_cell(row['summary'])} |"
         )
     return "\n".join(lines) + "\n"
+
+
+def read_manifest_rows(by_type_dir: Path) -> dict[str, dict[str, str]]:
+    """Inverse of render_table over by_type/*.md (the same glob as vault_rank.sh): {path: row + "type"}.
+
+    `type` is the manifest file name without the shard suffix, so it is the sanitized type name.
+    Cells are split on every pipe, like the awk ranker; the generator never writes a raw pipe in a cell.
+    """
+    rows: dict[str, dict[str, str]] = {}
+    for file in sorted(by_type_dir.glob("*.md")):
+        note_type = SHARD_SUFFIX.sub("", file.stem)
+        try:
+            lines = file.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line in lines:
+            if not line.startswith("| "):
+                continue
+            cells = [cell.strip() for cell in line.split("|")[1:-1]]
+            if len(cells) != len(MANIFEST_COLUMNS) or cells[0] in ("", "Path") or set(cells[0]) == {"-"}:
+                continue
+            rows[cells[0]] = {**dict(zip(MANIFEST_COLUMNS, cells)), "type": note_type}
+    return rows
 
 
 def sanitize_type_name(note_type: str) -> str:

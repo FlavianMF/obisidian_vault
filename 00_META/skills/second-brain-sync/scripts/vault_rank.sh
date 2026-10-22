@@ -7,8 +7,8 @@
 #
 # Contract (keep stable):
 #   - reads only 00_META/manifests/by_type/*.md (override: SECOND_BRAIN_MANIFEST_DIR);
-#   - prints at most K lines (default 5), TSV: score<TAB>path<TAB>title, best first;
-#     -n appends one more column, the number of query terms (the denominator of coverage), so a caller
+#   - prints at most K lines (default 5), TSV: score<TAB>path<TAB>title<TAB>coverage<TAB>confidence, best first;
+#     -n appends one more column, `terms`, the number of query terms (the denominator of coverage), so a caller
 #     can tell a coverage of 1.0 over one term from one over six; without -n the columns do not change;
 #   - only rows with score > MIN (default 0); prints nothing when no term matches;
 #   - the query reaches awk through ENVIRON, never `-v` (-v interprets backslashes);

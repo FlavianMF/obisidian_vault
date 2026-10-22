@@ -6,7 +6,9 @@ single writer and delegates every guard to vault_sync.py.
 
   sb status                 vault, notes by type, git state, hook switches, last sync
   sb doctor [--json]        unresolved wikilinks, duplicate titles, frontmatter, secrets, stale notes
-  sb search [-k N] <query>  the L1 ranker (vault_rank.sh), same TSV output
+  sb search [-k N] [--json] <query>
+                            the L1 ranker (vault_rank.sh), same TSV output; --json prints a list of {path, title,
+                            type, summary, coverage, confidence, score, terms}, type and summary from the manifests
   sb candidate add|list|prune
                             queue of note candidates (local state, 30-day TTL); never writes the vault
   sb observe record|summarize
@@ -293,10 +295,39 @@ def run_status(vault: Path, state_dir: Path, env) -> str:
 
 # ---------------------------------------------------------------- search
 
-def run_search(vault: Path, query: str, k: int) -> int:
-    env = dict(os.environ, SECOND_BRAIN_MANIFEST_DIR=str(vault / "00_META/manifests/by_type"))
-    subprocess.run(["bash", str(HERE / "vault_rank.sh"), "-k", str(k), "--", query], env=env, check=False)
-    return 0  # vault_rank.sh contract: silent, always exit 0
+SEARCH_FIELDS = ("path", "title", "type", "summary", "coverage", "confidence", "score", "terms")
+
+
+def rank_json(tsv: str, manifest_rows: dict[str, dict[str, str]]) -> list[dict]:
+    """vault_rank.sh -n rows joined with the manifest by path; malformed lines are skipped."""
+    hits = []
+    for line in tsv.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 6:
+            continue
+        try:
+            score, coverage, terms = float(parts[0]), float(parts[3]), int(parts[5])
+        except ValueError:
+            continue
+        row = manifest_rows.get(parts[1], {})
+        hits.append({"path": parts[1], "title": parts[2], "type": row.get("type", ""),
+                     "summary": row.get("summary", ""), "coverage": coverage, "confidence": parts[4],
+                     "score": score, "terms": terms})
+    return hits
+
+
+def run_search(vault: Path, query: str, k: int, as_json: bool = False) -> int:
+    manifests = vault / "00_META/manifests/by_type"
+    env = dict(os.environ, SECOND_BRAIN_MANIFEST_DIR=str(manifests))
+    if not as_json:
+        subprocess.run(["bash", str(HERE / "vault_rank.sh"), "-k", str(k), "--", query], env=env, check=False)
+        return 0  # vault_rank.sh contract: silent, always exit 0
+    done = subprocess.run(["bash", str(HERE / "vault_rank.sh"), "-k", str(k), "-n", "--", query],
+                          capture_output=True, text=True, env=env, check=False, stdin=subprocess.DEVNULL)
+    hits = rank_json(done.stdout, gm.read_manifest_rows(manifests) if done.stdout.strip() else {})
+    json.dump(hits, sys.stdout, ensure_ascii=False, indent=2)
+    sys.stdout.write("\n")
+    return 0
 
 
 # ---------------------------------------------------------------- cli
@@ -483,6 +514,7 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--today", type=dt.date.fromisoformat, default=None, help=argparse.SUPPRESS)
     search = sub.add_parser("search", parents=[common], help="L1 ranker over the manifests")
     search.add_argument("-k", type=int, default=5)
+    search.add_argument("--json", action="store_true", help="JSON list with type and summary from the manifests")
     search.add_argument("query", nargs="+")
     cand = sub.add_parser("candidate", parents=[common], help="queue of note candidates (30-day TTL)")
     cand_sub = cand.add_subparsers(dest="action", required=True)
@@ -560,7 +592,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "review":
         return run_review(args, vault, state_dir)
     if args.command == "search":
-        return run_search(vault, " ".join(args.query), args.k)
+        return run_search(vault, " ".join(args.query), args.k, args.json)
     issues = run_doctor(vault, args.stale_days, args.today or dt.date.today())
     if args.json:
         json.dump([i._asdict() for i in issues], sys.stdout, ensure_ascii=False, indent=2)
