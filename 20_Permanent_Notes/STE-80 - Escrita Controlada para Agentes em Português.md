@@ -25,8 +25,14 @@ O STE-80 está implementado quando, numa bateria fixa de prompts:
 2. **Nenhum fato se perde** em relação à resposta sem estilo. Este critério é absoluto.
 3. A resposta inteira não fica mais longa que a resposta sem estilo.
 
-O critério 2 existe por causa do teste de Ghinda: o nome da norma no prompt apagou 46,8% dos
-fatos. Ver [[ASD-STE100 Simplified Technical English]].
+O critério 2 existe por causa do teste de Ghinda: o nome da norma no prompt fez o Claude
+manter 17 de 24 fatos (lidos à mão), contra 24 do controle. Ver
+[[Ghinda 2026b - Experimento STE em Explicação de Código]].
+
+**A instrução tem uma cláusula de escape.** No mesmo teste, "when it doesn't detract from
+meaning" recuperou 24 de 24 fatos no Claude e subiu o Codex de 13 para 18. No STE-80, a
+cláusula fica assim: "Se uma regra apagar um fato, um nome ou uma ressalva, quebre a regra e
+mantenha o fato."
 
 ## As regras que entram, já em português
 
@@ -104,9 +110,10 @@ fragmento.
 
 ## O que NÃO funcionou
 
-- **Nomear a norma no prompt:** "escreva em ASD-STE100" apagou 46,8% dos fatos de código no
-  teste de Ghinda (Claude). O pedido frouxo apagou 8,5%. O pedido "80% of the way" manteve
-  8 de 8 fatos no teste da StashBase.
+- **Nomear a norma no prompt sem escape:** "in ASD-STE100" manteve 17 de 24 fatos de código
+  no Claude, lidos à mão. Pelo regex foram 14 e 11 de 24, a origem do "46,8%". O pedido frouxo
+  manteve 24. Com a cláusula de escape, 24. O pedido "80% of the way" manteve 8 de 8 fatos de
+  prosa no teste da StashBase.
 - **Instrução gradual:** "frases curtas quando possível" é negociada pelo modelo. O "80%"
   escrito no prompt é o mesmo tipo de regra gradual.
 - **Autoavaliação:** o modelo superestima a própria conformidade (dois preprints de 2026).

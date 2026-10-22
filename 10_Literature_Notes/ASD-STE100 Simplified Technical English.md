@@ -94,11 +94,14 @@ numeração).
   - Gist `toppa` (*output style* para Claude Code): tabela de regras com
     `keep-coding-instructions: true`, isenção para código e citações, glossário em
     `CONTEXT.md`, e a regra "clareza vence brevidade, sem perder fato nem ressalva".
-- **Perda de fatos (Lucian Ghinda, ago/2026, informal):** Claude explicando código Ruby.
-  Palavras por frase: 17,8 sem estilo, 9,1 com "Simple Technical English", 10,2 com
-  ASD-STE100. **Fatos perdidos: 8,5% com o pedido frouxo e 46,8% com o nome da norma.** A
-  causa provável: o dicionário não tem palavras para conceitos de domínio, então o modelo
-  explica o conceito em vez de nomeá-lo, ou o omite. O teste da StashBase (prosa, Opus 5.5)
+- **Perda de fatos (Lucian Ghinda, ago/2026, informal):** Claude explicando código Ruby,
+  6 fatos por trecho, 24 por condição. Palavras por frase: de 16–20 sem estilo para 8–11 com
+  estilo. **Fatos lidos à mão: controle 24, "Simple Technical English" 24, ASD-STE100 17.**
+  O "46,8% perdido" que circula é a contagem por regex, que subestima as variantes com estilo.
+  A causa provável: o dicionário não tem palavras para conceitos de domínio, então o modelo
+  explica o conceito em vez de nomeá-lo, ou o omite. **Uma cláusula de escape recupera os
+  fatos:** "Use ASD-STE100 ... when it doesn't detract from meaning" manteve 24 de 24 no Claude
+  e subiu o Codex de 13 para 18 (controle 17). O que importa é a redação, não a posição. O teste da StashBase (prosa, Opus 5.5)
   manteve 8 de 8 fatos com "80% of the way". As respostas não ficaram mais curtas, só as
   frases.
 - **O modelo gera "inglês com sabor de STE", não STE.** Ele quebra o vocabulário e parece
@@ -110,8 +113,9 @@ numeração).
 
 - O texto oficial da Issue 9 não foi extraído. O PDF oficial é gratuito, mas vem protegido
   contra cópia. Toda regra acima é paráfrase.
-- Os números de Ghinda para Codex divergem entre as fontes secundárias. Os dados brutos estão
-  em `github.com/lucianghinda/llm-experiments/tree/main/simplified-technical-english`.
+- Os números de Ghinda para Codex divergem entre as fontes secundárias. Esta nota usa os
+  números do repo, lidos em 2026-10-22.
+- Os dois preprints de 2026 sobre autoavaliação de conformidade não foram localizados.
 
 ## 🔗 Conexões
 
@@ -122,10 +126,20 @@ numeração).
 
 ## Fontes
 
-- ASD-STE100 Issue 9 (PDF oficial): https://www.asd-ste100.org/
-- Wikipedia: https://en.wikipedia.org/wiki/Simplified_Technical_English
-- Fact-check do post de Karpathy: https://max.nardit.com/articles/karpathy-understanding-llm-outputs
-- Ghinda: https://notes.ghinda.com/post/don-t-automatically-add-asd-ste100-to-your-agents-instructions
-- StashBase (CLAUDE.md × output style × skill): https://stashbase.ai/blog/asd-ste100-claude/
-- Skills: https://github.com/0xpili/simplified-technical-english ·
-  https://github.com/AminBlg/SimpleEnglish · https://gist.github.com/toppa/bf7ff49d6fc44fd4fc3337248f8f2a7e
+Cada fonte tem uma nota em `10_Literature_Notes/References/`:
+
+- Norma: [[ASD 2025 - ASD-STE100 Issue 9]] · [[Wikipedia - Simplified Technical English]] ·
+  [[McGaw - ASD-STE100 Clear Technical English]]
+- LLM e evidência: [[Karpathy 2026 - ASD-STE100 para Ler Saída de LLM]] ·
+  [[Nardit 2026 - Fact-check do Post de Karpathy]] ·
+  [[Ghinda 2026a - Explain to Me in Simple Technical English]] ·
+  [[Ghinda 2026b - Experimento STE em Explicação de Código]] ·
+  [[Ghinda 2026c - Não Adicione ASD-STE100 Automaticamente]] ·
+  [[StashBase 2026 - ASD-STE100 no Claude]] ·
+  [[Menon 2026 - Prompting em Simplified Technical English]]
+- Implementações: [[0xpili - simplified-technical-english Skill]] ·
+  [[AminBlg - SimpleEnglish Skill]] · [[toppa - ASD-STE100 Output Style]]
+- Português: [[Lei 15.263 2025 - Política Nacional de Linguagem Simples]]
+
+Vistas só no resumo da busca, sem nota própria: `danyuchn/asd-ste100-skill`, a lista de
+checadores da TechScribe (techscribe.co.uk) e a página "What is STE" da ASD.
