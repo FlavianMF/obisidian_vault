@@ -48,15 +48,8 @@ Além dos padrões técnicos, você deve operar utilizando estas "Skills":
 4. **Ingestão de Literatura**: Sempre que citar um artigo, siga a [[Skill - Ingestão de Notas de Literatura]]. Crie a nota `[[Sobrenome Ano]]` com citação completa e **link de acesso direto** (DOI/URL).
 
 ## 🔍 Como Consultar
-1. **Gemini CLI Extension (PREFERENCIAL)**: Se você tiver acesso às ferramentas de extensão do Obsidian, utilize:
-    - `obsidian_rag_query`: Para busca semântica em todo o vault.
-    - `obsidian_read_note`: Para leitura otimizada de notas.
-    - `obsidian_link_audit`: Para verificar a integridade das conexões.
-2. **Manifest-First (FALLBACK — caso do Claude Code e outros agentes sem essas extensões)**:
-    - Leia `00_META/manifests/INDEX.md` primeiro (pequeno, seguro ler inteiro).
-    - **`grep` — nunca `Read` completo** — os arquivos `00_META/manifests/by_type/<type>*.md` pela sua palavra-chave. O glob cobre shards automaticamente se um `type` crescer além do limite de linhas por arquivo.
-    - Abra (leitura completa) só as notas específicas retornadas pelo grep.
-    - Nunca leia `20_Permanent_Notes/` (ou outra pasta) inteira por varredura — isso custa tokens proporcionais ao tamanho do vault, não ao que você precisa.
+1. **Protocolo de busca (fonte única)**: antes da primeira busca no vault, leia o "Behavior 1 — Manifest-First Read" em `00_META/skills/second-brain-sync/SKILL.md` e siga as regras numeradas dele. Elas definem quando buscar, a rota (`grep`, MOC ou `sb.py search --json`), os tetos de aberturas e de reformulações, a saída "o vault não cobre isso" e a citação. Esta nota não repete essas regras.
+2. **Ferramentas Gemini CLI** (`obsidian_rag_query`, `obsidian_read_note`, `obsidian_link_audit`): se existirem no seu harness, substituem os comandos de busca e de leitura do protocolo; os tetos do protocolo valem igual.
 3. **Traceability**: Sempre verifique o [[PRD]] e as RFCs do projeto atual para garantir que o código atenda aos requisitos originais e não contrarie decisão já registrada.
 
 ---
