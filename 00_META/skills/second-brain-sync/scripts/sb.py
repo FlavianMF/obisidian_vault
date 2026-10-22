@@ -13,6 +13,10 @@ single writer and delegates every guard to vault_sync.py.
                             deterministic observer: tool-call metadata log (PostToolUse), candidates (Stop)
   sb review capture next|apply|drop
                             review the candidate queue; dry run unless --apply, writes only via vault_sync.py
+  sb review promote next|apply
+                            notes seen in 2+ projects: accept or reject a promotion to Agent-Instruction.md
+  sb review stock next|apply
+                            stale, unconfirmed, duplicate or broken notes: keep, update, merge or retire
   sb sync --note ... --project-name P --message M [--verdict V] [--reason R]
                             vault_sync.py with the vault path preset; the guards live there
 
@@ -36,6 +40,7 @@ sys.path.insert(0, str(HERE))
 import candidates  # noqa: E402
 import observe  # noqa: E402
 import review  # noqa: E402
+import review_notes  # noqa: E402
 import generate_manifests as gm  # noqa: E402
 from lib import frontmatter, secret_scan  # noqa: E402
 
@@ -345,8 +350,41 @@ def run_candidate(args, state_dir: Path) -> int:
     return 0
 
 
+def broken_links(vault: Path, stale_days: int, today: dt.date) -> dict[str, list[str]]:
+    """Unresolved wikilinks per note, from the doctor."""
+    found: dict[str, list[str]] = defaultdict(list)
+    for issue in run_doctor(vault, stale_days, today):
+        if issue.check == "unresolved-link":
+            found[issue.path].append(issue.detail.strip("[]"))
+    return dict(found)
+
+
 def run_review(args, vault: Path, state_dir: Path) -> int:
     """`sb review capture next|apply|drop`: the session's agent drafts, the user approves, vault_sync.py writes."""
+    if args.stage in ("promote", "stock") and args.action == "next":
+        if args.stage == "promote":
+            sys.stdout.write(review_notes.run_promote_next(vault, state_dir, limit=args.limit))
+        else:
+            today = dt.date.today()
+            sys.stdout.write(review_notes.run_stock_next(
+                vault, state_dir, today, limit=args.limit, fresh=args.fresh, stale_days=args.stale_days,
+                broken=broken_links(vault, args.stale_days, today)))
+        return 0
+    if args.stage in ("promote", "stock"):
+        try:
+            raw = json.loads(Path(args.decisions).expanduser().read_text(encoding="utf-8"))
+        except (OSError, ValueError) as err:
+            sys.stderr.write(f"sb review: cannot read the decisions file ({err.__class__.__name__})\n")
+            return 2
+        if args.stage == "promote":
+            code, text = review_notes.run_promote_apply(vault, state_dir, raw, apply=args.apply)
+        else:
+            today = dt.date.today()
+            code, text = review_notes.run_stock_apply(vault, state_dir, today, raw, apply=args.apply,
+                                                      stale_days=args.stale_days,
+                                                      broken=broken_links(vault, args.stale_days, today))
+        (sys.stdout if code == 0 else sys.stderr).write(text)
+        return code
     if args.action == "next":
         sys.stdout.write(review.capture_next(vault, state_dir, limit=args.limit, project=args.project, kind=args.kind,
                                              source=args.source, fresh=args.fresh, as_json=args.json))
@@ -468,7 +506,23 @@ def build_parser() -> argparse.ArgumentParser:
     obs_sum.add_argument("--project", default="", help="default: the git repo name")
     obs_sum.add_argument("--transcript", default="", help="transcript path, read for numeric usage only")
     rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
-    stage = rev.add_subparsers(dest="stage", required=True).add_parser("capture", help="candidates to notes")
+    stages = rev.add_subparsers(dest="stage", required=True)
+    stage = stages.add_parser("capture", help="candidates to notes")
+    promote = stages.add_parser("promote", help="notes worth an Agent-Instruction.md entry").add_subparsers(
+        dest="action", required=True)
+    promote.add_parser("next", help="notes seen in 2+ projects").add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
+    promote_apply = promote.add_parser("apply", help="validate a decisions file; with --apply, record it")
+    promote_apply.add_argument("--decisions", required=True, help="JSON list of {note, verdict, reason?}")
+    promote_apply.add_argument("--apply", action="store_true")
+    stock = stages.add_parser("stock", help="notes that need a second look").add_subparsers(dest="action", required=True)
+    stock_next = stock.add_parser("next", help="stale, unconfirmed, duplicate or broken notes")
+    stock_apply = stock.add_parser("apply", help="validate a decisions file; with --apply, write through vault_sync.py")
+    stock_apply.add_argument("--decisions", required=True, help="JSON list of {note, verdict, ...}")
+    stock_apply.add_argument("--apply", action="store_true")
+    stock_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
+    stock_next.add_argument("--fresh", action="store_true", help="ignore the open batch")
+    for each in (stock_next, stock_apply):
+        each.add_argument("--stale-days", type=int, default=gm.DEFAULT_STALE_DAYS)
     act = stage.add_subparsers(dest="action", required=True)
     rev_next = act.add_parser("next", help="a batch with a proposal for each candidate; resumes an open batch")
     rev_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)

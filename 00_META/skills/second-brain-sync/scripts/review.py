@@ -157,16 +157,16 @@ def pending(state_dir: Path, *, project: str = "", kind: str = "", source: str =
     )
 
 
-def load_batch_state(state_dir: Path) -> dict:
+def load_batch_state(state_dir: Path, name: str = STATE_FILE) -> dict:
     try:
-        raw = json.loads((state_dir / STATE_FILE).read_text(encoding="utf-8"))
+        raw = json.loads((state_dir / name).read_text(encoding="utf-8"))
         return raw if isinstance(raw, dict) else {}
     except (OSError, ValueError):
         return {}
 
 
-def save_batch_state(state_dir: Path, review_id: str, started: str, ids: list[str]) -> None:
-    target = state_dir / STATE_FILE
+def save_batch_state(state_dir: Path, review_id: str, started: str, ids: list[str], name: str = STATE_FILE) -> None:
+    target = state_dir / name
     target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     tmp = target.with_suffix(".tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
