@@ -25,6 +25,8 @@ Guardrails live here in code, not in prose the agent has to remember:
     note), `absorb` (it updates existing notes), `drop` (nothing is written; `--reason` is logged).
     A declared verdict that contradicts the git facts is refused; an omitted one is inferred.
   - A NEW trap or pattern note must have an "O que NÃO funcionou" section (updates are exempt).
+  - A new or changed note that looks like it holds a credential is refused (`refused-secret`), using
+    lib/secret_scan.py; a line with `sb-allow-secret` is skipped, for a deliberate fake example.
   - "New" means absent from HEAD (not `git status` says untracked), so `git add` or a local
     commit before the sync does not switch the checks off.
   - Derived manifest files never count as unrelated dirty files; a failed commit or push
@@ -60,7 +62,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate_manifests  # noqa: E402
-from lib import frontmatter  # noqa: E402
+from lib import frontmatter, secret_scan  # noqa: E402
 
 VERDICTS = ("save", "improve-then-save", "absorb", "drop")
 SECTION_TYPES = {"trap", "pattern"}
@@ -332,6 +334,19 @@ def check_negative_section(vault_root: Path, note: str) -> str | None:
     return None
 
 
+def check_secrets(vault_root: Path, note: str) -> str | None:
+    """Fail closed when a note that is about to be committed looks like it holds a credential."""
+    findings = secret_scan.scan_text((vault_root / note).read_text(encoding="utf-8", errors="replace"))
+    if not findings:
+        return None
+    labels = ", ".join(sorted({f.label for f in findings}))
+    lines = ", ".join(str(f.line) for f in findings[:5])
+    return (
+        f"{note} looks like it holds a secret ({labels}; line {lines}). Remove it, or put "
+        f"`{secret_scan.ALLOW_MARKER}` on a line that is a deliberate fake example."
+    )
+
+
 def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
     event: dict = {"project": args.project_name, "created": [], "updated": [], "outcome": "error"}
 
@@ -371,6 +386,11 @@ def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
     if problem:
         event["outcome"] = "refused-verdict"
         return fail(problem), event
+    for note in event["created"] + event["updated"]:
+        problem = check_secrets(vault_root, note)
+        if problem:
+            event["outcome"] = "refused-secret"
+            return fail(problem), event
     for note in event["created"]:
         problem = check_new_note(vault_root, note, args.new_because)
         if problem:

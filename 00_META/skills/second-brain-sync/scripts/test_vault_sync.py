@@ -470,5 +470,44 @@ class VerdictAndNegativeSectionTest(VaultFixture):
         self.assertEqual(self.sync(self.touch_existing()).returncode, 0)
 
 
+class SecretGateTest(VaultFixture):
+    FAKE = "gh" + "p_" + "A1b2C3d4E5f6G7h8I9j0K1l2"  # built at run time: not a literal in the repository
+
+    def append(self, rel, line):
+        path = self.vault / rel
+        path.write_text(path.read_text(encoding="utf-8") + f"\n{line}\n", encoding="utf-8")
+
+    def last(self):
+        return self.log("sync.jsonl")[-1]
+
+    def test_new_note_with_a_secret_is_refused_without_echoing_it(self):
+        rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        self.append(rel, f"token {self.FAKE}")
+        done = self.sync(rel)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("GitHub token", done.stderr)
+        self.assertNotIn(self.FAKE, done.stderr + json.dumps(self.last()))
+        self.assertEqual(self.last()["outcome"], "refused-secret")
+
+    def test_updated_note_that_gains_a_secret_is_refused(self):
+        rel = "20_Permanent_Notes/Importar Issues no Jira por REST.md"
+        self.append(rel, f"export {self.FAKE}")
+        done = self.sync(rel)
+        self.assertEqual((done.returncode, self.last()["outcome"]), (1, "refused-secret"))
+
+    def test_allow_marker_lets_a_deliberate_fake_example_through(self):
+        rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        self.append(rel, f"exemplo {self.FAKE}  <!-- sb-allow-secret -->")
+        self.assertEqual(self.sync(rel).returncode, 0)
+
+    def test_nothing_is_committed_when_the_secret_gate_refuses(self):
+        rel = self.write("Calibração de Câmera Estéreo", tags="visao, opencv")
+        self.append(rel, self.FAKE)
+        head = subprocess.run(["git", "-C", str(self.vault), "rev-parse", "HEAD"], capture_output=True, text=True).stdout
+        self.sync(rel)
+        after = subprocess.run(["git", "-C", str(self.vault), "rev-parse", "HEAD"], capture_output=True, text=True).stdout
+        self.assertEqual(head, after)
+
+
 if __name__ == "__main__":
     unittest.main()
