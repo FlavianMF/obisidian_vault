@@ -58,12 +58,12 @@ def build_prompt(query: str) -> str:
     return PROMPT_HEAD + query.strip()
 
 
-def build_command(binary: str) -> list[str]:
+def build_command(binary: str, system_prompt: str = SYSTEM_PROMPT, budget: str = BUDGET_USD) -> list[str]:
     # `--tools ""` é variádica: fica por último, e o prompt vai pelo stdin.
     return [
         binary, "-p", "--model", MODEL, "--output-format", "json", "--safe-mode", "--strict-mcp-config",
-        "--disable-slash-commands", "--no-session-persistence", "--max-budget-usd", BUDGET_USD,
-        "--system-prompt", SYSTEM_PROMPT, "--tools", "",
+        "--disable-slash-commands", "--no-session-persistence", "--max-budget-usd", budget,
+        "--system-prompt", system_prompt, "--tools", "",
     ]  # fmt: skip
 
 
@@ -78,7 +78,8 @@ def child_env(base: Mapping[str, str]) -> dict[str, str]:
     return env
 
 
-def parse_response(stdout: str, query: str) -> tuple[list[str], str]:
+def parse_envelope(stdout: str) -> tuple[str, str]:
+    """Valida o envelope do `claude -p`; devolve (result sem fence, modelos separados por vírgula)."""
     try:
         envelope = json.loads(stdout)
     except json.JSONDecodeError as exc:
@@ -93,8 +94,13 @@ def parse_response(stdout: str, query: str) -> tuple[list[str], str]:
     keys = sorted(usage)
     if not all("haiku" in k.casefold() for k in keys):
         raise ValueError(f"modelo inesperado: {keys}")
+    return FENCE.sub("", envelope["result"].strip()), ",".join(keys)
+
+
+def parse_response(stdout: str, query: str) -> tuple[list[str], str]:
+    result, model = parse_envelope(stdout)
     try:
-        payload = json.loads(FENCE.sub("", envelope["result"].strip()))
+        payload = json.loads(result)
     except json.JSONDecodeError as exc:
         raise ValueError("result não é JSON") from exc
     if not isinstance(payload, dict) or not isinstance(payload.get("rewrites"), list):
@@ -110,24 +116,30 @@ def parse_response(stdout: str, query: str) -> tuple[list[str], str]:
         raise ValueError(f"{len(rewrites)} reformulações; máximo {ev.REWRITES_MAX}")
     if len(rewrites) < ev.REWRITES_MIN:
         raise ValueError(f"{len(rewrites)} reformulações válidas; mínimo {ev.REWRITES_MIN}")
-    return rewrites, ",".join(keys)
+    return rewrites, model
 
 
-def call_claude(prompt: str, *, binary: str, timeout: int, query: str | None = None) -> tuple[list[str], str]:
+def run_claude(prompt: str, *, binary: str, timeout: int, system_prompt: str = SYSTEM_PROMPT) -> str:
+    """Roda o `claude -p` isolado (cwd fora do vault, env limpo) e devolve o stdout."""
     with tempfile.TemporaryDirectory(prefix="gen_rewrites-") as tmp:
         if Path(tmp).resolve().is_relative_to(ev.VAULT):
             raise SystemExit(f"diretório temporário dentro do vault: {tmp}")
         try:
             result = subprocess.run(
-                build_command(binary), input=prompt, capture_output=True, text=True, timeout=timeout,
-                cwd=tmp, env=child_env(os.environ), check=False,
+                build_command(binary, system_prompt), input=prompt, capture_output=True, text=True,
+                timeout=timeout, cwd=tmp, env=child_env(os.environ), check=False,
             )  # fmt: skip
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(f"timeout de {timeout}s") from exc
     if result.returncode != 0:
         raise RuntimeError(f"claude saiu com {result.returncode}: {result.stderr[-300:]}")
+    return result.stdout
+
+
+def call_claude(prompt: str, *, binary: str, timeout: int, query: str | None = None) -> tuple[list[str], str]:
+    stdout = run_claude(prompt, binary=binary, timeout=timeout)
     original = query if query is not None else prompt.removeprefix(PROMPT_HEAD)
-    return parse_response(result.stdout, original)
+    return parse_response(stdout, original)
 
 
 def read_existing(path: Path) -> dict[str, dict]:

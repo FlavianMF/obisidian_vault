@@ -84,6 +84,14 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(cmd[-2:], ["--tools", ""])
         self.assertNotIn("--bare", cmd)
 
+    def test_build_command_custom_system_prompt_only_swaps_that(self):
+        default = gr.build_command("claude")
+        custom = gr.build_command("claude", system_prompt="X")
+        self.assertEqual(custom[custom.index("--system-prompt") + 1], "X")
+        idx = default.index("--system-prompt") + 1
+        self.assertEqual(default[:idx] + default[idx + 1 :], custom[:idx] + custom[idx + 1 :])
+        self.assertEqual(custom[-2:], ["--tools", ""])
+
     def test_g5_child_env(self):
         base = {"CLAUDECODE": "1", "CLAUDE_CODE_SESSION_ID": "x", "CLAUDE_PID": "1", "CLAUDE_EFFORT": "h", "FOO": "1", "PATH": "/bin"}
         env = gr.child_env(base)
@@ -115,6 +123,16 @@ class ParseTest(unittest.TestCase):
         for stdout in bad:
             with self.assertRaises(ValueError, msg=stdout):
                 gr.parse_response(stdout, "consulta")
+
+    def test_parse_envelope_returns_result_and_model(self):
+        body = json.dumps({"x": 1})
+        result, model = gr.parse_envelope(envelope(result="```json\n" + body + "\n```"))
+        self.assertEqual(result, body)
+        self.assertIn("haiku", model)
+        with self.assertRaisesRegex(ValueError, "modelo inesperado"):
+            gr.parse_envelope(envelope(modelUsage={"claude-sonnet-4-5": {}}))
+        with self.assertRaisesRegex(ValueError, "envelope não é JSON"):
+            gr.parse_envelope("nope")
 
     def test_g10_wrong_model(self):
         with self.assertRaisesRegex(ValueError, "modelo inesperado"):
