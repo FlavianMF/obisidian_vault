@@ -355,3 +355,38 @@ Positivas por origem:
 
 - B2: o `test` tem 8 positivas novas desse tipo, então a B2 tende a falhar no success@5.
 - B3: o `rerank` só reordena o top-20 do `rank`. Ele não recupera uma nota que o `rank` não trouxe. Antes de planejar a B3, meça o recall@20 do `rank` nas positivas novas.
+
+## Atualização 2026-10-26: B2 do PRD-004, rodada única do split `test`
+
+Contexto: [[PRD-004 - Golden Set Ampliado, Split Test e Rerank]], etapa B2. O Haiku gerou as reformulações das 24 queries do `test` (24 chamadas, cerca de US$ 0,003, commit `5f9e2a4`, antes da rodada). O usuário aprovou a rodada em 2026-10-26. Comando: `run_eval.py --methods rank,rewrite --split test --k 5 --min-coverage 0.35 --confirm-test-run`, no HEAD `5f9e2a4`. O `test_run.json` (commit `3539d56`) trava o `run_eval.py` contra uma segunda rodada no `test`.
+
+| método | s@5 (IC95) | recall@5 | MRR | FP | tok/acerto |
+|---|---|---|---|---|---|
+| `rank` | 0,19 (0,00–0,38) | 0,22 | 0,19 | 0,25 | 1670 |
+| `rewrite` | 0,56 (0,31–0,81) | 0,59 | 0,50 | 0,25 | 1208 |
+
+Por origem, com o `origin_breakdown.py`:
+
+| método | positivas antigas (8) | positivas novas (8) | FP negativas antigas (2) | FP negativas novas (6) |
+|---|---|---|---|---|
+| `rank` | 2 | 1 | 1 | 1 |
+| `rewrite` | 6 | 3 | 1 | 1 |
+
+**Veredito contra os pisos da B2: não cumpre.** Os pisos não foram afrouxados.
+
+- success@5 ≥ 0,80: não cumpre (0,56).
+- FP ≤ 0,20: não cumpre (0,25, 2 de 8 negativas).
+- tokens por acerto ≤ `rank`: cumpre (1208 contra 1670).
+
+**Leitura.** No `test`, o `rewrite` triplica os acertos do `rank` (9/16 contra 3/16). Os IC95 quase não se sobrepõem (0,31–0,38). É o sinal mais forte a favor da reescrita até agora. Ele sustenta a regra 4 do Behavior 1, mas não basta para ativar o L1. As positivas antigas do `test` são mais difíceis que as do `dev` para o `rank` (2/8 contra 14/19 no limiar 0,35).
+
+## Atualização 2026-10-26: C0 da B3, teto do `rerank` no `dev`
+
+O `rerank` só reordena o top-20 do `rank`, então o success@20 do `rank` é o teto do success@5 do `rerank`. Medição sem custo, `run_eval.py --methods rank --split dev --k 20`:
+
+| limiar | success@20 | positivas antigas (19) | positivas novas (17) |
+|---|---|---|---|
+| 0,35 | 0,47 (17/36) | 14 | 3 |
+| 0 | 0,75 (27/36) | 17 | 10 |
+
+O teto fica abaixo de 0,80 em qualquer limiar, então o `rerank` não pode cumprir o piso 1 da B3. As positivas novas ficam em 3/17 no limiar 0,35, abaixo de 4/17. Pela regra do plano da B3, a lacuna de vocabulário fica registrada como fora do alcance do `rerank`. O usuário decidiu medir a B3 mesmo assim (2026-10-26), para conhecer o FP e o custo do juiz. O veredito do piso 1 já nasce negativo.
