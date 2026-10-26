@@ -1,5 +1,6 @@
 """Testes do gerador de manifests: python3 -m unittest discover -s 00_META/skills/second-brain-sync/scripts -v"""
 
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -112,6 +113,17 @@ class ManifestTableTest(unittest.TestCase):
         before = note.read_bytes()
         gm.write_manifests(self.vault)
         self.assertEqual(note.read_bytes(), before)
+
+    def test_git_ignored_notes_are_skipped_and_non_repo_falls_back_silently(self):
+        plan = self.vault / ".claude" / "PRPs" / "plans" / "x.plan.md"
+        plan.parent.mkdir(parents=True)
+        plan.write_text("# plano\n\ntexto\n", encoding="utf-8")
+        paths = lambda: [r["path"] for rows in gm.collect_rows(self.vault).values() for r in rows]
+        self.assertIn(".claude/PRPs/plans/x.plan.md", paths())  # sem git: nada é ignorado
+        subprocess.run(["git", "init", "-q"], cwd=self.vault, check=True)
+        (self.vault / ".git" / "info" / "exclude").write_text(".claude/PRPs/plans/\n", encoding="utf-8")
+        self.assertNotIn(".claude/PRPs/plans/x.plan.md", paths())
+        self.assertIn("20_Permanent_Notes/n1.md", paths())
 
 
 if __name__ == "__main__":

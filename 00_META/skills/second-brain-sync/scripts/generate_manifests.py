@@ -30,6 +30,7 @@ import argparse
 import datetime as dt
 import os
 import re
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -122,14 +123,39 @@ def as_list_str(value) -> str:
     return str(value or "")
 
 
+def git_ignored(vault_root: Path, rels: list[str]) -> set[str]:
+    """Paths git ignores (.gitignore, .git/info/exclude). Silent fallback: empty set."""
+    if not rels:
+        return set()
+    try:
+        proc = subprocess.run(
+            ["git", "check-ignore", "--stdin", "-z"],
+            cwd=vault_root,
+            input="\0".join(rels) + "\0",
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    if proc.returncode not in (0, 1):  # 128 = not a git repo / error
+        return set()
+    return {p for p in proc.stdout.split("\0") if p}
+
+
 def iter_notes(vault_root: Path):
+    found = []
     for path in sorted(vault_root.rglob("*.md")):
         rel = path.relative_to(vault_root)
         if any(part in EXCLUDE_DIR_PARTS for part in rel.parts):
             continue
         if str(rel).startswith(MANIFEST_DIR_NAME) or str(rel).startswith(SKILL_DIR_NAME):
             continue
-        yield path, rel
+        found.append((path, rel))
+    ignored = git_ignored(vault_root, [rel.as_posix() for _, rel in found])
+    for path, rel in found:
+        if rel.as_posix() not in ignored:
+            yield path, rel
 
 
 def collect_rows(vault_root: Path) -> dict[str, list[dict[str, str]]]:
