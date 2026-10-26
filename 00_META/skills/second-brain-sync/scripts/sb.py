@@ -40,6 +40,7 @@ from typing import NamedTuple
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import candidates  # noqa: E402
+import ctxpack  # noqa: E402
 import observe  # noqa: E402
 import review  # noqa: E402
 import review_notes  # noqa: E402
@@ -537,6 +538,8 @@ def build_parser() -> argparse.ArgumentParser:
     obs_sum.add_argument("--session", required=True)
     obs_sum.add_argument("--project", default="", help="default: the git repo name")
     obs_sum.add_argument("--transcript", default="", help="transcript path, read for numeric usage only")
+    ctx = sub.add_parser("ctx", parents=[common], help="session context pack for subagents (hook payload on stdin)")
+    ctx.add_argument("action", choices=("record-read", "record-finding", "render", "prune"))
     rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
     stages = rev.add_subparsers(dest="stage", required=True)
     stage = stages.add_parser("capture", help="candidates to notes")
@@ -587,6 +590,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "candidate":
         return run_candidate(args, state_dir)
+    if args.command == "ctx":
+        return ctxpack.run(args.action, state_dir, sys.stdin, sys.stdout, os.environ)
     if args.command == "observe":
         return run_observe(args, state_dir)
     if args.command == "review":
