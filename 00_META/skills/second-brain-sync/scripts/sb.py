@@ -42,6 +42,7 @@ sys.path.insert(0, str(HERE))
 import candidates  # noqa: E402
 import ctxpack  # noqa: E402
 import observe  # noqa: E402
+import prune  # noqa: E402
 import review  # noqa: E402
 import review_notes  # noqa: E402
 import generate_manifests as gm  # noqa: E402
@@ -540,6 +541,10 @@ def build_parser() -> argparse.ArgumentParser:
     obs_sum.add_argument("--transcript", default="", help="transcript path, read for numeric usage only")
     ctx = sub.add_parser("ctx", parents=[common], help="session context pack for subagents (hook payload on stdin)")
     ctx.add_argument("action", choices=("record-read", "record-finding", "render", "prune"))
+    prn = sub.add_parser("prune", parents=[common], help="tool-output pruner (PostToolUse hook payload on stdin)")
+    prn.add_argument("action", choices=("hook", "gc", "replay"))
+    prn.add_argument("--projects", default="", help="replay: transcripts dir (default ~/.claude/projects)")
+    prn.add_argument("--json", action="store_true", help="replay: JSON instead of TSV")
     rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
     stages = rev.add_subparsers(dest="stage", required=True)
     stage = stages.add_parser("capture", help="candidates to notes")
@@ -592,6 +597,13 @@ def main(argv: list[str] | None = None) -> int:
         return run_candidate(args, state_dir)
     if args.command == "ctx":
         return ctxpack.run(args.action, state_dir, sys.stdin, sys.stdout, os.environ)
+    if args.command == "prune":
+        if args.action == "replay":
+            result = prune.replay(Path(args.projects or Path.home() / ".claude/projects"), os.environ)
+            sys.stdout.write(json.dumps(result, ensure_ascii=False, indent=1) + "\n" if args.json
+                             else prune.format_replay(result))
+            return 0
+        return prune.run(args.action, state_dir, sys.stdin, sys.stdout, os.environ)
     if args.command == "observe":
         return run_observe(args, state_dir)
     if args.command == "review":
