@@ -47,6 +47,8 @@ RRF_DEPTH = 10
 REWRITES_MIN = 2
 REWRITES_MAX = 3
 REWRITE_REQUIRED = {"id", "query", "rewrites", "model", "created"}
+TEST_LOCK = Path(__file__).resolve().parent / "test_run.json"
+LOCKED_SPLITS = ("test", "all")
 
 
 @dataclass(frozen=True)
@@ -330,6 +332,44 @@ def build_adapters(
     return [available[n]() for n in names]
 
 
+def check_test_lock(split: str, confirmed: bool, lock_path: Path) -> None:
+    """O split test roda uma vez só: exige confirmação e recusa se o lock já existe."""
+    if split not in LOCKED_SPLITS:
+        return
+    if not confirmed:
+        raise SystemExit("o split test roda uma vez só e exige --confirm-test-run, com aprovação do usuário")
+    if lock_path.exists():
+        try:
+            date = json.loads(lock_path.read_text(encoding="utf-8")).get("date", "desconhecida")
+        except (OSError, ValueError, AttributeError):
+            date = "desconhecida"
+        raise SystemExit(f"o split test já rodou em {date} ({lock_path.name}); não há segunda rodada")
+
+
+def _vault_head() -> str | None:
+    try:
+        out = subprocess.run(["git", "-C", str(VAULT), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.stdout.strip() or None if out.returncode == 0 else None
+
+
+def write_test_lock(lock_path: Path, args, results: dict) -> None:
+    """Grava o lock com criação exclusiva (modo "x"); falha se já existir."""
+    payload = {
+        "date": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "split": args.split,
+        "methods": args.methods.split(","),
+        "k": args.k,
+        "min_coverage": args.min_coverage,
+        "min_terms": args.min_terms,
+        "head": _vault_head(),
+        "summaries": {name: res["summary"] for name, res in results.items()},
+    }
+    with open(lock_path, "x", encoding="utf-8") as fh:
+        fh.write(json.dumps(payload, ensure_ascii=False, indent=1))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--methods", default="rank,random,fixed")
@@ -340,7 +380,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-terms", type=int, default=1, help="mínimo de termos úteis na query do rank")
     parser.add_argument("--rewrites", type=Path, default=REWRITES, help="reformulações do adaptador rewrite")
     parser.add_argument("--no-save", action="store_true")
+    parser.add_argument("--confirm-test-run", action="store_true", help="confirma a rodada única do split test (exige aprovação do usuário)")
     args = parser.parse_args(argv)
+    check_test_lock(args.split, args.confirm_test_run, TEST_LOCK)
 
     queries = load_golden(split=args.split)
     if not queries:
@@ -350,6 +392,8 @@ def main(argv: list[str] | None = None) -> int:
         started = time.perf_counter()
         results[adapter.name] = evaluate(adapter, queries, args.k, args.draws)
         results[adapter.name]["summary"]["seconds"] = round(time.perf_counter() - started, 2)
+    if args.split in LOCKED_SPLITS:
+        write_test_lock(TEST_LOCK, args, results)
     print(f"split={args.split} k={args.k} queries={len(queries)}\n")
     print(render(results, args.k))
     if not args.no_save:

@@ -1,10 +1,13 @@
 """Testes do harness: python3 -m unittest discover -s 00_META/eval -v"""
 
+import contextlib
+import io
 import json
 import math
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import run_eval as ev
 
@@ -231,6 +234,82 @@ class RealRewritesTest(unittest.TestCase):
     def test_real_file_valid_for_dev(self):
         ids = {q.id for q in ev.load_golden(split="all")}
         ev.load_rewrites(ev.REWRITES, ev.load_golden(split="dev"), ids)
+
+
+def _test_split_has_rewrites() -> bool:
+    if not ev.REWRITES.is_file():
+        return False
+    have = {json.loads(line)["id"] for line in ev.REWRITES.read_text(encoding="utf-8").splitlines() if line.strip()}
+    return all(q.id in have for q in ev.load_golden(split="test"))
+
+
+@unittest.skipUnless(_test_split_has_rewrites(), "todas as queries do test têm linha em rewrites.jsonl")
+class RealRewritesTestSplit(unittest.TestCase):
+    def test_real_file_valid_for_test(self):
+        ids = {q.id for q in ev.load_golden(split="all")}
+        ev.load_rewrites(ev.REWRITES, ev.load_golden(split="test"), ids)
+
+
+class TestLockTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.lock = Path(self.tmp.name) / "test_run.json"
+        patcher = mock.patch.object(ev, "TEST_LOCK", self.lock, create=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(self.tmp.cleanup)
+
+    def run_main(self, *argv):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = ev.main(["--methods", "fixed", "--no-save", *argv])
+        return code, out.getvalue()
+
+    def test_test_split_without_confirmation_refuses(self):
+        with self.assertRaisesRegex(SystemExit, "--confirm-test-run"):
+            self.run_main("--split", "test")
+        self.assertFalse(self.lock.exists())
+
+    def test_all_split_without_confirmation_refuses(self):
+        with self.assertRaisesRegex(SystemExit, "--confirm-test-run"):
+            self.run_main("--split", "all")
+        self.assertFalse(self.lock.exists())
+
+    def test_confirmed_run_writes_lock(self):
+        code, _ = self.run_main("--split", "test", "--confirm-test-run")
+        self.assertEqual(code, 0)
+        data = json.loads(self.lock.read_text(encoding="utf-8"))
+        self.assertEqual(data["split"], "test")
+        self.assertEqual(data["methods"], ["fixed"])
+        self.assertIn("min_coverage", data)
+        self.assertEqual(data["summaries"]["fixed"]["n_pos"], 16)
+
+    def test_second_run_refuses_and_keeps_lock(self):
+        self.run_main("--split", "test", "--confirm-test-run")
+        before = self.lock.read_bytes()
+        date = json.loads(before)["date"]
+        with self.assertRaisesRegex(SystemExit, date):
+            self.run_main("--split", "test", "--confirm-test-run")
+        self.assertEqual(self.lock.read_bytes(), before)
+
+    def test_dev_split_works_with_and_without_lock(self):
+        self.assertEqual(self.run_main("--split", "dev")[0], 0)
+        self.lock.write_text("{}", encoding="utf-8")
+        self.assertEqual(self.run_main("--split", "dev")[0], 0)
+        self.assertEqual(self.lock.read_text(encoding="utf-8"), "{}")
+
+    def test_failure_mid_evaluation_leaves_no_lock(self):
+        class Boom:
+            name = "boom"
+            stochastic = False
+
+            def search(self, query, k):
+                raise RuntimeError("falha simulada")
+
+        with mock.patch.object(ev, "build_adapters", return_value=[Boom()]):
+            with self.assertRaises(RuntimeError):
+                self.run_main("--split", "test", "--confirm-test-run")
+        self.assertFalse(self.lock.exists())
 
 
 if __name__ == "__main__":
