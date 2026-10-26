@@ -58,7 +58,7 @@ Regras do pacote:
 - O TTL é de 7 dias, no mesmo `prune` da fila de candidatos.
 - O SubagentStart recalcula o `sha256` de cada arquivo. Um arquivo alterado aparece como "mudou".
 - O texto passa pelo `lib/secret_scan` da fila de candidatos antes da gravação. Se o scan achar um segredo, o hook descarta a conclusão inteira.
-- O modo vem de `SB_CTXPACK`: `active` grava e injeta (padrão desde a E2, decisão do usuário em 2026-10-26), `shadow` grava e não injeta, `0` desliga. O arquivo `DISABLED` do SB também desliga.
+- O modo vem de `SB_CTXPACK`: `shadow` grava e não injeta, `active` grava e injeta, `0` desliga. O arquivo `DISABLED` do SB também desliga. O padrão foi `active` na E2 e passou a `shadow` depois da E3 (§8).
 - Um fato durável sai do pacote só pela fila de candidatos (`sb.py candidate add`), nunca de forma automática.
 
 Implementação proposta: subcomandos `sb.py ctx record-read`, `sb.py ctx record-finding` e `sb.py ctx render`, chamados por um hook novo `~/dotfiles/claude/hooks/sb-ctxpack.sh`.
@@ -141,6 +141,36 @@ Com 5 tarefas, o resultado é indicativo, não estatístico.
 - **Pacote no vault.** O vault é memória durável e revisada. O pacote é estado de sessão.
 - **`CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`.** Ele anula agentes que pedem Opus de propósito.
 - **Multiagente por padrão.** Um sistema multiagente gasta cerca de 15x os tokens de um chat e perde em tarefa sequencial (estudo, E7 e E13).
+
+## 8. Resultado da E3 (2026-10-26)
+
+**Decisão: D1 desligada.** O padrão de `SB_CTXPACK` passou a `shadow`. O pacote continua a gravar as leituras e as conclusões, e por isso o `--rereads` continua a medir. Para ligar o pacote numa sessão, defina `SB_CTXPACK=active`.
+
+Ferramenta: `00_META/eval/ab_ctxpack.py`. O script sorteia o braço por par, roda cada sessão com `claude -p --model sonnet` e só com as ferramentas `Read Grep Glob Agent`, e revela os braços só depois da última nota. O estado fica em `~/.local/state/second-brain/ab/ctxpack/`.
+
+**Rodada 1 (descartada).** As 5 tarefas lançaram os subagentes em paralelo. O pacote só recebe a conclusão de um subagente quando ele termina. Por isso, um subagente que começa junto com os outros recebe um pacote vazio. Em duas tarefas, o braço `active` não injetou nada e ficou igual ao `shadow`. Mesmo assim, o `sub_eq` de uma delas variou 76% entre os dois braços. Esta variação mede o ruído de uma sessão única.
+
+**Rodada 2 (válida).** Foram 5 tarefas com delegação em sequência: o subagente B começa depois de A e trabalha sobre o resultado de A. Cada tarefa rodou 2 pares, num total de 20 sessões. Nas sessões `active`, o pacote recebeu as conclusões de A e as leituras antes de B começar.
+
+| Métrica (total de 10 pares) | `shadow` | `active` | Variação |
+| --- | --- | --- | --- |
+| Tokens eq da thread principal | 258.122 | 248.286 | −3,8% |
+| Tokens eq dos subagentes | 727.265 | 857.947 | +18,0% |
+| Leituras de subagente | 44 | 44 | 0 |
+| Leituras repetidas (M6) | 16 | 19 | +18,8% |
+| Tarefas aprovadas | 10/10 | 9/10 | |
+
+- O `sub_eq` do braço `active` ficou acima do `shadow` em 9 dos 10 pares.
+- O subagente B releu os arquivos mesmo com o pacote. A tarefa pede a linha exata, e o pacote só traz o caminho, o estado do hash e a conclusão.
+- O pacote fica no prefixo do subagente e entra em todos os turnos dele. Por isso, o custo cresce com o número de turnos.
+- A única reprovação (`active`, r2t2) veio de um critério ambíguo. Outras três sessões deram a mesma resposta e foram aprovadas. A reprovação conta como regressão pela regra do §5, mas a decisão não depende dela.
+- O próprio agente que rodou as sessões deu as notas, sem ver o braço. O usuário não deu as notas, como o §5 pede.
+
+**Lições:**
+
+- O pacote não ajuda quando os subagentes começam juntos. Ele só pode ajudar quando um subagente começa depois que outro já terminou.
+- O agente relê para confirmar a linha exata, e o pacote não muda isso. Uma conclusão sem o trecho do arquivo não substitui a leitura.
+- Uma sessão única tem ruído maior que o efeito procurado. Um A/B neste harness precisa de pares repetidos.
 
 ---
 **Referências**: [[Estudo - Orquestração de Agentes e Economia de Tokens]] · [[RFC-001 - Memória de Agentes sobre o Second Brain com Orçamento de Tokens]] · [[F0 - Linha de Base de Tokens e Golden Set MVP]] · [[Router de Tokens em 3 Camadas - Carga, Contexto e Modelo]] · [[Orquestração Híbrida de Agentes]] · [[Pesquisa Paralela por Agentes Antes do Grill]] · code.claude.com/docs/en/hooks (2026-10-26) · code.claude.com/docs/en/sub-agents (2026-10-26)
