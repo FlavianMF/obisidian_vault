@@ -1,7 +1,15 @@
 ---
 title: STE-80 - Escrita Controlada para Agentes em Português
 type: pattern
-tags: [prompt-engineering, agentic-ai, technical-writing, controlled-language, claude-code, hooks]
+tags:
+  [
+    prompt-engineering,
+    agentic-ai,
+    technical-writing,
+    controlled-language,
+    claude-code,
+    hooks,
+  ]
 created: 2026-10-22
 provenance: obsidian_vault
 verified: 2026-10-22 via análise das fontes da nota ASD-STE100 e leitura de ~/dotfiles/agents/AGENTS.md e da skill caveman (sem teste próprio ainda)
@@ -38,25 +46,25 @@ mantenha o fato."
 
 O STE é inglês. As regras de estrutura passam para o português. O dicionário não passa.
 
-| STE | Regra STE-80 em PT-BR | Exemplo |
-|---|---|---|
-| 5.1 / 6.3 | Frase com no máximo 20 palavras em instrução e 25 em explicação. Código, caminho, número com unidade e sigla contam como uma palavra (8.6). | — |
-| 5.2 / 5.3 | Uma instrução por frase, no imperativo. | "Rode os testes." Não: "Você deve rodar os testes e depois commitar." |
-| 5.4 | Condição antes do comando, com vírgula. | "Se o teste falhar, leia o log." |
-| 3.6 | Voz ativa. Sem passiva analítica nem pronominal em instrução. | Não: "O arquivo foi removido pelo script." Não: "Remove-se o cache." |
-| 3.5 | Sem gerúndio fora de nome técnico. Sem gerundismo. | Não: "vou estar verificando", "verificando o log, nota-se". |
-| 3.2 / 3.4 | Presente, pretérito perfeito, futuro simples e imperativo. Evitar futuro do pretérito e tempos compostos. | "O hook roda no Stop." Não: "O hook teria sido executado". |
-| 3.7 | Verbo para ação, não substantivo. **É a regra que mais rende em português**, porque o português técnico nominaliza muito. | "Verifique a configuração." Não: "Realize a verificação da configuração." |
-| 2.1 | No máximo duas preposições "de" encadeadas num sintagma. | Não: "o arquivo de configuração do servidor de produção do cliente". |
-| 4.1 / 6.1 | Um tópico por frase. | — |
-| 6.4–6.6 | Parágrafo começa pela frase-tópico, trata de um tópico e tem no máximo 6 frases. | — |
-| 4.3 | Texto complexo vira lista vertical. A primeira linha termina em dois-pontos. | — |
-| 1.11 / 1.3 | Um termo por coisa, sem alternar sinônimos. Termo de domínio fica como está. | Não alternar "hook", "gancho" e "gatilho". |
-| 4.2 | Mantenha as palavras necessárias. Sem frase telegráfica que admita duas leituras. | — |
-| 8.1 | Sem ponto e vírgula. Escreva duas frases. | — |
-| Modais | "deve" = obrigação, "pode" = capacidade. Incerteza real é dita uma vez, sem empilhar ("talvez possa eventualmente"). | — |
-| 7.1–7.3 | Aviso: palavra de risco, comando, consequência. | "AVISO: não rode `git reset --hard` agora. As mudanças não salvas serão perdidas." |
-| 5.5 | Nota só informa. Instrução nunca fica dentro de nota. | — |
+| STE        | Regra STE-80 em PT-BR                                                                                                                       | Exemplo                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 5.1 / 6.3  | Frase com no máximo 20 palavras em instrução e 25 em explicação. Código, caminho, número com unidade e sigla contam como uma palavra (8.6). | —                                                                                  |
+| 5.2 / 5.3  | Uma instrução por frase, no imperativo.                                                                                                     | "Rode os testes." Não: "Você deve rodar os testes e depois commitar."              |
+| 5.4        | Condição antes do comando, com vírgula.                                                                                                     | "Se o teste falhar, leia o log."                                                   |
+| 3.6        | Voz ativa. Sem passiva analítica nem pronominal em instrução.                                                                               | Não: "O arquivo foi removido pelo script." Não: "Remove-se o cache."               |
+| 3.5        | Sem gerúndio fora de nome técnico. Sem gerundismo.                                                                                          | Não: "vou estar verificando", "verificando o log, nota-se".                        |
+| 3.2 / 3.4  | Presente, pretérito perfeito, futuro simples e imperativo. Evitar futuro do pretérito e tempos compostos.                                   | "O hook roda no Stop." Não: "O hook teria sido executado".                         |
+| 3.7        | Verbo para ação, não substantivo. **É a regra que mais rende em português**, porque o português técnico nominaliza muito.                   | "Verifique a configuração." Não: "Realize a verificação da configuração."          |
+| 2.1        | No máximo duas preposições "de" encadeadas num sintagma.                                                                                    | Não: "o arquivo de configuração do servidor de produção do cliente".               |
+| 4.1 / 6.1  | Um tópico por frase.                                                                                                                        | —                                                                                  |
+| 6.4–6.6    | Parágrafo começa pela frase-tópico, trata de um tópico e tem no máximo 6 frases.                                                            | —                                                                                  |
+| 4.3        | Texto complexo vira lista vertical. A primeira linha termina em dois-pontos.                                                                | —                                                                                  |
+| 1.11 / 1.3 | Um termo por coisa, sem alternar sinônimos. Termo de domínio fica como está.                                                                | Não alternar "hook", "gancho" e "gatilho".                                         |
+| 4.2        | Mantenha as palavras necessárias. Sem frase telegráfica que admita duas leituras.                                                           | —                                                                                  |
+| 8.1        | Sem ponto e vírgula. Escreva duas frases.                                                                                                   | —                                                                                  |
+| Modais     | "deve" = obrigação, "pode" = capacidade. Incerteza real é dita uma vez, sem empilhar ("talvez possa eventualmente").                        | —                                                                                  |
+| 7.1–7.3    | Aviso: palavra de risco, comando, consequência.                                                                                             | "AVISO: não rode `git reset --hard` agora. As mudanças não salvas serão perdidas." |
+| 5.5        | Nota só informa. Instrução nunca fica dentro de nota.                                                                                       | —                                                                                  |
 
 **Ficam de fora (os 20%):** o dicionário de ~900 palavras (1.1, 1.2, 1.4, 9.2), as
 categorias de nome e verbo técnico (1.5, 1.12), a ortografia americana (1.14) e as
