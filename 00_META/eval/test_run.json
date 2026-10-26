@@ -1,0 +1,46 @@
+{
+ "date": "2026-10-26T13:28:08",
+ "split": "test",
+ "methods": [
+  "rank",
+  "rewrite"
+ ],
+ "k": 5,
+ "min_coverage": 0.35,
+ "min_terms": 1,
+ "head": "5f9e2a4cced7e70b571aa0b0df401221efdd68c9",
+ "summaries": {
+  "rank": {
+   "n_pos": 16,
+   "n_neg": 8,
+   "success@5": 0.1875,
+   "recall@5": 0.21875,
+   "mrr": 0.1875,
+   "ndcg@5": 0.2112558604197459,
+   "neg_false_positive": 0.25,
+   "tokens_total": 5010.0,
+   "tokens_per_hit": 1670.0,
+   "ci95_success": [
+    0.0,
+    0.375
+   ],
+   "seconds": 4.19
+  },
+  "rewrite": {
+   "n_pos": 16,
+   "n_neg": 8,
+   "success@5": 0.5625,
+   "recall@5": 0.59375,
+   "mrr": 0.5,
+   "ndcg@5": 0.5401220796161781,
+   "neg_false_positive": 0.25,
+   "tokens_total": 10869.42857142857,
+   "tokens_per_hit": 1207.7142857142856,
+   "ci95_success": [
+    0.3125,
+    0.8125
+   ],
+   "seconds": 17.37
+  }
+ }
+}
