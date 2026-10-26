@@ -138,6 +138,7 @@ Com 5 tarefas, o resultado é indicativo, não estatístico.
 - **Pacote escrito pelo agente, sem hook.** Depende da disciplina do modelo, como o hook `Stop` da RFC-001. O usuário pediu captura automática.
 - **Pacote com conteúdo de arquivo.** Duplica o arquivo no contexto e envelhece rápido. O hash e a conclusão bastam para decidir se é preciso reler.
 - **Bloquear o `Read` repetido com `PreToolUse`.** Um bloqueio errado tira do agente a linha exata de que ele precisa. O pacote só avisa.
+- **Podar a saída de ferramenta com `PostToolUse` (D5).** Medida e rejeitada em 2026-10-26: o corte estimado foi de 1,6%, abaixo do portão de 5% (§9).
 - **Pacote no vault.** O vault é memória durável e revisada. O pacote é estado de sessão.
 - **`CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`.** Ele anula agentes que pedem Opus de propósito.
 - **Multiagente por padrão.** Um sistema multiagente gasta cerca de 15x os tokens de um chat e perde em tarefa sequencial (estudo, E7 e E13).
@@ -171,6 +172,45 @@ Ferramenta: `00_META/eval/ab_ctxpack.py`. O script sorteia o braço por par, rod
 - O pacote não ajuda quando os subagentes começam juntos. Ele só pode ajudar quando um subagente começa depois que outro já terminou.
 - O agente relê para confirmar a linha exata, e o pacote não muda isso. Uma conclusão sem o trecho do arquivo não substitui a leitura.
 - Uma sessão única tem ruído maior que o efeito procurado. Um A/B neste harness precisa de pares repetidos.
+
+## 9. D5 — Poda de saída de ferramenta (2026-10-26, rejeitada)
+
+**Decisão: D5 não entra em uso.** O hook não foi ligado. O código fica nas branches `worktree-sb-roteamento-modelos` (vault) e `feat/sb-prune` (dotfiles), sem merge.
+
+Origem: a literatura aponta a poda de observações como a maior alavanca de custo por turno (H4). Detalhes em [[Estudo - Literatura sobre Eficiência de Tokens em Agentes]] (SWE-Pruner, Complexity Trap).
+
+**Desenho testado:**
+
+- Um hook `PostToolUse` com matcher `Bash|Grep|Glob` chama `sb.py prune hook`. O hook troca a saída por uma versão reduzida via `updatedToolOutput`.
+- As regras são determinísticas, sem LLM:
+  - R0 isenta `cat`, `sed`, `head`, `tail` e pipelines já limitados.
+  - R1 reduz um teste aprovado ao resumo final.
+  - R2 corta uma listagem em 80 linhas.
+  - R3 corta uma saída genérica acima de 10 mil caracteres (30 mil para `git diff|show|log`).
+- Toda poda grava a saída inteira em `~/.local/state/second-brain/spill/` (modo 0600) e diz ao agente onde ela está.
+
+**S0, prova do mecanismo** (Claude Code 2.1.310):
+
+- A reescrita funciona no Bash. O valor precisa repetir todas as chaves de `tool_response`, inclusive `noOutputExpected`, que a doc não cita.
+- Um comando com exit diferente de 0 dispara `PostToolUseFailure`, com `tool_response` nulo. Este evento não aceita reescrita. Por isso, o hook só vê saídas de sucesso.
+
+**S1, replay offline** (`sb.py prune replay` sobre os transcripts locais):
+
+| Regra | Podas | Caracteres antes | Caracteres depois | Corte |
+| --- | --- | --- | --- | --- |
+| R1 | 1 | 2.027 | 1.883 | 7,1% |
+| R2 | 50 | 348.112 | 245.721 | 29,4% |
+| R3 | 9 | 117.460 | 57.864 | 50,7% |
+| Total | 60 | 467.599 | 305.468 | 34,7% |
+
+O corte total foi de 162.131 caracteres, em 10.155.812 caracteres de saída de ferramenta: **1,6%**. O portão do S1 pedia pelo menos 5%.
+
+**Lições:**
+
+- O volume grande vem de leituras intencionais: `cat`, `sed` e `Read` somam perto de 3 milhões de caracteres. Podar essas leituras tira do agente a linha exata, que a E3 mostrou que ele relê.
+- A saída que dá para podar com segurança (listagens, testes aprovados, logs genéricos) é pequena neste uso.
+- A alavanca seguinte está no volume de leitura: `Read` com `offset` e `limit`, e busca antes de abrir. A D3 (compactação) continua aberta.
+- O `sb.py prune replay` fica como ferramenta de medição. Rode de novo se o padrão de uso mudar.
 
 ---
 **Referências**: [[Estudo - Orquestração de Agentes e Economia de Tokens]] · [[RFC-001 - Memória de Agentes sobre o Second Brain com Orçamento de Tokens]] · [[F0 - Linha de Base de Tokens e Golden Set MVP]] · [[Router de Tokens em 3 Camadas - Carga, Contexto e Modelo]] · [[Orquestração Híbrida de Agentes]] · [[Pesquisa Paralela por Agentes Antes do Grill]] · code.claude.com/docs/en/hooks (2026-10-26) · code.claude.com/docs/en/sub-agents (2026-10-26)
