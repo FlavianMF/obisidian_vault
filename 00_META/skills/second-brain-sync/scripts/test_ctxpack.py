@@ -23,7 +23,7 @@ class CtxFixture(unittest.TestCase):
         self.state = self.root / "state"
         self.work = self.root / "work"
         self.work.mkdir()
-        self.env = {}
+        self.env = {"SB_CTXPACK": "active"}
 
     def file(self, name, text="alpha\n"):
         path = self.work / name
@@ -50,6 +50,11 @@ class CtxFixture(unittest.TestCase):
 
 
 class RecordTests(CtxFixture):
+    def test_default_mode_is_shadow(self):
+        self.assertEqual(ctxpack.mode({}), "shadow")
+        self.assertEqual(ctxpack.mode({"SB_CTXPACK": "qualquer"}), "shadow")
+        self.assertEqual(ctxpack.mode({"SB_CTXPACK": "active"}), "active")
+
     def test_read_records_path_and_hash_not_content(self):
         path = self.file("a.txt", "SEGREDO-DE-CONTEUDO\n")
         self.assertTrue(self.read(path))
@@ -165,8 +170,7 @@ class RenderTests(CtxFixture):
 
 class CliTests(CtxFixture):
     def run_cli(self, action, payload, raw=None):
-        env = {**os.environ, "SECOND_BRAIN_STATE_DIR": str(self.state)}
-        env.pop("SB_CTXPACK", None)
+        env = {**os.environ, "SECOND_BRAIN_STATE_DIR": str(self.state), "SB_CTXPACK": "active"}
         return subprocess.run([sys.executable, str(SB), "ctx", action], input=raw if raw is not None else json.dumps(payload),
                               capture_output=True, text=True, env=env)
 

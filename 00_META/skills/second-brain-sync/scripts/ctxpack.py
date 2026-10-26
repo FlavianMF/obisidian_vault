@@ -2,7 +2,7 @@
 
 State: <state>/ctx/<session_id>.jsonl (dir 0700, file 0600). Never stores file content. A finding that
 trips lib/secret_scan is dropped whole. Every entry point swallows errors: a hook must not break a session.
-Mode via SB_CTXPACK: active (default) records and renders, shadow records only, 0/false/off/no does nothing.
+Mode via SB_CTXPACK: shadow (default) records only, active records and renders, 0/false/off/no does nothing.
 """
 from __future__ import annotations
 
@@ -29,10 +29,11 @@ HEADER = (
 
 
 def mode(env: dict) -> str:
-    value = (env.get("SB_CTXPACK") or "active").strip().lower()
+    # Padrão shadow desde a E3 da RFC-002 (2026-10-26): o pacote injetado custou +18% de sub_eq sem cortar releitura.
+    value = (env.get("SB_CTXPACK") or "shadow").strip().lower()
     if value in ("0", "false", "off", "no"):
         return "off"
-    return "shadow" if value == "shadow" else "active"
+    return "active" if value == "active" else "shadow"
 
 
 def enabled(state_dir: Path, env: dict) -> str:
