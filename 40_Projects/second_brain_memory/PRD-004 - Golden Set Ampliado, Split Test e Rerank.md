@@ -12,7 +12,7 @@ scope: project
 
 # PRD-004 — Golden Set Ampliado, Split Test e Rerank
 
-**Status**: DRAFT em 2026-10-23 · Origem: [[PRD-003 - Agentic RAG no Second Brain]] (Resultado) · Estudo: [[Estudo - Agentic RAG no Second Brain]] (A4, A5) · Medições: [[F0 - Linha de Base de Tokens e Golden Set MVP]].
+**Status**: IN PROGRESS (B1 completa em 2026-10-23; piso 9 não cumprido, ver F0) · Origem: [[PRD-003 - Agentic RAG no Second Brain]] (Resultado) · Estudo: [[Estudo - Agentic RAG no Second Brain]] (A4, A5) · Medições: [[F0 - Linha de Base de Tokens e Golden Set MVP]].
 
 ## Problem Statement
 
@@ -158,7 +158,7 @@ B1, B2 e B3. O MVP está completo quando a F0 tiver três seções datadas, uma 
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 1 | B1 — Golden set ≥ 60 | Validador, rascunhos, aprovação, divisão, reformulações novas, linha de base `dev` | pending | - | - | `~/obsidian_vault/.claude/PRPs/plans/b1-golden-set.plan.md` |
+| 1 | B1 — Golden set ≥ 60 | Validador, rascunhos, aprovação, divisão, reformulações novas, linha de base `dev` | complete (`9d3f826` e `4379381` no `master`; pisos 1–8 cumprem, piso 9 não) | - | - | `~/obsidian_vault/.claude/PRPs/plans/b1-golden-set.plan.md` |
 | 2 | B2 — Split `test` | Uma execução no `test`, limiar 0,35 | pending | - | 1 | `~/obsidian_vault/.claude/PRPs/plans/b2-split-test.plan.md` |
 | 3 | B3 — Rerank | `RerankAdapter`, julgamentos em cache, medição no `dev` | pending | - | 1 | `~/obsidian_vault/.claude/PRPs/plans/b3-rerank.plan.md` |
 
@@ -217,4 +217,4 @@ A B2 e a B3 dependem só da B1. Por decisão do usuário, rodam em sequência: B
 ---
 
 *Generated: 2026-10-23*
-*Status: DRAFT - pisos aprovados, nenhuma medição feita*
+*Status: IN PROGRESS - B1 medida, B2 e B3 pendentes*

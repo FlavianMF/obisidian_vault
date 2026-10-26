@@ -323,3 +323,35 @@ A linha de base do `rank` mudou desde 2026-10-14 (no limiar 0,30, o FP foi de 0,
 Por query: o `rewrite` acerta e o `rank` erra em `q026` (limiares 0,30 e 0,35) e em `q019` (0,35). O contrário não ocorre. Em 0,30, o `rewrite` tem um falso positivo a mais (`q037`).
 
 **Leitura.** A reescrita nunca perdeu um acerto do `rank` e recuperou duas lacunas de vocabulário. Isso sustenta a regra 4 do Behavior 1 (reescrever em PT e EN antes de buscar), que não depende de limiar. O L1 continua em sombra, como decidido (D-A1). Próximos passos possíveis, todos com aprovação do usuário: rodar o split `test` uma vez no limiar 0,35, ou aumentar o golden set para 60 queries antes de qualquer decisão sobre o L1.
+
+## Atualização 2026-10-23: B1 do PRD-004, golden set com 80 queries e nova linha de base `dev`
+
+Contexto: [[PRD-004 - Golden Set Ampliado, Split Test e Rerank]], etapa B1. O Haiku gerou 53 rascunhos: 25 positivas a partir de notas, 20 negativas e 8 prompts do shadow. O usuário aprovou 38 (25 positivas e 13 negativas) e rejeitou 15. A promoção usou a semente `20261023` e mandou 14 queries ao `test` e 24 ao `dev`. A divisão entrou no commit `4379381`, antes da medição. Custo em Haiku: cerca de US$ 0,01 em 77 chamadas.
+
+Composição: 80 queries. O `dev` tem 36 positivas e 20 negativas. O `test` tem 16 positivas e 8 negativas. O `validate_golden.py` passa nos pisos 1 a 6.
+
+| limiar | `rank` s@5 (IC95) | `rank` FP | `rank` tok/acerto | `rewrite` s@5 (IC95) | `rewrite` FP | `rewrite` tok/acerto |
+|---|---|---|---|---|---|---|
+| 0 | 0,58 (0,42–0,72) | 1,00 | 7804 | 0,64 (0,47–0,81) | 1,00 | 8502 |
+| 0,25 | 0,58 (0,42–0,75) | 0,40 | 3505 | 0,69 (0,53–0,83) | 0,50 | 3550 |
+| 0,30 | 0,47 (0,31–0,64) | 0,30 | 2961 | 0,56 (0,39–0,69) | 0,35 | 3443 |
+| 0,35 | 0,44 (0,28–0,61) | 0,15 | 2182 | 0,53 (0,36–0,67) | 0,15 | 2274 |
+| 0,40 | 0,42 (0,25–0,58) | 0,00 | 1306 | 0,50 (0,33–0,67) | 0,05 | 1433 |
+| 0,45 | 0,36 (0,19–0,53) | 0,00 | 1036 | 0,47 (0,31–0,64) | 0,05 | 1004 |
+| 0,50 | 0,28 (0,14–0,44) | 0,00 | 984 | 0,36 (0,22–0,53) | 0,05 | 1014 |
+
+Positivas por origem:
+
+| limiar | método | antigas (19) | novas (17) |
+|---|---|---|---|
+| 0 | `rank` | 17 | 4 |
+| 0 | `rewrite` | 17 | 6 |
+| 0,35 | `rank` | 14 | 2 |
+| 0,35 | `rewrite` | 16 | 3 |
+
+**Veredito contra os pisos da B1.** Os pisos 1 a 8 cumprem. O piso 9 (pisos da A3 no `dev` ampliado) **não cumpre**. O `rewrite` fica abaixo de 0,80 de success@5 em todos os limiares. Os pisos não foram afrouxados.
+
+**Leitura.** As 19 positivas antigas repetem a A3. As 17 positivas novas quase não são achadas, mesmo sem limiar. O prompt dos rascunhos proibiu as palavras do título, então as queries novas medem a lacuna de vocabulário pura. O `rewrite` recupera só 2 delas a mais que o `rank`. Consequências para as próximas etapas:
+
+- B2: o `test` tem 8 positivas novas desse tipo, então a B2 tende a falhar no success@5.
+- B3: o `rerank` só reordena o top-20 do `rank`. Ele não recupera uma nota que o `rank` não trouxe. Antes de planejar a B3, meça o recall@20 do `rank` nas positivas novas.
