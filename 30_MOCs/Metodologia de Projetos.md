@@ -63,3 +63,7 @@ Dois eixos que se completam: *o que construir e em que ordem* (a cadeia de artef
 - [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]] — o lado
   da leitura.
 - [[Engenharia de Sistemas Agêntica]] · [[Orquestração Híbrida de Agentes]]
+
+## 🔁 Melhoria contínua
+- [[Kaizen e Melhoria Contínua]] — o mapa vizinho: kaizen, CTQ, baseline e sustentação de
+  ganhos.
