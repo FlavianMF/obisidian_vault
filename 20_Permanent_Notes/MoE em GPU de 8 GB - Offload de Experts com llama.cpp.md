@@ -23,9 +23,12 @@ Em MoE, a atenção roda para todo token e os experts (>75% dos pesos) só em pa
 - **Ranking (estimado, 2026-10-28):** Qwen3.6-35B-A3B (3B ativos, SWE-bench Verified 73,4% com scaffold interno, ~18-25 tok/s) > gpt-oss-20b > Gemma 4 26B-A4B > DeepSeek-Coder-V2-Lite (mais rápido, ~28-38 tok/s) > Granite 4 H-Small. Todos os tok/s são estimativas da pesquisa.
 - **Gargalo de RAM:** o `.wslconfig` limita o WSL2 a 20 GB e o Qwen3.6 Q4 pesa ~21,5 GB. Suba `memory` para 24 GB ou rode no Windows.
 - **Teto de banda:** 3B ativos a ~4,5 bits leem ~1,7 GB por token. Com DDR5 a ~70 GB/s o teto é ~40 tok/s.
+- **`--moe-cache-mib N`** (PRs #29887/#30112, já no build local): cache LRU de experts em VRAM, só decode com batch ≤32. Medido em RTX 4090/5090 + EPYC: 1,57x a 2,20x, hit rate 72-89%, cache de ~10% dos experts. Nada medido em 8 GB.
+- **Fontes inválidas na pesquisa de tok/s:** PR #10123 (não existe), issue #8192 (sem relação), arXiv 2604.12000. Descarte os tok/s "publicados" dela.
 - **Origem dos números:** pesquisa do `gemini-3.8-flash` com IDs de arXiv incompletos. Meça antes de confiar: `llama-bench -p 512 -n 128 -ngl 99 --n-cpu-moe N -fa 1`.
 
 ## O que NÃO funcionou
+- A pesquisa de tok/s do Gemini citou PR e issue do llama.cpp que não existem ou não tratam do assunto. Confira toda fonte na API do GitHub antes de aproveitar o número.
 - Nada foi executado: o `llama.cpp` não está compilado no WSL e nenhum MoE foi medido nesta máquina. Esta nota vem de leitura de PRs/issues e de uma pesquisa de terceiros.
 - Ollama: sem offload de experts, então `qwen3.8` 27B roda por split de camadas (3-6 tok/s estimados) em vez de por experts.
 - Mixtral 8x7B: descartado pelos 2-6 tok/s publicados (não verificado).
