@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Autenticação de providers
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Docs: [opencode.ai/docs/providers](https://opencode.ai/docs/providers/) · Fonte: `packages/opencode/src/auth/index.ts`, `packages/opencode/src/provider/*`
 

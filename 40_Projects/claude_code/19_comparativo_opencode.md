@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Claude Code × opencode: dois desenhos de harness
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Comparação com a pesquisa irmã em `notes/research/opencode/`. Os dois resolvem o mesmo
 problema — agente de codificação no terminal, com ferramentas, permissão, MCP, plugins,

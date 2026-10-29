@@ -11,7 +11,7 @@ project: projetos_ita
 
 # `mods/telemetry` dissecado — estender o `$` em 45 linhas
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 81 arquivos, mas o hook é **um só**. Este mod existe para demonstrar (e para usar de
 verdade) o mecanismo de extensão do `$`: um passo de `engine.create` que adiciona um

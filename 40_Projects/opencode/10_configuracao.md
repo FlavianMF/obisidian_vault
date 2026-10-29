@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Configuração
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Docs: [opencode.ai/docs/config](https://opencode.ai/docs/config/)
 

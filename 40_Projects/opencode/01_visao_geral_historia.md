@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Visão geral e história
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 ## O que é
 

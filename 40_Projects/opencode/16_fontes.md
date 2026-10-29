@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Fontes
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 ## Repositório e API GitHub
 

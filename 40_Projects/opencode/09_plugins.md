@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Plugins
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Docs: [opencode.ai/docs/plugins](https://opencode.ai/docs/plugins/) · Fonte: `packages/plugin/src/index.ts` (npm `@opencode-ai/plugin`, v1.18.29)
 

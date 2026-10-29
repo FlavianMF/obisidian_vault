@@ -11,7 +11,7 @@ project: projetos_ita
 
 # A superfície de eventos
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Catálogo do contrato publicado em `mods/types/claude-code.d.ts` (10.772 linhas, 432 tipos
 exportados, escrito pelo comando `/plugin-types` da versão 2.1.273).

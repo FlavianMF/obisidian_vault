@@ -19,7 +19,7 @@ project: projetos_ita
 ## Por que essa pesquisa
 
 Segundo caso de estudo de harness de agentes deste projeto, depois de
-[`opencode`](../opencode/00_indice.md). O objetivo é o mesmo: extrair padrões arquiteturais
+[`opencode`](../opencode/00_indice_opencode.md). O objetivo é o mesmo: extrair padrões arquiteturais
 para o harness próprio de orquestração LLM ↔ Capella
 (`notes/arquitetura_hibrida_mcp_capella.md`, `notes/metodologia_dev_mcp.md`).
 

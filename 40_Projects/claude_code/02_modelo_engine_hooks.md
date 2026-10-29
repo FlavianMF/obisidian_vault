@@ -11,7 +11,7 @@ project: projetos_ita
 
 # O modelo central: engine, `$`, hooks e tiers
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Tudo em Claude Code que é extensível passa por **um único modelo**, declarado em
 `mods/types/claude-code.d.ts`. Vale a pena entendê-lo antes de qualquer outra coisa:

@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Headless, scriptável, SDK e API — foco harness
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Esse é o arquivo mais diretamente aplicável ao desenvolvimento de um harness próprio: cobre todos os pontos de entrada não-interativos que o opencode expõe.
 

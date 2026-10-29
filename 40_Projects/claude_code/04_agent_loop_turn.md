@@ -11,7 +11,7 @@ project: projetos_ita
 
 # O loop do agente: turno, passo, compactação
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 O loop não é um bloco opaco: ele é **descrito evento a evento** no contrato
 (`mods/types/claude-code.d.ts`). Este capítulo reconstrói o loop a partir dos eventos, na

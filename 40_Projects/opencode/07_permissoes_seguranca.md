@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Permissões e segurança
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Docs: [opencode.ai/docs/permissions](https://opencode.ai/docs/permissions/) · Fonte: `packages/opencode/src/permission/index.ts`, `packages/opencode/src/permission/evaluate.ts`
 

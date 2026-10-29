@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Persistência de sessão
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Duas camadas de storage coexistem no código-fonte, refletindo uma migração em andamento.
 

@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Providers e abstração multi-provider LLM
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Duas camadas coexistem:
 

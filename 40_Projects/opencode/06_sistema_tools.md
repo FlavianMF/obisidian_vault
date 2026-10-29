@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Sistema de tools
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Docs: [opencode.ai/docs/tools](https://opencode.ai/docs/tools/) · Fonte: `packages/opencode/src/tool/*.ts`
 

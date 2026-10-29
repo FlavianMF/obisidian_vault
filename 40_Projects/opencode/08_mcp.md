@@ -11,7 +11,7 @@ project: projetos_ita
 
 # MCP (Model Context Protocol)
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Docs: [opencode.ai/docs/mcp-servers](https://opencode.ai/docs/mcp-servers/) · Fonte: `packages/opencode/src/mcp/{index,auth,browser,catalog,oauth-callback,oauth-provider}.ts`, `packages/opencode/src/cli/cmd/mcp.ts`
 

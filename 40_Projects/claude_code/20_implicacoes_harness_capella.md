@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Implicações para o harness próprio (Capella / MBSE)
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Síntese dos 19 capítulos anteriores, dirigida ao trabalho em curso:
 `capella_mcp` (servidor MCP de acesso ao modelo Capella), `capella_llm_window`

@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Subagentes, skills e comandos
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Três formas de "unidade de comportamento" que o harness expõe. As três passam pelos mesmos
 eventos, e as três podem vir de um plugin.

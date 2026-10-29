@@ -11,7 +11,7 @@ project: projetos_ita
 
 # MCP no harness
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 O Model Context Protocol aparece em três lugares distintos do repositório, e a leitura
 combinada diz mais do que cada um separado.

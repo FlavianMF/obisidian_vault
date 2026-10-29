@@ -11,7 +11,7 @@ project: projetos_ita
 
 # `mods/sec-default` dissecado — segurança como posição na cadeia
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 60 arquivos, 33 linhas de `register`. É o mod mais curto e o mais importante
 conceitualmente: ele mostra que, neste desenho, **segurança é um problema de assento**, não

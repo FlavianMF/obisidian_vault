@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Prompt, contexto e memória
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Seis eventos cobrem a montagem de tudo que o modelo lê antes da conversa. O desenho aqui tem
 uma preocupação atravessada que não aparece nos outros subsistemas: **cache de prompt**.

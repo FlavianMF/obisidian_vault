@@ -11,7 +11,7 @@ project: projetos_ita
 
 # O que o CHANGELOG conta
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 `CHANGELOG.md` tem **718 KB**, **397 versões** e **5.768 entradas**, de `0.2.21` até `2.1.274`.
 É a fonte mais densa do repositório sobre o que o harness virou — e sobre o que custa
