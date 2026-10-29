@@ -8,7 +8,6 @@ project: second_brain_memory
 confidence: low
 scope: project
 ---
-
 # Estudo — Agentic RAG no Second Brain
 
 **Status**: Decisões fechadas em 2026-10-22; A1–A3 viraram o [[PRD-003 - Agentic RAG no Second Brain]] · **Data**: 2026-10-22 · Conceito e fontes em [[Agentic RAG]].
