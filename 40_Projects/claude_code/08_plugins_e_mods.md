@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Plugins, mods e marketplaces
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Duas gerações de extensibilidade convivem no mesmo repositório, e o nome delas confunde:
 

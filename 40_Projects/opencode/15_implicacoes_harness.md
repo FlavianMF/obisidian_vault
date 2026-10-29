@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Implicações de design para um harness próprio
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Síntese das outras 14 seções, focada em: o que vale a pena copiar/adaptar do design do opencode ao construir um harness de orquestração de agentes (relevante ao trabalho de MCP/LLM tooling em torno do Capella — ver `notes/arquitetura_hibrida_mcp_capella.md`, `notes/metodologia_dev_mcp.md`).
 
@@ -48,4 +48,4 @@ Os pontos 1–6 acima são padrões arquiteturais que podem ser extraídos e apl
 
 ## Ver também
 
-Todos os outros 14 arquivos desta pasta contêm o detalhe de implementação por trás de cada um desses padrões. Ver [00_indice.md](00_indice.md) para navegação por objetivo.
+Todos os outros 14 arquivos desta pasta contêm o detalhe de implementação por trás de cada um desses padrões. Ver [00_indice_opencode.md](00_indice_opencode.md) para navegação por objetivo.

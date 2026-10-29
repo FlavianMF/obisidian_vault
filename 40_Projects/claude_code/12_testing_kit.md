@@ -11,7 +11,7 @@ project: projetos_ita
 
 # O kit de teste: `claude-code/testing`
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 O segundo módulo declarado no `.d.ts` (`declare module 'claude-code/testing'`,
 `claude-code.d.ts:9448`) é o kit que `claude plugin test <dir>` roda. Vale um capítulo

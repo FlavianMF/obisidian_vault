@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Configuração e settings
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Dois sistemas distintos, que é fácil confundir:
 

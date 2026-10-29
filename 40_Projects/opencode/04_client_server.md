@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Client/server
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 opencode tem arquitetura client/server explícita — mais nuançada que um servidor sempre-remoto fixo.
 

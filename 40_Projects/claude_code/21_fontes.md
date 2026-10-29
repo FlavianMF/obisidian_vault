@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Fontes
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Toda citação desta pesquisa aponta para uma destas fontes. O repositório é um alvo móvel
 (o `CHANGELOG.md` muda quase todo dia), então **tudo que vem do repo está pinado no

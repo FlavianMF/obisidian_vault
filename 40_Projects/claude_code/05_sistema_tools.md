@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Sistema de ferramentas
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 Três eventos cobrem o ciclo inteiro de uma ferramenta, e eles são deliberadamente
 **separados por pergunta**, não por fase:

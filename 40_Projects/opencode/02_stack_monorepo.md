@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Stack e monorepo
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 ## Tech stack
 

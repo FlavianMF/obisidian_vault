@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Permissões e segurança
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 A segurança do harness está espalhada por **quatro camadas independentes**, e a propriedade
 interessante é que cada uma falha sozinha sem derrubar as outras.

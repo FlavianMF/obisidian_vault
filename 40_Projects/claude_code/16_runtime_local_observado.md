@@ -11,7 +11,7 @@ project: projetos_ita
 
 # O runtime, observado em disco
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 > **Escopo e método.** Este capítulo é a única parte da pesquisa que não vem do repositório
 > nem dos docs. Ele observa **o que a instalação local escreve em disco** — nomes de

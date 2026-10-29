@@ -70,7 +70,7 @@ ativamente desenvolvida antes de construir dependência em cima dela.
 
 Pesquisa detalhada (17 notas: stack, agent loop, client-server, providers,
 tools, permissões, MCP, plugins, config, persistência, headless/SDK/API,
-subagentes, auth, fontes) — [índice completo em 40_Projects/opencode](../40_Projects/opencode/00_indice.md).
+subagentes, auth, fontes) — [índice completo em 40_Projects/opencode](../40_Projects/opencode/00_indice_opencode.md).
 Cópia espelhada também no projeto de origem `projetos_ita`, fora do vault:
 `notes/research/opencode/00_indice.md`.
 
@@ -90,4 +90,4 @@ assento, e testabilidade. Comparativo completo em
 - [[Permission-as-Deferred-Promise para Approval Gates de Agente]]
 - [[Transporte Plugável - Mesma API Client-Server In-Process ou HTTP Real]]
 - [[Separar Protocol de Route em Abstração Multi-Provider de LLM]]
-- [Índice completo da pesquisa (40_Projects/opencode)](../40_Projects/opencode/00_indice.md)
+- [Índice completo da pesquisa (40_Projects/opencode)](../40_Projects/opencode/00_indice_opencode.md)

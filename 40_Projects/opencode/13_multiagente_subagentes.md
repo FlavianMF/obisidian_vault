@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Multi-agente e subagentes
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Feature de primeira classe, análoga à tool Task do Claude Code. Docs: [opencode.ai/docs/agents](https://opencode.ai/docs/agents/) · Fonte: `packages/opencode/src/tool/task.ts`, `packages/opencode/src/agent/*`
 

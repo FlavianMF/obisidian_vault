@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Agent loop — modelo de execução
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_opencode.md)
 
 Fonte primária: `packages/opencode/src/session/{prompt,processor,tools}.ts`, `packages/opencode/src/tool/tool.ts`, `CONTEXT.md`, `specs/v2/session.md`. Fetches feitos via `raw.githubusercontent.com/.../dev/...` — trechos de código são "como reportado" pelo WebFetch (sumarização, não `cat` byte-exato), mas a estrutura foi corroborada entre múltiplas leituras.
 

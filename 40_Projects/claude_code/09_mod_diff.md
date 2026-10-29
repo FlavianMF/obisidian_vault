@@ -11,7 +11,7 @@ project: projetos_ita
 
 # `mods/diff` dissecado — um mod real, inteiro
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 779 arquivos, 577 deles `.ts`/`.tsx` sob `hooks/`, 199 sob `tests/`. É o maior artefato de
 código real publicado sobre o harness — e o único lugar onde dá para ver como a Anthropic

@@ -11,7 +11,7 @@ project: projetos_ita
 
 # O harness rodando em CI, sobre o próprio repositório
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 13 workflows, 8 scripts. Cinco deles rodam o **próprio Claude Code** como agente de manutenção
 do repositório. É o melhor exemplo publicado de "harness headless em produção" — e o mais

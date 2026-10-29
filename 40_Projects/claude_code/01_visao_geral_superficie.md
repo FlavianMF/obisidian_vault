@@ -11,7 +11,7 @@ project: projetos_ita
 
 # Visão geral: o que é o Claude Code e o que o repositório é
 
-[← Índice](00_indice.md)
+[← Índice](00_indice_claude_code.md)
 
 ## O produto
 
@@ -120,4 +120,4 @@ desmontado nem descompilado ([21](21_fontes.md), [16](16_runtime_local_observado
 ## Ver também
 
 - [02](02_modelo_engine_hooks.md) — o modelo central, e por onde começar
-- [00](00_indice.md) — leitura recomendada por objetivo
+- [00](00_indice_claude_code.md) — leitura recomendada por objetivo
