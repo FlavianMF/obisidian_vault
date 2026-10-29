@@ -5,9 +5,9 @@ tags: [ollama, llm, gpu, nvidia, windows, sysmem-fallback, performance, pcie]
 created: 2026-10-15
 provenance: ollama-8gb-configs
 project: ollama-8gb-configs
-verified: 2026-10-15 via leitura de shared-memory-study.md (cálculo de largura de banda; teste A/B não executado)
+verified: 2026-10-15 via leitura de shared-memory-study.md (cálculo de largura de banda; teste A/B não executado). 2026-10-29 via artifact de execução da epic (margem medida com qwen3:8b em 2026-10-28; não reproduzido hoje)
 confidence: low
-seen_in: [ollama-8gb-configs]
+seen_in: [ollama-8gb-configs, dotfiles]
 ---
 
 # Memória Compartilhada da GPU - CPU Vence no Decode
@@ -23,8 +23,9 @@ Exemplo (27B, 11,5 GB fora da VRAM): CPU ~4-5 tok/s; sysmem ~1-2 tok/s. O Ollama
 
 ## Ação
 - NVIDIA Control Panel → `ollama.exe` e `ollama app.exe` → **CUDA - Sysmem Fallback Policy = Prefer No Sysmem Fallback** (driver ≥546.01); reiniciar o Ollama (a política é lida na criação do contexto CUDA). Vira OOM explícito em vez de lentidão.
+- **`llama-server` no WSL2 (2026-10-29):** a política por aplicativo (`ollama.exe`) **não alcança o `llama-server` do WSL2**, que não tem `.exe` no Windows. Aplique no perfil **global** do NVIDIA Control Panel. Verifique o derrame em "Memória GPU compartilhada" no Gerenciador de Tarefas. Margem medida no `qwen3:8b` com 8K: ~1,6 GB, com o Windows já ocupando 1199 MiB. Fonte: artifacts da epic dotfiles; a política global não foi testada nesta nota.
 - Sinal de estouro: vários GB de memória compartilhada subindo durante a geração (poucos centésimos são normais).
-- `GGML_CUDA_ENABLE_UNIFIED_MEMORY` é Linux; WSL2 ignora a política. iGPU Intel: descartada pelo Ollama (`dropping integrated GPU`), manter assim.
+- `GGML_CUDA_ENABLE_UNIFIED_MEMORY` é Linux; WSL2 ignora a política por aplicativo (ver o perfil global abaixo). iGPU Intel: descartada pelo Ollama (`dropping integrated GPU`), manter assim.
 - Prefill (compute-bound) e MoE (poucos experts ativos por token) são onde a GPU/split ainda compensa.
 - Raptor Lake (6P+8E): testar `num_thread` = nº de P-cores contra o padrão quando há CPU no caminho.
 - Limitar a VM do WSL2 em `.wslconfig` (`memory=8GB`) para não disputar RAM com o modelo dividido.

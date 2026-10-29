@@ -37,5 +37,7 @@ Camada de **orquestração do trabalho** dos agentes (plano, execução, revisã
 
 Contexto de uso: [[Orquestração Híbrida de Agentes]] e a RFC-002 do projeto second_brain_memory.
 
+Roteamento de agentes para um modelo local: [[Local Primeiro no Traycer - Roteamento de Agentes para llama.cpp com Escalonamento]].
+
 ## O que NÃO funcionou
 Nada foi testado. É leitura de fontes públicas, nenhuma ferramenta foi instalada ou rodada. Por isso `confidence: low`.

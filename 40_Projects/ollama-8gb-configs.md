@@ -30,10 +30,15 @@ Repo de **docs + Modelfiles** (sem código de aplicação) para rodar LLMs locai
 - **Nenhum número foi medido**: tabelas de eval rate / PROCESSOR / teste A-B estão vazias. Pendente: medir, validar `RENDERER`/`PARSER` do import hf.co, confirmar tool calling dos Qwen3.5 (issues Ollama #14493, #14745).
 - Dúvidas abertas: largura de banda real da GPU (224 vs 384 GB/s), link PCIe, contexto máx. do Granite (1M vs 128K).
 
+## Estado (2026-10-29, via artifacts da epic dotfiles)
+- Os agentes do Traycer deixaram de usar o Ollama do Windows como backend. Decisão de 2026-10-28: `llama.cpp` direto no WSL2, porque só o `llama-server` faz offload de experts. O Ollama segue para os Modelfiles deste repo.
+- A afirmação "nenhum número foi medido" acima vale só para as tabelas do repo; existem números medidos em outro modelo (`qwen3:8b`), ver [[Orçamento de VRAM para LLM Local - Pesos, Grafo e KV Cache]].
+
 ## Notas extraídas
 - [[Orçamento de VRAM para LLM Local - Pesos, Grafo e KV Cache]]
 - [[Tag Multimodal do Ollama Carrega Projetor de Visão e Estoura a VRAM]]
 - [[Memória Compartilhada da GPU - CPU Vence no Decode]]
 - [[Ollama no Windows Para Cliente no WSL2 - Bind, Firewall e Contexto Global]]
 - [[opencode com Modelo Local Único Residente em GPU de 8 GB]]
+- Llama.cpp no WSL2: [[llama.cpp para Blackwell no WSL2 - Toolkit do Repo wsl-ubuntu e 120a-real]], [[llama-server - -ngl 99 e --fit Conflitam com --n-cpu-moe e o Health Dá 503 na Carga]], [[Local Primeiro no Traycer - Roteamento de Agentes para llama.cpp com Escalonamento]], [[Plano de Energia Alto Desempenho do Windows Crava a GPU do Notebook em 35 W]]
 - Relacionadas: [[Ollama Ignora Tamanho de Contexto Enviado por Request]], [[Detecção Ao Vivo de Janela de Contexto do Ollama via api-ps e api-show]], [[opencode]]

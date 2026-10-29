@@ -5,9 +5,9 @@ tags: [llm, moe, llama-cpp, vram, blackwell, offload, ollama, rtx5050]
 created: 2026-10-28
 provenance: ollama-8gb-configs
 project: ollama-8gb-configs
-verified: 2026-10-28 via busca web (existência de Qwen3.6-35B-A3B e Gemma 4 26B-A4B) e GitHub API (PRs #15077, #22196, #29887, #30112 mesclados; issues Ollama #11772, #16515, #17557 abertas). tok/s da pesquisa NÃO verificados e nada de MoE medido na máquina
+verified: 2026-10-28 via busca web (existência de Qwen3.6-35B-A3B e Gemma 4 26B-A4B) e GitHub API (PRs #15077, #22196, #29887, #30112 mesclados; issues Ollama #11772, #16515, #17557 abertas). tok/s da pesquisa NÃO verificados e nada de MoE medido na máquina. 2026-10-29 via artifacts da epic (build ac8e169 conferido: 146 ELFs sm_120a, flags existem; llama-bench denso medido)
 confidence: low
-seen_in: [ollama-8gb-configs]
+seen_in: [ollama-8gb-configs, dotfiles]
 ---
 
 # MoE em GPU de 8 GB - Offload de Experts com llama.cpp
@@ -21,7 +21,10 @@ Em MoE, a atenção roda para todo token e os experts (>75% dos pesos) só em pa
 - **Armadilha:** Sysmem Fallback do driver NVIDIA faz o estouro de VRAM virar ~1 tok/s sem erro. Configure "Prefer No Sysmem Fallback".
 - **Tool calling:** passe `--jinja`; evite quant abaixo de Q4. A pesquisa sugere KV `q4_0`, mas o setup mede com `q8_0`; comece em `q8_0`.
 - **Ranking (estimado, 2026-10-28):** Qwen3.6-35B-A3B (3B ativos, SWE-bench Verified 73,4% com scaffold interno, ~18-25 tok/s) > gpt-oss-20b > Gemma 4 26B-A4B > DeepSeek-Coder-V2-Lite (mais rápido, ~28-38 tok/s) > Granite 4 H-Small. Todos os tok/s são estimativas da pesquisa.
-- **Gargalo de RAM:** o `.wslconfig` limita o WSL2 a 20 GB e o Qwen3.6 Q4 pesa ~21,5 GB. Suba `memory` para 24 GB ou rode no Windows.
+- **Gargalo de RAM (atualizado 2026-10-29):** o `.wslconfig` já está em `memory=24GB` (`free -g` mostra 23 GB após `wsl --shutdown`). O ganho sobre os 20 GB é de 4 GB. O Qwen3.6-35B-A3B Q4 (21,5 GB) passa a ser candidato, mas sem folga: meça antes de apostar. Ponto de partida decidido: `gpt-oss-20b` MXFP4 (~12 GB).
+- **Estado do build (2026-10-29):** `-DCMAKE_CUDA_ARCHITECTURES=120a-real` é o padrão do próprio projeto (`ggml/src/ggml-cuda/CMakeLists.txt:64`). Build `ac8e169`, CUDA 12.8.93. `--n-cpu-moe`, `--cpu-moe` e `--moe-cache-mib` existem. Receita em [[llama.cpp para Blackwell no WSL2 - Toolkit do Repo wsl-ubuntu e 120a-real]].
+- **Referência densa (única medição nesta máquina, 2026-10-29):** `qwen3 8B Q4_K_M`, `-ngl 99 -r 3`: `pp512` 1624 ± 58 tok/s, `tg128` 39,7 ± 1,3 tok/s. Nenhum MoE foi medido. Use como régua.
+- **Kimi K3** (2,8T parâmetros) existe e é inviável local.
 - **Teto de banda:** 3B ativos a ~4,5 bits leem ~1,7 GB por token. Com DDR5 a ~70 GB/s o teto é ~40 tok/s.
 - **`--moe-cache-mib N`** (PRs #29887/#30112, já no build local): cache LRU de experts em VRAM, só decode com batch ≤32. Medido em RTX 4090/5090 + EPYC: 1,57x a 2,20x, hit rate 72-89%, cache de ~10% dos experts. Nada medido em 8 GB.
 - **Fontes inválidas na pesquisa de tok/s:** PR #10123 (não existe), issue #8192 (sem relação), arXiv 2604.12000. Descarte os tok/s "publicados" dela.
@@ -29,7 +32,8 @@ Em MoE, a atenção roda para todo token e os experts (>75% dos pesos) só em pa
 
 ## O que NÃO funcionou
 - A pesquisa de tok/s do Gemini citou PR e issue do llama.cpp que não existem ou não tratam do assunto. Confira toda fonte na API do GitHub antes de aproveitar o número.
-- Nada foi executado: o `llama.cpp` não está compilado no WSL e nenhum MoE foi medido nesta máquina. Esta nota vem de leitura de PRs/issues e de uma pesquisa de terceiros.
+- Nenhum MoE foi executado nesta máquina. Em 2026-10-28 o `llama.cpp` passou a estar compilado no WSL (só um modelo denso foi medido). Os números de MoE desta nota vêm de leitura de PRs/issues e de uma pesquisa de terceiros.
+- O primeiro script de serviço passava `-ngl 99` e `--fit on` junto de `--n-cpu-moe` e o `--fit` abortava. Ver [[llama-server - -ngl 99 e --fit Conflitam com --n-cpu-moe e o Health Dá 503 na Carga]].
 - Ollama: sem offload de experts, então `qwen3.8` 27B roda por split de camadas (3-6 tok/s estimados) em vez de por experts.
 - Mixtral 8x7B: descartado pelos 2-6 tok/s publicados (não verificado).
 
@@ -38,3 +42,6 @@ Em MoE, a atenção roda para todo token e os experts (>75% dos pesos) só em pa
 - [[opencode com Modelo Local Único Residente em GPU de 8 GB]]
 - [[Memória Compartilhada da GPU - CPU Vence no Decode]]
 - [[ollama-8gb-configs|Projeto ollama-8gb-configs]]
+- [[llama.cpp para Blackwell no WSL2 - Toolkit do Repo wsl-ubuntu e 120a-real]]
+- [[llama-server - -ngl 99 e --fit Conflitam com --n-cpu-moe e o Health Dá 503 na Carga]]
+- [[Local Primeiro no Traycer - Roteamento de Agentes para llama.cpp com Escalonamento]]
