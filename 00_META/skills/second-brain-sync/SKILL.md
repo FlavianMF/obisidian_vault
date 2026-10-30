@@ -362,6 +362,8 @@ frontmatter, secrets, stale notes; exits 1 on an error-level issue; add `--json`
 `search <query>` (the L1 ranker; `search --json <query>` returns path, title, type, summary, coverage, confidence, score and terms per hit, to judge a note without opening it). Run `doctor` before a large sync. A line with `sb-allow-secret` is
 skipped by the secret scan, for a deliberate fake example.
 
+**Ranking that learns (`vault_rank.sh`).** The ranker multiplies a note's score by `0.8 + 0.4 * r` once the note entered the context in 10 or more sessions of the last 7 days (`<sid>.injected` in the state dir). `r` is the share of those sessions where the agent also opened it (`<sid>.opened`), each session weighted from 1.0 (now) to 0.25 (7 days). The factor stays in `[0.8, 1.2]`: a note nobody opens loses at most 20% and is never zeroed. The set of rows and the other columns do not change. `SECOND_BRAIN_RANK_LEARN=0` (also `false`, `no`, `off`) turns it off and the output is the plain score; `SECOND_BRAIN_RANK_MIN_INJECTIONS=N` sets the minimum. Measure the golden set with `SECOND_BRAIN_RANK_LEARN=0`. A note that helps only through the hint, without a `Read`, does not rise.
+
 **`sb candidate` (queue of note candidates).** When you are corrected or find a reusable trap or
 pattern mid-task, run `sb.py candidate add --kind trap|pattern|decision|concept --title "..."
 --summary "..."` instead of writing the vault. The queue is local state

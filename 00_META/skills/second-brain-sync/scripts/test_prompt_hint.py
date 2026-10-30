@@ -32,7 +32,8 @@ class RankContractTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.manifests = Path(self.tmp.name) / "by_type"
         write_manifest(self.manifests)
-        self.env = {**os.environ, "SECOND_BRAIN_MANIFEST_DIR": str(self.manifests)}
+        self.state = Path(self.tmp.name) / "state"
+        self.env = {**os.environ, "SECOND_BRAIN_MANIFEST_DIR": str(self.manifests), "SECOND_BRAIN_STATE_DIR": str(self.state)}
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -207,9 +208,11 @@ class RealVaultSmokeTest(unittest.TestCase):
         import time
 
         started = time.perf_counter()
-        done = subprocess.run(
-            [str(RANK), "-k", "3", "importar issues jira rest csv"], capture_output=True, text=True, timeout=5, check=False
-        )
+        with tempfile.TemporaryDirectory() as empty_state:  # the ranker reads <state>/*.injected: never the machine's
+            done = subprocess.run(
+                [str(RANK), "-k", "3", "importar issues jira rest csv"], capture_output=True, text=True, timeout=5,
+                check=False, env={**os.environ, "SECOND_BRAIN_STATE_DIR": empty_state},
+            )
         self.assertLess(time.perf_counter() - started, 0.3)
         self.assertTrue(done.stdout.strip())
         self.assertTrue(VAULT.joinpath("00_META").is_dir())

@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import generate_manifests as gm
@@ -69,6 +70,10 @@ class VaultFixture(unittest.TestCase):
         self.vault = Path(self._tmp.name) / "vault"
         self.state = Path(self._tmp.name) / "state"
         self.state.mkdir()
+        # the ranker reads <state>/*.injected: never the real state dir of the machine
+        patcher = mock.patch.dict(os.environ, {"SECOND_BRAIN_STATE_DIR": str(self.state)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         (self.vault / "20_Permanent_Notes").mkdir(parents=True)
 
     def note(self, name, *, title=None, type_="concept", created="2026-10-01", extra="", body="Corpo da nota.\n",

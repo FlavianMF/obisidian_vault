@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import re
 import statistics
@@ -112,8 +113,12 @@ class RankAdapter:
         self._flags = ["-c", str(min_coverage), "-t", str(min_terms)]
 
     def search(self, query: str, k: int) -> list[str]:
+        # the golden set measures the plain ranking; exporting SECOND_BRAIN_RANK_LEARN=1 measures it with the learning adjustment
+        env = {**os.environ}
+        env.setdefault("SECOND_BRAIN_RANK_LEARN", "0")
         result = subprocess.run(
-            [str(RANKER), "-k", str(k), *self._flags, query], capture_output=True, text=True, timeout=10, check=False
+            [str(RANKER), "-k", str(k), *self._flags, query], capture_output=True, text=True, timeout=10, check=False,
+            env=env,
         )
         return [line.split("\t")[1] for line in result.stdout.splitlines() if line.count("\t") >= 2]
 

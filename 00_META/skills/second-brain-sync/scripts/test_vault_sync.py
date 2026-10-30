@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -68,6 +69,10 @@ class VaultFixture(unittest.TestCase):
         git(self.vault, "push", "-q", "origin", "master")
         self.state = root / "state"
         self.env = {**os.environ, "SECOND_BRAIN_STATE_DIR": str(self.state)}
+        # callers that build their env from os.environ (review.matches_for) must not reach the real state dir
+        patcher = mock.patch.dict(os.environ, {"SECOND_BRAIN_STATE_DIR": str(self.state)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def tearDown(self):
         self.tmp.cleanup()
