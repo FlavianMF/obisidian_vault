@@ -6,8 +6,9 @@ created: 2026-10-15
 provenance: obsidian_vault
 project: second_brain_memory
 confidence: low
-verified: 2026-10-15 via leitura de hook-flags.js, hooks.json, observe.sh, start-observer.sh e config.json do plugin ecc 2.2.3 e conferência do efeito na própria sessão (o GateGuard passou a barrar o primeiro comando Bash e a primeira escrita de arquivo)
+verified: 2026-10-30 via revisão web, não reproduzido
 scope: project
+seen_in: [obsidian_vault]
 ---
 
 # Reavaliação — ECC com perfil completo e observer ligado
@@ -102,3 +103,5 @@ mantém a observação fora de diretórios de trabalho com esses nomes (o padrã
    `--dry-run`, só o usuário executa. O agente continua sem rodar esses comandos por conta própria.
 5. **I0 inclui o teste do redator de segredos e a leitura do limite de injeção: aprovado.** O teste usa credenciais falsas em
    `CLV2_HOMUNCULUS_DIR` temporário, nunca no diretório real.
+
+- 2026-10-30 (obsidian_vault): O observer Haiku do continuous-learning-v2 le o log de tool calls gravado por hook do plugin ecc@ecc. Com o ECC desligado no projeto nao ha log nem analise; observer.enabled=true em ecc-clv2-config.json so vale com o plugin ligado.
