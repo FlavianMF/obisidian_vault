@@ -5,6 +5,8 @@ tags: [requirements, scope, agentic-ai, project-methodology, grilling, dev-workf
 created: 2026-09-20
 provenance: orbita-platform
 project: orbita-platform
+seen_in: [outlet_promo]
+verified: 2026-10-30 via revisão web, não reproduzido
 ---
 
 # Pedido de Sistema Novo Costuma Ser Delta de Sistema Existente
@@ -64,3 +66,5 @@ de quem lê o código.
 Relacionado: [[Cadeia de Artefatos de Projeto - Intenção, RFC, Plano de Fase]],
 [[Playbook de Projeto - Erros Já Cometidos Como Artefato]],
 [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]].
+
+- 2026-10-30 (outlet_promo): Mapear funcionalidades via grilling em rodadas, consolidar num doc de mapa (um modulo por PRD, ordem de dependencia) e chamar /ecc:prp-prd apontando o mapa como fonte da verdade, pedindo para perguntar so lacunas; evita refazer o questionario do prp-prd.
