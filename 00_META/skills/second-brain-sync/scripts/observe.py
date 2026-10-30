@@ -2,8 +2,8 @@
 
 `record` runs from a PostToolUse hook: one JSON line of metadata per tool call (tool name, file path, size of
 the result), never content and never a command line. `summarize` runs from the Stop hook: it reads that log plus
-the numeric `usage` fields of the transcript, and queues at most MAX_CANDIDATES candidates. It never writes the
-vault. The log lives in `<state>/observe/<session>.jsonl` (mode 0600) and expires after LOG_TTL_DAYS.
+the numeric `usage` fields of the transcript, queues at most MAX_CANDIDATES candidates and writes the usage record
+(usage.py). It never writes the vault. The log lives in `<state>/observe/<session>.jsonl` (mode 0600) and expires after LOG_TTL_DAYS.
 """
 from __future__ import annotations
 
@@ -16,6 +16,9 @@ from pathlib import Path
 from typing import NamedTuple
 
 import candidates
+import patches
+import usage
+from lib import secret_scan
 
 LOG_DIR = "observe"
 LOG_TTL_DAYS = 7
@@ -28,17 +31,25 @@ SKIP_PATH = re.compile(
     r"(^|/)(secrets|\.ssh|\.aws|\.gnupg)(/|$)|(^|/)\.env[^/]*$"
     r"|ecc-observer-analysis|(^|/)\.observer-tmp(/|$)"  # the ECC observer's own temp files: 63 of 141 candidates were noise
 )
-SAFE_SESSION = re.compile(r"[^A-Za-z0-9_-]")
+SAFE_SESSION = candidates.SAFE_SESSION
 
 
 class Finding(NamedTuple):
     kind: str
     title: str
     summary: str
+    rule: str = ""  # "reread" or "big": the rule that fired
+    path: str = ""
+    count: int = 0  # reads of the path (reread), or reads at or over BIG_READ_CHARS (big)
+    size: int = 0  # characters of the biggest read (big)
 
 
 def log_path(state_dir: Path, session: str) -> Path:
-    return state_dir / LOG_DIR / f"{SAFE_SESSION.sub('', session)}.jsonl"
+    """The log of one session. Raises ValueError for an id `candidates.safe_session` refuses: no file takes that name."""
+    clean = candidates.safe_session(session, cut=False)
+    if clean is None:
+        raise ValueError("session id refused")
+    return state_dir / LOG_DIR / f"{clean}.jsonl"
 
 
 def _path_of(tool_input: object) -> str:
@@ -70,15 +81,16 @@ def _expire_old_logs(directory: Path, now: float) -> None:
 
 def record(state_dir: Path, payload: dict) -> bool:
     """Append one metadata line for a PostToolUse payload. Returns False when nothing was written."""
-    session = SAFE_SESSION.sub("", str(payload.get("session_id") or ""))
+    session = candidates.safe_session(str(payload.get("session_id") or ""), cut=False)
     tool = str(payload.get("tool_name") or "")
     if not session or not tool or payload.get("agent_id"):
         return False
     path = _path_of(payload.get("tool_input"))
-    if path and SKIP_PATH.search(path):
+    if path and (SKIP_PATH.search(path) or secret_scan.contains_secret_shape(path)):
         return False
     target = log_path(state_dir, session)
-    target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    target.parent.mkdir(exist_ok=True, mode=0o700)
     now = time.time()
     if not target.exists():
         _expire_old_logs(target.parent, now)
@@ -105,7 +117,7 @@ def read_log(state_dir: Path, session: str) -> list[dict]:
                 continue
             if isinstance(raw, dict) and isinstance(raw.get("tool"), str):
                 entries.append(raw)
-    except OSError:
+    except (OSError, ValueError):  # no log, or an id that can name none
         pass
     return entries
 
@@ -140,36 +152,58 @@ def analyze(entries: list[dict]) -> list[Finding]:
             findings.append(Finding(
                 "trap", f"Releitura repetida de {Path(path).name}",
                 f"{Path(path).name} foi lido {times} vezes na mesma sessao; ler o trecho necessario ou guardar "
-                f"o fato evita reprocessar o arquivo inteiro a cada turno."))
-    big = {}
+                f"o fato evita reprocessar o arquivo inteiro a cada turno.",
+                "reread", path, times))
+    big: dict[str, list[int]] = {}
     for e in entries:
         if e["tool"] == "Read" and e.get("path") and isinstance(e.get("size"), int) and e["size"] >= BIG_READ_CHARS:
-            big[e["path"]] = max(big.get(e["path"], 0), e["size"])
-    for path, size in sorted(big.items(), key=lambda kv: -kv[1]):
+            big.setdefault(e["path"], []).append(e["size"])
+    for path, sizes in sorted(big.items(), key=lambda kv: -max(kv[1])):
+        size = max(sizes)
         findings.append(Finding(
             "pattern", f"Read grande de {Path(path).name}",
             f"{Path(path).name} devolveu ~{size // 1000} mil caracteres de uma vez; buscar antes e ler so o "
-            f"trecho (offset/limit) mantem o contexto pequeno."))
+            f"trecho (offset/limit) mantem o contexto pequeno.",
+            "big", path, len(sizes), size))
     return findings
 
 
-def summarize(state_dir: Path, session: str, project: str, transcript: Path | None = None) -> dict:
-    """Queue up to MAX_CANDIDATES findings. Returns counts; idempotent because the queue dedupes by id."""
+def summarize(state_dir: Path, session: str, project: str, transcript: Path | None = None,
+              root: Path | None = None) -> dict:
+    """Queue up to MAX_CANDIDATES findings and write the usage record. With a `root`, the same findings also become
+    patch files in the state (patches.py); without one, none. Returns counts; idempotent: the queue dedupes by id and
+    counts each session once, patches are a function of the findings and the project, and the usage record is a
+    function of the transcript."""
     entries = read_log(state_dir, session)
     queued = 0
     findings = analyze(entries)
+    clean = candidates.safe_session(session, cut=False)  # None when empty or shaped like a credential
     for finding in findings[:MAX_CANDIDATES]:
         try:
-            _, created = candidates.add(state_dir, kind=finding.kind, title=finding.title,
-                                        summary=finding.summary, project=project, source="observer")
-        except candidates.QueueError:
-            continue
+            _, created = candidates.add(state_dir, kind=finding.kind, title=finding.title, summary=finding.summary,
+                                        project=project, source="observer", session=clean)
+        except (candidates.QueueError, OSError, ValueError):
+            continue  # an unwritable or damaged queue must not stop the usage record below
         queued += created
-    return {"calls": len(entries), "findings": len(findings), "queued": queued,
-            "expensive_turns": expensive_turns(transcript)}
+    proposed = 0
+    if root is not None and clean:
+        try:
+            patches.expire(state_dir)
+            proposed = patches.propose(state_dir, findings[:MAX_CANDIDATES], root=root, project=project, session=clean)
+        except (OSError, ValueError):
+            pass  # patches are best effort too: the usage record below must still run
+    record = None
+    if clean:
+        try:
+            record = usage.update(state_dir, clean, project, transcript)
+        except (OSError, ValueError, OverflowError):
+            pass  # the usage record is best effort: the candidates above already ran
+    return {"calls": len(entries), "findings": len(findings), "queued": queued, "patches": proposed,
+            "expensive_turns": expensive_turns(transcript), "usage": record}
 
 
 def format_summary(result: dict) -> str:
+    patched = f", {result['patches']} patches" if result.get("patches") else ""
     return (f"observer: {result['calls']} tool calls, {result['findings']} findings, "
-            f"{result['queued']} queued, {result['expensive_turns']} expensive turns\n")
+            f"{result['queued']} queued{patched}, {result['expensive_turns']} expensive turns\n")
 

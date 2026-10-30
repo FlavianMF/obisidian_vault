@@ -60,3 +60,12 @@ def scan_text(text: str) -> list[Finding]:
                 seen.add(label)
                 findings.append(Finding(label, number))
     return findings
+
+
+def contains_secret_shape(text: str) -> bool:
+    """True when `text` looks like a credential. Unlike scan_text, the allow marker does not exempt it.
+
+    For values the runtime stores on its own (a path, a project name): a marker in the value must not
+    let a credential through.
+    """
+    return bool(scan_text(text.replace(ALLOW_MARKER, " ")))

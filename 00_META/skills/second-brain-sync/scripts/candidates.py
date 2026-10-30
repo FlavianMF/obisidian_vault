@@ -3,6 +3,11 @@
 An agent that was corrected, or that found a trap, appends one line here instead of writing to the vault.
 The queue never touches the vault: a person turns a candidate into a note later (`sb review`, step I4).
 Each line lives 30 days; the last 7 days are flagged. The file is local state, mode 0600, one JSON object per line.
+
+Recurrence: adding a live duplicate from a session the line has not seen raises `count` and `sessions` in place and
+appends the session id to `session_ids`. The same session again changes nothing, byte for byte, so the observer can
+run on every Stop. A duplicate without a session id changes nothing either: it cannot prove another session. The
+recurrence never renews `ts`, so a line still dies 30 days after it was first seen.
 """
 from __future__ import annotations
 
@@ -18,6 +23,7 @@ from pathlib import Path
 from typing import Iterator, NamedTuple
 
 from lib import secret_scan
+from lib.session_id import MAX_SESSION_LEN, MAX_SESSION_RAW, SAFE_SESSION, safe_session  # noqa: F401  (re-exported)
 
 QUEUE_NAME = "queue.jsonl"
 KINDS = ("trap", "pattern", "decision", "concept")
@@ -28,6 +34,8 @@ MAX_SUMMARY = 500
 REVIEW_LOG = "review.jsonl"  # written by review.py; read here so a reviewed candidate never comes back
 DRAFT_DIR = "drafts"  # optional note body that travels with a candidate
 MAX_DRAFT_BYTES = 16 * 1024
+MAX_SESSION_IDS = 100  # per line; `sessions` saturates here, and the gates only ask for >= 2
+UNREADABLE = "\ufffd"  # what read_lines returns for a line that is not UTF-8: parse_line refuses it
 DECIDED_OUTCOMES = ("applied", "rejected")
 # mktemp-style suffix (`.QT9hkj`): six letters/digits with mixed case or a digit, so `.gradle` and `.json` stay.
 TEMP_SUFFIX = re.compile(r"\.(?=[A-Za-z0-9]*[A-Z0-9])(?=[A-Za-z0-9]*[a-z])[A-Za-z0-9]{6}\b")
@@ -41,6 +49,9 @@ class Candidate(NamedTuple):
     summary: str
     project: str
     source: str
+    count: int = 1  # sessions that recorded it, plus one when the line came without a session id
+    sessions: int = 0  # distinct session ids; always len(session_ids)
+    session_ids: tuple[str, ...] = ()
 
     @property
     def age_days(self) -> int:
@@ -119,7 +130,8 @@ def write_draft(state_dir: Path, cid: str, body: str) -> None:
 def locked(path: Path) -> Iterator[None]:
     """Serialise writers (two sessions can add at once); the lock file is the queue's sibling."""
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with open(path.with_suffix(".lock"), "a") as lock:
+    fd = os.open(path.with_suffix(".lock"), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)  # private, whatever the umask
+    with os.fdopen(fd, "a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         try:
             yield
@@ -127,23 +139,67 @@ def locked(path: Path) -> Iterator[None]:
             fcntl.flock(lock, fcntl.LOCK_UN)
 
 
+def recurrence(raw: dict) -> tuple[int, tuple[str, ...]]:
+    """`count` and `session_ids` of a line; a legacy or damaged line reads as count 1 with no ids."""
+    ids: list[str] = []
+    if isinstance(raw.get("session_ids"), list):
+        ids = list(dict.fromkeys(i for i in raw["session_ids"] if isinstance(i, str) and i))
+    count = raw.get("count")
+    count = count if type(count) is int and count >= 1 else 1
+    return max(count, len(ids)), tuple(ids)
+
+
 def parse_line(line: str) -> Candidate | None:
     try:
         raw = json.loads(line)
+        count, ids = recurrence(raw)
         return Candidate(
             id=str(raw["id"]), ts=dt.datetime.fromisoformat(raw["ts"]), kind=str(raw["kind"]),
             title=str(raw["title"]), summary=str(raw.get("summary", "")), project=str(raw.get("project", "")),
-            source=str(raw.get("source", "agent")),
+            source=str(raw.get("source", "agent")), count=count, sessions=len(ids), session_ids=ids,
         )
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, AttributeError):
         return None
 
 
-def read_lines(path: Path) -> list[str]:
+def parse_bytes(line: bytes) -> tuple[dict, Candidate] | None:
+    """A line as (its JSON object, its candidate), or None unless it is strict UTF-8 and a candidate."""
     try:
-        return [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        text = line.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    item = parse_line(text)
+    return None if item is None else (json.loads(text), item)
+
+
+def read_lines(path: Path) -> list[str]:
+    """Non-blank lines, split on newline only. A line that is not UTF-8 comes back as UNREADABLE, never raises."""
+    try:
+        data = path.read_bytes()
     except OSError:
         return []
+    lines = []
+    for raw in data.split(b"\n"):
+        try:
+            line = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            line = UNREADABLE
+        if line.strip():
+            lines.append(line)
+    return lines
+
+
+def replace_file(path: Path, data: bytes) -> None:
+    """Swap the queue for `data` in one step, mode 0600; the temp file is removed if anything fails."""
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".queue-")
+    try:
+        with os.fdopen(fd, "wb") as out:
+            out.write(data)
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 def load(state_dir: Path, include_decided: bool = False) -> tuple[list[Candidate], int]:
@@ -164,11 +220,13 @@ def live(items: list[Candidate]) -> list[Candidate]:
 
 
 def add(state_dir: Path, *, kind: str, title: str, summary: str, project: str, source: str = "agent",
-        body: str | None = None) -> tuple[str, bool]:
+        body: str | None = None, session: str | None = None) -> tuple[str, bool]:
     """Append a candidate. Returns (id, created).
 
-    Not queued again: an identical live candidate, or one the review already decided (`was_decided`).
-    `body` is an optional note draft that travels with the candidate (stored 0600, same lifetime).
+    Not queued again: an identical live candidate, or one the review already decided (`was_decided`). A live
+    duplicate from a new `session` raises `count` and `sessions` in the first live line; the same session, or no
+    session, changes nothing. `body` is an optional note draft that travels with the candidate (stored 0600, same
+    lifetime). An unusable session id (empty, or shaped like a credential) is the same as none.
     """
     title, summary, project = normalize(title), normalize(summary), normalize(project)
     if kind not in KINDS:
@@ -182,44 +240,71 @@ def add(state_dir: Path, *, kind: str, title: str, summary: str, project: str, s
     if body is not None and len(body.encode("utf-8")) > MAX_DRAFT_BYTES:
         raise QueueError(f"draft is over {MAX_DRAFT_BYTES // 1024} KB")
     findings = secret_scan.scan_text(f"{title}\n{summary}\n{body or ''}")
+    if secret_scan.contains_secret_shape(project):  # a folder name can carry a token; the marker does not excuse it
+        raise QueueError("project looks like a secret; nothing was queued")
     if findings:
         labels = ", ".join(sorted({f.label for f in findings}))
         raise QueueError(f"looks like a secret ({labels}); nothing was queued")
     cid = candidate_id(kind, title, project)
+    sid = safe_session(session)
     path = queue_path(state_dir)
     with locked(path):
         if cid in decided_ids(state_dir):
             return cid, False
-        items, _ = load(state_dir)
-        if any(i.id == cid and i.days_left > 0 for i in items):
+        try:
+            data = path.read_bytes()
+        except OSError:
+            data = b""
+        rows = data.split(b"\n") if data else []
+        for index, row in enumerate(rows):
+            parsed = parse_bytes(row)
+            if parsed is None or parsed[1].id != cid or parsed[1].days_left <= 0:
+                continue
+            obj, item = parsed
+            ids = list(item.session_ids)
+            if sid is not None and sid not in ids and len(ids) < MAX_SESSION_IDS:
+                ids.append(sid)
+                obj.update(count=item.count + 1, sessions=len(ids), session_ids=ids)
+                try:
+                    rows[index] = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+                except UnicodeEncodeError:  # a lone surrogate that json.loads accepted
+                    rows[index] = json.dumps(obj).encode("utf-8")
+                replace_file(path, b"\n".join(rows))
             return cid, False
         if body:
             write_draft(state_dir, cid, body)
         entry = {"id": cid, "ts": utcnow().isoformat(timespec="seconds"), "kind": kind, "title": title,
-                 "summary": summary, "project": project, "source": source}
+                 "summary": summary, "project": project, "source": source, "count": 1,
+                 "sessions": 1 if sid else 0, "session_ids": [sid] if sid else []}
+        gap = b"\n" if data and not data.endswith(b"\n") else b""  # never glue onto an unterminated last line
         fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
-        with os.fdopen(fd, "a", encoding="utf-8") as out:
-            out.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        with os.fdopen(fd, "ab") as out:
+            out.write(gap + (json.dumps(entry, ensure_ascii=False) + "\n").encode("utf-8"))
     return cid, True
 
 
+def get(state_dir: Path, cid: str) -> Candidate | None:
+    """The first live, undecided candidate with this id."""
+    return next((i for i in live(load(state_dir)[0]) if i.id == cid), None)
+
+
 def prune(state_dir: Path, *, apply: bool) -> list[Candidate]:
-    """Drop expired candidates (unparsable lines are kept: they are not ours to delete). Dry run unless `apply`."""
+    """Drop expired candidates (every other line, readable or not, is kept byte for byte). Dry run unless `apply`."""
     path = queue_path(state_dir)
     with locked(path):
+        try:
+            rows = path.read_bytes().split(b"\n")
+        except OSError:
+            return []
         kept, expired = [], []
-        for line in read_lines(path):
-            item = parse_line(line)
-            if item is not None and item.days_left <= 0:
-                expired.append(item)
+        for row in rows:
+            parsed = parse_bytes(row)
+            if parsed is not None and parsed[1].days_left <= 0:
+                expired.append(parsed[1])
             else:
-                kept.append(line)
+                kept.append(row)
         if apply and expired:
-            fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".queue-")
-            with os.fdopen(fd, "w", encoding="utf-8") as out:
-                out.write("".join(line + "\n" for line in kept))
-            os.chmod(tmp, 0o600)
-            os.replace(tmp, path)
+            replace_file(path, b"\n".join(kept))
             for item in expired:
                 remove_draft(state_dir, item.id)
     return expired

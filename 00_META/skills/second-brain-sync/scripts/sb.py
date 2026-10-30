@@ -13,6 +13,12 @@ single writer and delegates every guard to vault_sync.py.
                             queue of note candidates (local state, 30-day TTL); never writes the vault
   sb observe record|summarize
                             deterministic observer: tool-call metadata log (PostToolUse), candidates (Stop)
+  sb patch list|show|apply  patches the observer proposed (a line for CLAUDE.md/AGENTS.md, a permissions.deny entry);
+                            `apply <id>` is a dry run, `apply <id> --apply` is the one command that writes a project
+  sb task set <feature|bugfix|pesquisa|docs>
+                            category of the current session (CLAUDE_CODE_SESSION_ID or --session), kept for the usage record
+  sb usage report [--days N] [--json]
+                            tokens per task category and usage-limit notices per week; reads local state only
   sb review capture next|apply|drop
                             review the candidate queue; dry run unless --apply, writes only via vault_sync.py
   sb review promote next|apply
@@ -42,8 +48,10 @@ sys.path.insert(0, str(HERE))
 import candidates  # noqa: E402
 import ctxpack  # noqa: E402
 import observe  # noqa: E402
+import patches  # noqa: E402
 import review  # noqa: E402
 import review_notes  # noqa: E402
+import usage  # noqa: E402
 import generate_manifests as gm  # noqa: E402
 from lib import frontmatter, secret_scan  # noqa: E402
 
@@ -351,17 +359,30 @@ def read_body(source: str) -> str | None:
 def run_candidate(args, state_dir: Path) -> int:
     if args.action == "add":
         project = args.project or detect_project()
+        session = args.session if args.session is not None else os.environ.get("CLAUDE_CODE_SESSION_ID")
+        if session and observe.SAFE_SESSION.sub("", session) and candidates.safe_session(session) is None:
+            sys.stderr.write(f"sb candidate: session id refused (over {candidates.MAX_SESSION_RAW} characters "
+                             "or shaped like a credential)\n")
+            return 2
         try:
             body = read_body(args.body_file)
             cid, created = candidates.add(state_dir, kind=args.kind, title=args.title, summary=args.summary,
-                                          project=project, source=args.source, body=body)
+                                          project=project, source=args.source, body=body, session=session)
+            seen = None if created else candidates.get(state_dir, cid)
+            reviewed = not created and seen is None and candidates.was_decided(state_dir, cid)
         except candidates.QueueError as err:
             sys.stderr.write(f"sb candidate: {err}\n")
             return 2
+        except OSError as err:
+            sys.stderr.write(f"sb candidate: cannot write the queue ({err.strerror or 'error'})\n")
+            return 2
         if created:
             sys.stdout.write(f"queued: {cid}\n")
+        elif reviewed:
+            sys.stdout.write(f"already reviewed: {cid}\n")
         else:
-            sys.stdout.write(f"{'already reviewed' if candidates.was_decided(state_dir, cid) else 'already queued'}: {cid}\n")
+            again = f" (seen {seen.count}x, {seen.sessions} sessions)" if seen and seen.count > 1 else ""
+            sys.stdout.write(f"already queued: {cid}{again}\n")
         return 0
     if args.action == "list":
         items, bad = candidates.load(state_dir)
@@ -373,7 +394,11 @@ def run_candidate(args, state_dir: Path) -> int:
         else:
             sys.stdout.write(candidates.format_list(pending, len(items) - len(pending), bad))
         return 0
-    removed = candidates.prune(state_dir, apply=args.apply)
+    try:
+        removed = candidates.prune(state_dir, apply=args.apply)
+    except OSError as err:
+        sys.stderr.write(f"sb candidate: cannot write the queue ({err.strerror or 'error'})\n")
+        return 2
     verb = "removed" if args.apply else "would remove (dry run, add --apply)"
     for item in removed:
         sys.stdout.write(f"{verb}: {item.id} {item.kind} {item.age_days}d {item.title}\n")
@@ -445,20 +470,96 @@ def run_observe(args, state_dir: Path) -> int:
             observe.record(state_dir, payload)
         return 0  # hook contract: never blocks the tool call
     transcript = Path(args.transcript).expanduser() if args.transcript else None
-    result = observe.summarize(state_dir, args.session, args.project or detect_project(), transcript)
+    root, name = detect_root()
+    result = observe.summarize(state_dir, args.session, args.project or name, transcript, root=root)
     sys.stdout.write(observe.format_summary(result))
     return 0
 
 
-def detect_project() -> str:
-    """Name of the git repo the agent is working in; the folder name outside a repo."""
+def run_task(args, state_dir: Path) -> int:
+    raw = args.session if args.session is not None else os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    if not observe.SAFE_SESSION.sub("", raw):
+        sys.stderr.write("sb task: no session id; set CLAUDE_CODE_SESSION_ID or pass --session\n")
+        return 2
+    session = candidates.safe_session(raw, cut=False)
+    if session is None:
+        sys.stderr.write(f"sb task: session id refused (over {candidates.MAX_SESSION_RAW} characters "
+                         "or shaped like a credential)\n")
+        return 2
+    try:
+        usage.write_task(state_dir, session, args.category)
+    except (OSError, ValueError) as err:
+        sys.stderr.write(f"sb task: cannot save the category: {err}\n")
+        return 2
+    sys.stdout.write(f"task: {args.category} (sessao {session})\n")
+    return 0
+
+
+def run_usage(args, state_dir: Path) -> int:
+    if not 1 <= args.days <= usage.MAX_DAYS:
+        sys.stderr.write(f"sb usage: --days must be between 1 and {usage.MAX_DAYS}\n")
+        return 2
+    try:
+        report = usage.build_report(state_dir, args.days, args.today or usage.utcnow().date())
+    except OverflowError:
+        sys.stderr.write("sb usage: --today and --days give a date out of range\n")
+        return 2
+    if args.json:
+        json.dump(report, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+    else:
+        sys.stdout.write(usage.format_report(report))
+    return 0
+
+
+def detect_root() -> tuple[Path, str]:
+    """Root and name of the git repo the agent is working in (one `git rev-parse`); the folder itself outside a repo."""
     try:
         top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5)
         if top.returncode == 0 and top.stdout.strip():
-            return Path(top.stdout.strip()).name
+            root = Path(top.stdout.strip())
+            return root, root.name
     except (OSError, subprocess.SubprocessError):
         pass
-    return Path.cwd().name
+    cwd = Path.cwd()
+    return cwd, cwd.name
+
+
+def detect_project() -> str:
+    """Name of the git repo the agent is working in; the folder name outside a repo."""
+    return detect_root()[1]
+
+
+def run_patch(args, state_dir: Path) -> int:
+    if args.action == "list":
+        found = patches.list_patches(state_dir)
+        if args.json:
+            json.dump([{**m._asdict(), "session_ids": list(m.session_ids), "sessions": m.sessions,
+                        "days_left": m.days_left} for m in found], sys.stdout, ensure_ascii=False, indent=2)
+            sys.stdout.write("\n")
+            return 0
+        for m in found:
+            sys.stdout.write(f"{m.id}  {m.rule:<6} {m.target}  {m.project}: {m.file}  count {m.count}, "
+                             f"sessions {m.sessions}, left {m.days_left}d\n")
+        sys.stdout.write(f"patches: {len(found)} pending\n")
+        return 0
+    data = patches.read(state_dir, args.id)
+    if data is None:
+        sys.stderr.write(f"sb patch: unknown patch {args.id!r} (ids are 8 hex characters)\n")
+        return 2
+    if args.action == "show":
+        sys.stdout.write(data.decode("utf-8", errors="replace"))
+        return 0
+    import patch_apply  # the only import of the project writer: reached by `patch apply` alone
+
+    result = patch_apply.apply_patch(state_dir, args.id, write=args.apply)
+    if result.code != 0:
+        sys.stderr.write(result.message + "\n")
+        return result.code
+    if result.diff:
+        sys.stdout.write(f"target: {result.target}\n{result.diff}")
+    sys.stdout.write(result.message + "\n")
+    return 0
 
 
 def run_sync(rest: list[str]) -> int:
@@ -525,6 +626,8 @@ def build_parser() -> argparse.ArgumentParser:
     cand_add.add_argument("--summary", default="", help=f"up to {candidates.MAX_SUMMARY} characters, no secrets")
     cand_add.add_argument("--project", default="", help="default: the git repo name")
     cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc", "observer"))
+    cand_add.add_argument("--session", default=None, help="session id, default: CLAUDE_CODE_SESSION_ID; "
+                          "a repeat from the same session does not count as a recurrence")
     cand_add.add_argument("--body-file", default="", help="note draft to keep with the candidate: a path or - for stdin "
                           f"(up to {candidates.MAX_DRAFT_BYTES // 1024} KB, no secrets)")
     cand_list = cand_sub.add_parser("list", help="pending candidates, oldest first")
@@ -538,6 +641,24 @@ def build_parser() -> argparse.ArgumentParser:
     obs_sum.add_argument("--session", required=True)
     obs_sum.add_argument("--project", default="", help="default: the git repo name")
     obs_sum.add_argument("--transcript", default="", help="transcript path, read for numeric usage only")
+    patch = sub.add_parser("patch", parents=[common], help="patches the observer proposed (dry run by default)")
+    patch_sub = patch.add_subparsers(dest="action", required=True)
+    patch_list = patch_sub.add_parser("list", help="pending patches")
+    patch_list.add_argument("--json", action="store_true")
+    patch_sub.add_parser("show", help="print one patch file").add_argument("id")
+    apply_cmd = patch_sub.add_parser("apply", help="check one patch against its project; with --apply, write it")
+    apply_cmd.add_argument("id")
+    apply_cmd.add_argument("--apply", action="store_true", help="write the target in the patch's project root")
+    task = sub.add_parser("task", parents=[common], help="category of the current session")
+    task_set = task.add_subparsers(dest="action", required=True).add_parser("set", help="annotate the session")
+    task_set.add_argument("category", choices=usage.CATEGORIES)
+    task_set.add_argument("--session", default=None, help="default: CLAUDE_CODE_SESSION_ID")
+    use = sub.add_parser("usage", parents=[common], help="token usage per session (numbers only)")
+    use_report = use.add_subparsers(dest="action", required=True).add_parser(
+        "report", help="tokens per category and usage-limit notices per week")
+    use_report.add_argument("--days", type=int, default=30, help=f"window in days, 1 to {usage.MAX_DAYS} (default 30)")
+    use_report.add_argument("--json", action="store_true")
+    use_report.add_argument("--today", type=dt.date.fromisoformat, default=None, help=argparse.SUPPRESS)
     ctx = sub.add_parser("ctx", parents=[common], help="session context pack for subagents (hook payload on stdin)")
     ctx.add_argument("action", choices=("record-read", "record-finding", "render", "prune"))
     rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
@@ -594,6 +715,12 @@ def main(argv: list[str] | None = None) -> int:
         return ctxpack.run(args.action, state_dir, sys.stdin, sys.stdout, os.environ)
     if args.command == "observe":
         return run_observe(args, state_dir)
+    if args.command == "patch":
+        return run_patch(args, state_dir)
+    if args.command == "task":
+        return run_task(args, state_dir)
+    if args.command == "usage":
+        return run_usage(args, state_dir)
     if args.command == "review":
         return run_review(args, vault, state_dir)
     if args.command == "search":

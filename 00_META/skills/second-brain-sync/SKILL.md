@@ -367,10 +367,22 @@ pattern mid-task, run `sb.py candidate add --kind trap|pattern|decision|concept 
 --summary "..."` instead of writing the vault. The queue is local state
 (`~/.local/state/second-brain/queue.jsonl`, mode 0600), each line expires after 30 days, and the
 command refuses text that looks like a secret. `list` shows pending lines (the last 7 days are
-flagged) and `prune` removes expired ones (dry run unless `--apply`). `--body-file PATH|-` keeps a
+flagged) and `prune` removes expired ones (dry run unless `--apply`). A duplicate is not queued again: it records a
+recurrence. A live duplicate from a new session raises `count` and `sessions` on the existing line (and adds the
+session id to `session_ids`); the same session again, or a call with no session id, changes nothing, so the Stop
+hook can run on every turn. `--session ID` (default `CLAUDE_CODE_SESSION_ID`) names the session. The recurrence does
+not renew the 30 days, and a candidate the review already decided never comes back. `--body-file PATH|-` keeps a
 draft of the note body (up to 16 KB, no secrets) with the candidate: write it while you still have
 the context, because the summary alone (500 characters) is too thin for a good note. Nothing in the
 queue reaches the vault until a person reviews it.
+
+**`sb task` and `sb usage` (token usage per task; numbers only).** At the start of a task, run
+`sb.py task set feature|bugfix|pesquisa|docs`. The category belongs to the current session only
+(`CLAUDE_CODE_SESSION_ID`, or `--session`). At the end of every turn the Stop hook writes one record per
+session to `~/.local/state/second-brain/usage/` (date, project, category, tokens, usage-limit notices; mode 0600,
+90-day TTL). It never stores message text or the text of a notice. `sb.py usage report [--days N] [--json]` shows
+tokens per category and usage-limit notices per week. The token figures use the same formula as
+`00_META/eval/usage_baseline.sh`.
 
 **`sb review capture` (review of the queue; only when the user asks for it).**
 1. `sb.py review capture next` prints a batch (default 5). Each candidate is inside an "untrusted
@@ -415,6 +427,20 @@ one decision is invalid, and both log to `review.jsonl` with `stage` and `note`.
   refused` with `reason` (`keep` decisions stay logged). If the commit is local and the push is
   pending, the outcome is normal, the event carries `detail`, and the text prints it: rerun `sb
   sync`. Do not decide for the user: show the plan and wait.
+
+**`sb patch` (patches the observer proposes; only when the user asks for it).** At each Stop the
+observer turns a repeated finding into a patch file under `<state>/patches/` (30-day TTL, at most 50):
+a line for the project's `CLAUDE.md` or `AGENTS.md` (a file read 3 times, or a read of 40,000
+characters or more), and, for a big read seen in 2 sessions, a `permissions.deny` entry in
+`.claude/settings.local.json`. A patch is a pure insertion: the diff holds `+` lines only, so no byte
+of the project reaches the state. Nothing writes a project until the user says so.
+- `sb.py patch list [--json]` and `sb.py patch show <id>` only read.
+- `sb.py patch apply <id>` is a dry run: it prints the target, the diff and `would apply`. Exit 1
+  when the patch no longer applies cleanly (the target changed, or the patch was edited).
+- `sb.py patch apply <id> --apply` is the one command that writes a project: it writes the target
+  named in the patch header and deletes the patch. Show the dry run first and wait for the user.
+- The `deny` entry blocks every `Read` of the file, `offset`/`limit` included, while the line patch
+  advises reading with `offset`/`limit`. Tell the user before applying both.
 
 ## Guardrails
 
