@@ -1,0 +1,21 @@
+<div id="drop" role="dialog" aria-modal="true" aria-labelledby="drop-heading" data-modal="drop"
+     class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl p-5 space-y-3">
+    <h2 id="drop-heading" class="text-sm font-semibold text-zinc-100">Motivo do descarte</h2>
+    <p id="drop-title" class="text-xs text-zinc-400 break-words"></p>
+    <textarea id="drop-reason" maxlength="300" rows="4" spellcheck="false" aria-label="Motivo do descarte"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500"></textarea>
+    <div class="flex items-center justify-between text-xs text-zinc-400">
+      <span id="drop-status" aria-live="polite"></span>
+      <span><span id="drop-count">0</span>/300</span>
+    </div>
+    <div id="drop-alert" role="alert" class="text-xs text-red-300 whitespace-pre-wrap break-words" hidden></div>
+    <div class="flex items-center justify-between">
+      <span class="text-[11px] text-zinc-400"><span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> confirma · <span class="kbd">Esc</span> cancela</span>
+      <div class="flex gap-2">
+        <button type="button" id="drop-cancel" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs rounded border border-zinc-700 text-zinc-200">Cancelar</button>
+        <button type="button" id="drop-confirm" disabled class="px-4 py-1.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded">Descartar</button>
+      </div>
+    </div>
+  </div>
+</div>

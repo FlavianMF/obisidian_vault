@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Second Brain · Revisão de candidatos</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
+    .kbd { background: #27272a; border: 1px solid #3f3f46; border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 600; color: #e4e4e7; }
+    button { cursor: pointer; } button:disabled { opacity: .45; cursor: not-allowed; }
+    .inflight { opacity: .5; pointer-events: none; }
+    #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    #stage { display: flex; flex: 1; min-height: 0; }
+    #card { display: flex; flex: 1; min-height: 0; }
+    #card > section { width: 50%; overflow-y: auto; }
+    #toasts { position: fixed; right: 16px; bottom: 80px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+    .toast { padding: 8px 14px; border-radius: 6px; font-size: 13px; border: 1px solid; max-width: 420px; }
+    .toast-success { background: #052e1c; color: #6ee7b7; border-color: #065f46; }
+    .toast-info { background: #0c1a3a; color: #93c5fd; border-color: #1e40af; }
+    .toast-error { background: #3b0a0a; color: #fca5a5; border-color: #991b1b; }
+  </style>
+</head>
+<body>
+<div id="app" data-query='{{ query|tojson }}'>
+  <header class="h-14 border-b border-zinc-800 px-6 flex items-center justify-between bg-zinc-900/60 shrink-0">
+    <div class="flex items-center gap-4">
+      <span class="text-xl font-bold text-violet-300">Second Brain</span>
+      <span class="text-xs text-zinc-400 font-mono">Review Hub</span>
+      <span id="pending" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/30">{{ pending }} pendentes</span>
+      <span class="text-xs text-zinc-300">Hoje: <strong id="today-applied" class="text-emerald-400">{{ today_applied }}</strong> aprovadas, <strong id="today-rejected" class="text-zinc-300">{{ today_rejected }}</strong> descartadas</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-xs text-zinc-300">
+        <label for="filter-project" class="text-zinc-400 font-medium">Projeto:</label>
+        <select id="filter-project" aria-label="Filtrar por projeto"
+                class="bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs rounded px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-violet-500">
+          <option value="">Todos os projetos</option>
+          {% for p in projects %}
+          <option value="{{ p }}" {% if current_project == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs text-zinc-300">
+        <label for="filter-kind" class="text-zinc-400 font-medium">Tipo:</label>
+        <select id="filter-kind" aria-label="Filtrar por tipo"
+                class="bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs rounded px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-violet-500">
+          <option value="">Todos os tipos</option>
+          {% for k in kinds %}
+          <option value="{{ k }}" {% if current_kind == k %}selected{% endif %}>{{ k }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="button" data-key="z" class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded border border-zinc-700 text-zinc-200">Desfazer <span class="kbd">Z</span></button>
+    </div>
+  </header>
+  <main id="stage">{% include "_candidate.html" %}</main>
+  <footer class="h-16 border-t border-zinc-800 px-6 flex items-center justify-between bg-zinc-900/90 shrink-0">
+    <div class="flex items-center gap-4 text-xs text-zinc-300">
+      <span>Item <strong id="pos">{{ offset + 1 if total else 0 }}</strong> de <strong id="total">{{ total }}</strong></span>
+      <span>Navegar: <button type="button" data-key="k" class="kbd">K</button> <button type="button" data-key="j" class="kbd">J</button></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button type="button" data-key="p" class="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-md border border-zinc-700">Pular <span class="kbd">P</span></button>
+      <button type="button" data-key="d" class="flex items-center gap-1.5 px-4 py-2 bg-red-950/60 hover:bg-red-900/70 text-red-300 text-xs font-semibold rounded-md border border-red-800/60">Descartar <span class="kbd">D</span></button>
+      <button type="button" data-key="a" class="flex items-center gap-1.5 px-4 py-2 bg-blue-950/60 hover:bg-blue-900/70 text-blue-300 text-xs font-semibold rounded-md border border-blue-800/60">Absorver <span class="kbd">A</span></button>
+      <button type="button" data-key="e" class="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-300 text-xs font-semibold rounded-md border border-amber-800/40">Editar <span class="kbd">E</span></button>
+      <button type="button" data-key="s" class="flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-md">Aprovar (Salvar) <span class="kbd">S</span></button>
+    </div>
+  </footer>
+</div>
+<div id="overlay"></div>
+<template id="drop-template">{% include "_drop.html" %}</template>
+<div id="toasts" role="status" aria-live="polite"></div>
+<script id="shortcuts" type="application/json">{{ shortcuts_json|safe }}</script>
+<script src="/static/review.js"></script>
+</body>
+</html>

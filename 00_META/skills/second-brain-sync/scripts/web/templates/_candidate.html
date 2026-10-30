@@ -1,0 +1,67 @@
+{% if item is none %}
+<div id="card" data-empty="true" data-offset="0" data-total="0" class="flex-1 flex items-center justify-center p-10 text-zinc-400">
+  <div class="text-center">
+    <p class="text-lg font-semibold text-zinc-200">Fila vazia</p>
+    <p class="text-sm mt-1">Nenhum candidato pendente. Tecle <span class="kbd">Z</span> para desfazer a última decisão.</p>
+  </div>
+</div>
+{% else %}
+{% set kind_class = {'trap': 'bg-orange-500/10 text-orange-300 border-orange-500/30', 'pattern': 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', 'decision': 'bg-violet-500/10 text-violet-300 border-violet-500/30', 'concept': 'bg-blue-500/10 text-blue-300 border-blue-500/30'}.get(item.kind, 'bg-zinc-800 text-zinc-300 border-zinc-700') %}
+{% set verdict_class = {'save': 'bg-emerald-950/30 border-emerald-800/50 text-emerald-300', 'absorb': 'bg-blue-950/30 border-blue-800/50 text-blue-300', 'drop': 'bg-red-950/20 border-red-900/40 text-red-300'}.get(item.proposal, 'bg-zinc-900 border-zinc-700 text-zinc-300') %}
+<div id="card" class="flex flex-1 min-h-0" data-empty="false" data-id="{{ item.id }}" data-offset="{{ offset }}"
+     data-total="{{ total }}" data-kind="{{ item.kind }}" data-proposal="{{ item.proposal }}"
+     data-absorb-target="{{ item.similar[0].path if item.similar else '' }}">
+  <section class="w-1/2 p-6 flex flex-col border-r border-zinc-800 overflow-y-auto" aria-label="Candidato">
+    <div class="flex items-center justify-between mb-4 gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="kind-badge px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border {{ kind_class }}">{{ item.kind }}</span>
+        <span class="text-xs text-zinc-300 font-mono">{{ item.project or '-' }}</span>
+        <span class="text-zinc-500">•</span>
+        <span class="text-xs {{ 'text-red-300' if item.days_left <= 7 else 'text-zinc-400' }}">{{ item.days_left }} dias restantes de TTL</span>
+      </div>
+      <div class="text-xs text-zinc-400 font-mono">ID: {{ item.id }}</div>
+    </div>
+    <h1 class="text-xl font-bold text-zinc-100 mb-3 leading-snug break-words">{{ item.title }}</h1>
+    <div class="bg-zinc-900/80 border border-zinc-800 rounded-lg p-4 mb-4 text-sm text-zinc-200 leading-relaxed break-words">
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Resumo do Candidato</div>
+      {{ item.summary }}
+    </div>
+    {% if item.has_draft %}
+    <div class="border border-zinc-800 rounded-lg p-3 bg-zinc-950/40">
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Rascunho</div>
+      <pre class="draft text-xs text-zinc-300 whitespace-pre-wrap break-words font-mono">{{ item.draft_content }}</pre>
+    </div>
+    {% else %}
+    <div class="border border-dashed border-zinc-800 rounded-lg p-3 bg-zinc-950/40 text-xs text-zinc-400">
+      <span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-2"></span>Sem rascunho: o corpo será gerado a partir do resumo.
+    </div>
+    {% endif %}
+    <div class="mt-auto pt-6 text-xs text-zinc-400 flex items-center gap-4 flex-wrap">
+      <span>Fonte: <strong>{{ item.source }}</strong></span>
+      <span>Sessões: <strong>{{ item.sessions }}</strong></span>
+      <span>Primeiro registro: <strong>{{ item.ts[:10] }}</strong> ({{ item.age_days }}d)</span>
+    </div>
+  </section>
+  <section class="w-1/2 p-6 flex flex-col overflow-y-auto bg-zinc-950" aria-label="Análise">
+    <div class="proposal p-4 rounded-lg border mb-6 {{ verdict_class }}">
+      <div class="font-semibold text-xs mb-1">Proposta automática: {{ item.proposal|upper }}</div>
+      {% if item.proposal_detail %}<p class="text-xs text-zinc-300 leading-relaxed break-words">{{ item.proposal_detail }}</p>{% endif %}
+    </div>
+    <div class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Notas similares no vault (ranker L1)</div>
+    <div class="space-y-3 flex-1">
+      {% for note in item.similar %}
+      <div class="similar p-3.5 rounded-lg border {{ 'border-violet-500/50 bg-zinc-900/70' if loop.first else 'border-zinc-800 bg-zinc-900/30' }}">
+        <div class="flex items-center justify-between mb-1.5 gap-2">
+          <span class="text-sm font-semibold text-zinc-100 break-words">{{ note.title }}</span>
+          <span class="coverage px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-zinc-200 whitespace-nowrap">{{ '%.0f' % (note.coverage * 100) }}% cobertura</span>
+        </div>
+        <div class="text-xs text-zinc-400 font-mono break-all">{{ note.path }}</div>
+        {% if loop.first %}<div class="mt-1 text-[11px] text-violet-300">Alvo de absorb <span class="kbd">A</span></div>{% endif %}
+      </div>
+      {% else %}
+      <p class="text-xs text-zinc-400">Nenhuma nota similar encontrada.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endif %}

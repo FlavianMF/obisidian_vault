@@ -418,6 +418,15 @@ def broken_links(vault: Path, stale_days: int, today: dt.date) -> dict[str, list
 
 def run_review(args, vault: Path, state_dir: Path) -> int:
     """`sb review capture next|apply|drop`: the session's agent drafts, the user approves, vault_sync.py writes."""
+    if args.stage == "web":
+        import web_service
+        return web_service.run_server(
+            vault,
+            state_dir,
+            host=args.host,
+            port=args.port,
+            open_browser=not args.no_browser,
+        )
     if args.stage in ("promote", "stock") and args.action == "next":
         if args.stage == "promote":
             sys.stdout.write(review_notes.run_promote_next(vault, state_dir, limit=args.limit))
@@ -663,6 +672,10 @@ def build_parser() -> argparse.ArgumentParser:
     ctx.add_argument("action", choices=("record-read", "record-finding", "render", "prune"))
     rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
     stages = rev.add_subparsers(dest="stage", required=True)
+    web = stages.add_parser("web", help="local web review interface for candidate triage")
+    web.add_argument("--host", default="127.0.0.1", help="host to bind (default: 127.0.0.1)")
+    web.add_argument("--port", type=int, default=8000, help="port to bind (default: 8000)")
+    web.add_argument("--no-browser", action="store_true", help="do not open browser automatically")
     stage = stages.add_parser("capture", help="candidates to notes")
     promote = stages.add_parser("promote", help="notes worth an Agent-Instruction.md entry").add_subparsers(
         dest="action", required=True)
