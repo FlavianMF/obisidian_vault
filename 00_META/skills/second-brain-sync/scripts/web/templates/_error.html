@@ -1,0 +1,4 @@
+<div id="card" data-error="true" data-code="{{ code }}" class="p-6 text-sm text-red-300">
+  <p class="font-semibold">{{ detail }}</p>
+  {% if errors %}<ul class="mt-2 list-disc pl-5 text-xs">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+</div>

@@ -1,0 +1,44 @@
+<aside id="editor" role="dialog" aria-modal="true" aria-labelledby="ed-heading" data-modal="editor" data-id="{{ item.id }}"
+       data-kind="{{ item.kind }}" class="fixed inset-y-0 right-0 z-40 w-full sm:w-[640px] bg-zinc-900 border-l border-zinc-700 shadow-2xl flex flex-col">
+  <header class="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
+    <h2 id="ed-heading" class="text-sm font-semibold text-zinc-100">Editar candidato <span class="font-mono text-zinc-400">{{ item.id }}</span></h2>
+    <span id="ed-status" class="text-xs text-zinc-400" aria-live="polite"></span>
+  </header>
+  <form id="ed-form" class="flex-1 min-h-0 overflow-y-auto p-5 space-y-4" onsubmit="return false">
+    <fieldset class="flex items-center gap-4 text-xs text-zinc-300">
+      <legend class="sr-only">Ação</legend>
+      <label class="flex items-center gap-1.5"><input type="radio" name="mode" value="save" {{ 'checked' if mode == 'save' }}> Salvar como nova nota</label>
+      <label class="flex items-center gap-1.5"><input type="radio" name="mode" value="absorb" {{ 'checked' if mode == 'absorb' }} {{ 'disabled' if not targets }}> Absorver em nota existente</label>
+    </fieldset>
+    <label class="block text-xs text-zinc-300">Título
+      <input id="ed-title" name="title" type="text" value="{{ title }}" autocomplete="off"
+             class="mt-1 w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-violet-500">
+    </label>
+    <label class="block text-xs text-zinc-300">Tags (separadas por vírgula)
+      <input id="ed-tags" name="tags" type="text" value="{{ tags }}" autocomplete="off"
+             class="mt-1 w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-violet-500">
+    </label>
+    <label class="block text-xs text-zinc-300">Nota de destino (absorb)
+      <select id="ed-note" name="note" {{ 'disabled' if mode != 'absorb' }}
+              class="mt-1 w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-violet-500 disabled:opacity-50">
+        {% for path in targets %}<option value="{{ path }}" {{ 'selected' if path == target }}>{{ path }}</option>{% endfor %}
+      </select>
+    </label>
+    <label id="ed-because-wrap" class="block text-xs text-zinc-300" hidden>Por que é novo? (já existe nota parecida)
+      <input id="ed-because" name="new_because" type="text" autocomplete="off"
+             class="mt-1 w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-violet-500">
+    </label>
+    <label class="block text-xs text-zinc-300">{{ 'Nota inteira atualizada (Markdown com frontmatter)' if mode == 'absorb' else 'Corpo (Markdown)' }}
+      <textarea id="ed-body" name="body" spellcheck="false"
+                class="mt-1 w-full min-h-[50vh] resize-y bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-xs text-zinc-100 font-mono leading-relaxed focus:outline-none focus:border-violet-500">{{ body }}</textarea>
+    </label>
+    <div id="ed-alert" role="alert" class="text-xs text-red-300 whitespace-pre-wrap break-words" hidden></div>
+  </form>
+  <footer class="px-5 py-3 border-t border-zinc-800 flex items-center justify-between">
+    <span class="text-[11px] text-zinc-400"><span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> confirma · <span class="kbd">Esc</span> cancela</span>
+    <div class="flex gap-2">
+      <button type="button" id="ed-cancel" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs rounded border border-zinc-700 text-zinc-200">Cancelar</button>
+      <button type="button" id="ed-confirm" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded">Confirmar</button>
+    </div>
+  </footer>
+</aside>

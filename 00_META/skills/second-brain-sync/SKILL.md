@@ -386,6 +386,13 @@ session to `~/.local/state/second-brain/usage/` (date, project, category, tokens
 tokens per category and usage-limit notices per week. The token figures use the same formula as
 `00_META/eval/usage_baseline.sh`.
 
+**`sb review web` (interface web local de triagem; ativada via `/review-web` ou `/sb-review`).**
+Inicia a aplicação web FastAPI local sob demanda para revisão split-view dos candidatos com atalhos de teclado (S/A/D/P/E/Z/J/K), drawer de edição in-browser, filtros por projeto/tipo e persistência delegada a `vault_sync.py`:
+```bash
+python3 ~/obsidian_vault/00_META/skills/second-brain-sync/scripts/sb.py review web [--port 8000] [--no-browser]
+```
+Abre automaticamente o navegador padrão em `http://127.0.0.1:8000/`. Os harnesses suportam ativação direta via comando slash `/review-web` (ou `/sb-review`).
+
 **`sb review capture` (review of the queue; only when the user asks for it).**
 1. `sb.py review capture next` prints a batch (default 5). Each candidate is inside an "untrusted
    data" frame, with the notes that already cover it and a proposal (`save`, `absorb`, `drop`).

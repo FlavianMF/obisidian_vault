@@ -44,6 +44,7 @@ Além dos padrões técnicos, você deve operar utilizando estas "Skills":
     - **Ao final da sessão**, destile o novo para o Vault Global e propague lá a mesma invalidação. Não encerre a sessão sem as duas coisas.
 
     Detalhe completo em [[Documentação Desatualizada é Bug, Não Dívida]]; o lado da leitura (reverificar antes de usar nota como base de decisão) em [[Notas de Análise Envelhecem em Dias - Reverificar no Código Antes de Apresentar]].
+    - **Triagem de Candidatos da Fila**: use o comando `/review-web` (ou `/sb-review`) para iniciar a interface web local FastAPI (`sb review web`) para aprovação/rejeição ágil no navegador.
 3. **Pesquisa Acadêmica**: Para temas teóricos ou inovações, siga a [[Skill - Pesquisa Acadêmica Rigorosa]]. Utilize Google Scholar, arXiv e NTRS para garantir o estado-da-arte antes de propor arquiteturas.
 4. **Ingestão de Literatura**: Sempre que citar um artigo, siga a [[Skill - Ingestão de Notas de Literatura]]. Crie a nota `[[Sobrenome Ano]]` com citação completa e **link de acesso direto** (DOI/URL).
 
