@@ -1,4 +1,7 @@
 ---
+title: "Por que tem 2 00_indice no vault?"
+type: unclassified
+created: 2026-10-29
 epoch: 1793300325043
 mode: agent
 backendId: claude

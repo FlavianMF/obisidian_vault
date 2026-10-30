@@ -1,3 +1,11 @@
+---
+title: Pesquisa Google Keep - Técnicas Avançadas de RAG e Economia de Tokens
+type: inbox
+tags: [inbox, rag, tokens]
+created: 2026-10-29
+provenance: manual
+---
+
 # Técnicas Avançadas de RAG e Economia de Tokens
 
 • Compressão Semântica: Uso de modelos menores para resumir outputs de ferramentas e trechos da conversa antes de enviar ao agente principal, reduzindo o histórico processado.
