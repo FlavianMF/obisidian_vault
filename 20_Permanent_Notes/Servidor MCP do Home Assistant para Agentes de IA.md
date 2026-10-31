@@ -5,8 +5,8 @@ tags: [home-assistant, mcp, ai-agents, automation, devops, tailscale]
 created: 2026-10-31
 provenance: dotfiles
 seen_in: [dotfiles]
-verified: 2026-10-31 via testes TDD em tests/ha_mcp_test.sh (24 assercoes) e suite completa make test no dotfiles
-confidence: medium
+verified: 2026-10-31 via testes TDD em tests/ha_mcp_test.sh e validacao de ponta a ponta com ha-mcp conectado no Claude Code e Home Assistant na Tailscale
+confidence: high
 scope: global
 ---
 
