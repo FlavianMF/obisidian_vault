@@ -632,10 +632,10 @@ def run_projects(args, vault: Path) -> int:
     except ImportError:
         sys.stderr.write("sb projects: missing dependency (PyYAML is required)\n")
         return 2
+    state_dir = Path(os.environ.get("SECOND_BRAIN_STATE_DIR") or Path.home() / ".local/state/second-brain")
     try:
         if args.action == "scan":
             import projects_scan
-            state_dir = Path(os.environ.get("SECOND_BRAIN_STATE_DIR") or Path.home() / ".local/state/second-brain")
             return projects_scan.scan(vault, state_dir, project_slug=args.project, run_tests=args.tests)
         if args.action == "list":
             return projects.cli_list(vault, as_json=args.json)
@@ -647,6 +647,63 @@ def run_projects(args, vault: Path) -> int:
             return projects.cli_archive(vault, args.slug)
         if args.action == "update":
             return projects.cli_update(vault, args.slug, proximo_passo=args.proximo_passo, bloqueio=args.bloqueio, fase=args.fase, prioridade=args.prioridade)
+        if args.action == "activity":
+            import projects_state
+            if args.activity_action == "set":
+                try:
+                    tasks = json.load(sys.stdin)
+                except Exception as exc:
+                    sys.stderr.write(f"sb projects activity set: invalid JSON input: {exc}\n")
+                    return 1
+                return projects_state.activity_set(state_dir, tasks)
+        if args.action == "pause":
+            import projects_state
+            return projects_state.pause(state_dir, args.slug)
+        if args.action == "resume":
+            import projects_state
+            return projects_state.resume(state_dir, args.slug)
+        if args.action == "suggest":
+            import projects_state
+            if args.suggest_action == "add":
+                s_id = projects_state.suggest_add(
+                    state_dir,
+                    project=args.project,
+                    ticket=args.ticket,
+                    harness=args.harness,
+                    model=args.model,
+                    effort=args.effort,
+                    reason=args.reason,
+                )
+                sys.stdout.write(f"{s_id}\n")
+                return 0
+            if args.suggest_action == "list":
+                items = projects_state.suggest_list(state_dir, state=args.state)
+                if args.json:
+                    json.dump(items, sys.stdout, ensure_ascii=False, indent=2)
+                    sys.stdout.write("\n")
+                else:
+                    for it in items:
+                        sys.stdout.write(f"{it['id']} [{it['state']}] {it['project']} {it['ticket']} ({it['harness']}/{it['model']}): {it['reason']}\n")
+                return 0
+            if args.suggest_action == "decide":
+                rc = projects_state.suggest_decide(state_dir, args.id, args.decision)
+                if rc != 0:
+                    sys.stderr.write(f"sb projects suggest decide: suggestion {args.id} not found\n")
+                    return 1
+                return 0
+            if args.suggest_action == "done":
+                rc = projects_state.suggest_done(state_dir, args.id, args.agent)
+                if rc != 0:
+                    sys.stderr.write(f"sb projects suggest done: suggestion {args.id} not found\n")
+                    return 1
+                return 0
+        if args.action == "gate":
+            import projects_state
+            code, reason = projects_state.gate(vault, state_dir, args.project, args.harness)
+            if code != 0:
+                sys.stdout.write(f"{reason}\n")
+                return 1
+            return 0
     except projects.MissingDependency as exc:
         sys.stderr.write(f"sb projects: {exc}\n")
         return 2
@@ -770,6 +827,41 @@ def build_parser() -> argparse.ArgumentParser:
     p_up.add_argument("--bloqueio", default=None)
     p_up.add_argument("--fase", default=None)
     p_up.add_argument("--prioridade", choices=("P1", "P2", "P3"), default=None)
+
+    p_act = proj_act.add_parser("activity", parents=[common], help="manage implementer activity state")
+    p_act_sub = p_act.add_subparsers(dest="activity_action", required=True)
+    p_act_sub.add_parser("set", parents=[common], help="read JSON tasks array from stdin and update activity.json")
+
+    p_pause = proj_act.add_parser("pause", parents=[common], help="pause project locally")
+    p_pause.add_argument("slug")
+    p_resume = proj_act.add_parser("resume", parents=[common], help="resume project locally")
+    p_resume.add_argument("slug")
+
+    p_sug = proj_act.add_parser("suggest", parents=[common], help="manage agent task suggestions queue")
+    p_sug_sub = p_sug.add_subparsers(dest="suggest_action", required=True)
+    p_sug_add = p_sug_sub.add_parser("add", parents=[common], help="add a suggestion")
+    p_sug_add.add_argument("--project", required=True)
+    p_sug_add.add_argument("--ticket", required=True)
+    p_sug_add.add_argument("--harness", required=True)
+    p_sug_add.add_argument("--model", required=True)
+    p_sug_add.add_argument("--effort", required=True)
+    p_sug_add.add_argument("--reason", required=True)
+
+    p_sug_list = p_sug_sub.add_parser("list", parents=[common], help="list suggestions")
+    p_sug_list.add_argument("--state", choices=("pending", "approved", "rejected", "done"), default=None)
+    p_sug_list.add_argument("--json", action="store_true")
+
+    p_sug_dec = p_sug_sub.add_parser("decide", parents=[common], help="decide on a suggestion")
+    p_sug_dec.add_argument("id")
+    p_sug_dec.add_argument("decision", choices=("approve", "reject"))
+
+    p_sug_done = p_sug_sub.add_parser("done", parents=[common], help="mark suggestion done")
+    p_sug_done.add_argument("id")
+    p_sug_done.add_argument("--agent", required=True)
+
+    p_gate = proj_act.add_parser("gate", parents=[common], help="evaluate fail-closed gating for project")
+    p_gate.add_argument("--project", required=True)
+    p_gate.add_argument("--harness", required=True)
 
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser

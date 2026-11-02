@@ -1297,7 +1297,7 @@ class ReachTest(unittest.TestCase):
         if out.returncode != 0:
             self.skipTest("no master branch here")
         for name in out.stdout.split():
-            self.assertTrue(name.startswith("00_META/skills/second-brain-sync/") or name == "00_META/eval/run_eval.py", name)
+            self.assertTrue(name.startswith("00_META/skills/second-brain-sync/") or name in ("00_META/eval/run_eval.py", "00_META/Frontmatter-Schema.md"), name)
 
 
 class GitApplyTableTest(Fixture):
