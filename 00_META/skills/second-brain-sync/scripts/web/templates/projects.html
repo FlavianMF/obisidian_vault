@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Second Brain Projects</title><style>
+body{font:13px system-ui;margin:12px;background:#fafafa;color:#222}
+.top{display:flex;gap:16px;padding:8px;background:#fff;border:1px solid #ddd;margin-bottom:8px}
+.top b{margin-right:4px}.sug{background:#fff7e0;border:1px solid #e6c860;padding:8px;margin-bottom:8px}
+button{font-size:12px;margin-left:4px}table{border-collapse:collapse;width:100%;background:#fff}
+td,th{border:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top}
+th{background:#f0f0f0}.blk{color:#b00}.ok{color:#080}.warn{color:#b60}
+.nodata{background:#fff;border:1px solid #ddd;padding:16px;text-align:center;color:#666}
+</style></head><body>
+{% if not has_data %}
+<div class="nodata">sem dados</div>
+{% else %}
+<div class="top">
+  {% for h, txt in header._quota_display.items() %}
+    <span><b>{{ h }}</b>{{ txt }}</span>
+  {% endfor %}
+  <span><b>implementadores</b>{{ header.active_implementers }}/{{ header.max_implementers }}</span>
+  <span><b>snapshot</b>{% if header.snapshot_age_min is not none %}{{ header.snapshot_age_min }} min{% else %}—{% endif %}</span>
+  <span><b>atividade</b>{% if header.activity_age_min is not none %}{{ header.activity_age_min }} min{% else %}—{% endif %}</span>
+</div>
+{% for s in suggestions %}
+<div class="sug"><b>Sugestão {{ s.id }}:</b> {{ s.project }}, ticket "{{ s.ticket }}", {{ s.harness }} {{ s.model }} {{ s.effort }}. Motivo: {{ s.reason }}. <button disabled>Aprovar</button><button disabled>Rejeitar</button></div>
+{% endfor %}
+<table><tr><th>P</th><th>Projeto</th><th>Situação</th><th>Fase</th><th>Próximo passo</th><th>Bloqueio</th><th>Agentes</th><th>Tickets</th><th>Git</th><th>Testes</th><th>Últ. sessão</th><th>Ações</th></tr>
+{% for p in projects %}
+<tr>
+  <td>{{ p.prioridade }}</td>
+  <td>{{ p.slug }}</td>
+  <td class="{% if p.situacao == 'bloqueado' %}blk{% elif p.situacao == 'parado' %}warn{% elif p.situacao == 'trabalhando' %}ok{% endif %}">{{ p.situacao }}</td>
+  <td>{{ p.fase }}</td>
+  <td>{{ p.proximo_passo }}</td>
+  <td class="{% if p.bloqueio %}blk{% endif %}">{{ p.bloqueio }}</td>
+  <td>{{ p.active_agents }}</td>
+  <td>{{ p.tickets_status_0 }}</td>
+  <td>{{ p._git_summary }}</td>
+  <td class="{% if p.tests_status == 'ok' %}ok{% elif p.tests_status == 'falha' %}blk{% endif %}">{{ p._tests_summary }}</td>
+  <td>{{ p.last_session_age }}</td>
+  <td><button disabled>{% if p.situacao == 'pausado' %}Retomar{% else %}Pausar{% endif %}</button><button disabled>P↑</button><button disabled>P↓</button></td>
+</tr>
+{% endfor %}
+</table>
+{% endif %}
+</body></html>

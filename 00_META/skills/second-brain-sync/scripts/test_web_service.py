@@ -556,7 +556,7 @@ class InvariantTest(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_i3_imports_are_stdlib_the_local_modules_or_the_web_stack(self):
-        allowed = {"fastapi", "pydantic", "starlette", "uvicorn", "candidates", "review", "vault_sync", "lib"}
+        allowed = {"fastapi", "pydantic", "starlette", "uvicorn", "candidates", "review", "vault_sync", "lib", "web_projects"}
         roots = set()
         for node in ast.walk(self.tree):
             if isinstance(node, ast.Import):

@@ -858,6 +858,9 @@ def create_app(
         applied, rejected = today_counts(s_dir)
         return StatsResponse(pending=len(review.pending(s_dir)), today_applied=applied, today_rejected=rejected)
 
+    import web_projects
+    app.include_router(web_projects.router)
+
     return app
 
 
