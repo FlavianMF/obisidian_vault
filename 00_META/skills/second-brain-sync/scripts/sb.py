@@ -704,6 +704,19 @@ def run_projects(args, vault: Path) -> int:
                 sys.stdout.write(f"{reason}\n")
                 return 1
             return 0
+        if args.action == "cmd":
+            import commands
+            cmd = commands.parse(args.text, vault=vault)
+            if isinstance(cmd, commands.ParseError):
+                sys.stderr.write(f"sb projects cmd: {cmd.message}\n")
+                return 1
+            res = commands.execute(cmd, vault, state_dir)
+            if res.ok:
+                sys.stdout.write(f"{res.message}\n")
+                return 0
+            else:
+                sys.stderr.write(f"sb projects cmd: {res.message}\n")
+                return 1
     except projects.MissingDependency as exc:
         sys.stderr.write(f"sb projects: {exc}\n")
         return 2
@@ -862,6 +875,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_gate = proj_act.add_parser("gate", parents=[common], help="evaluate fail-closed gating for project")
     p_gate.add_argument("--project", required=True)
     p_gate.add_argument("--harness", required=True)
+
+    p_cmd = proj_act.add_parser("cmd", parents=[common], help="execute text command")
+    p_cmd.add_argument("text", help="text command string")
 
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
