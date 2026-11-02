@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 import re
 import sys
@@ -160,6 +161,11 @@ def validate(vault: Path) -> list[Issue]:
         for env_name in p_entry.get("env", []):
             if not ENV_VAR_RE.match(str(env_name)):
                 issues.append(Issue("env", ERROR, manifest_rel, f"invalid env variable name: `{env_name}`"))
+        chk_str = p_entry.get("checkout")
+        if chk_str:
+            chk_path = Path(os.path.expanduser(chk_str))
+            if not chk_path.exists():
+                issues.append(Issue("checkout", WARN, manifest_rel, f"project `{slug}` checkout path does not exist: `{chk_str}`"))
 
     for p_entry in manifest.projects:
         slug = p_entry.get("slug", "")

@@ -719,6 +719,15 @@ def run_projects(args, vault: Path) -> int:
             else:
                 sys.stderr.write(f"sb projects cmd: {res.message}\n")
                 return 1
+        if args.action == "bootstrap":
+            import projects_bootstrap
+            return projects_bootstrap.bootstrap(
+                vault,
+                state_dir,
+                slug=args.slug,
+                all_projects=args.all,
+                apply=args.apply,
+            )
     except projects.MissingDependency as exc:
         sys.stderr.write(f"sb projects: {exc}\n")
         return 2
@@ -884,6 +893,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_cmd = proj_act.add_parser("cmd", parents=[common], help="execute text command")
     p_cmd.add_argument("text", help="text command string")
+
+    p_boot = proj_act.add_parser("bootstrap", parents=[common], help="bootstrap project repositories and environments")
+    p_boot.add_argument("slug", nargs="?", default=None, help="project slug to bootstrap")
+    p_boot.add_argument("--all", action="store_true", help="bootstrap all projects in manifest")
+    p_boot.add_argument("--apply", action="store_true", help="execute bootstrap actions (dry-run without it)")
 
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
