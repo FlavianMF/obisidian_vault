@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Second Brain · Entrar</title><style>
+body{font:15px system-ui;margin:0;background:#fafafa;color:#222;display:grid;place-items:center;min-height:100vh}
+form{background:#fff;border:1px solid #ddd;padding:20px;width:min(92vw,360px)}
+label{display:block;margin-bottom:12px}input{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:8px;font:inherit}
+button{font:inherit;padding:8px 16px}.err{color:#b00;margin:0 0 12px}
+</style></head><body>
+<form method="post" action="/login">
+  {% if error %}<p class="err" role="alert">{{ error }}</p>{% endif %}
+  <label>Token<input type="password" name="token" autocomplete="current-password" required autofocus></label>
+  <button type="submit">Entrar</button>
+</form>
+</body></html>

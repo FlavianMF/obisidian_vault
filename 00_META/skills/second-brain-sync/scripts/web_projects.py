@@ -8,8 +8,10 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel, Field
 from starlette.templating import Jinja2Templates
 
+import commands
 import projects
 import projects_state
 
@@ -341,6 +343,23 @@ def api_projects(request: Request) -> JSONResponse:
         "projects": filtered_projects,
     }
     return JSONResponse(content=resp)
+
+
+class CommandRequest(BaseModel):
+    text: str = Field(max_length=500)
+
+
+@router.post("/api/command")
+def api_command(req: CommandRequest, request: Request) -> JSONResponse:
+    """The dashboard buttons and voice clients send the same text commands as `sb projects cmd`."""
+    vault = get_vault_path(request)
+    state_dir = get_state_dir(request)
+    parsed = commands.parse(req.text, vault=vault)
+    if isinstance(parsed, commands.ParseError):
+        return JSONResponse(status_code=400, content={"ok": False, "message": parsed.message})
+    with request.app.state.lock:  # pausing, prioritising and approving write state and the vault like /api/decide
+        result = commands.execute(parsed, vault, state_dir)
+    return JSONResponse(status_code=200 if result.ok else 400, content={"ok": result.ok, "message": result.message})
 
 
 @router.get("/projects", response_class=HTMLResponse)

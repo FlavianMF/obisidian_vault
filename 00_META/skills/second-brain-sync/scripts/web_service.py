@@ -20,7 +20,7 @@ from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -34,11 +34,15 @@ if str(HERE) not in sys.path:
 import candidates
 import review
 import vault_sync
+import web_auth
+import web_projects
 from lib import frontmatter, secret_scan
 
 WEB_DIR = HERE / "web"
 DEFAULT_ALLOWED_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "testserver"})
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+HOST_NAME = re.compile(r"^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$")
+LOGIN_BODY_LIMIT = 4096
 DROP_REASON_WEB = "descartado na revisão web"
 # key -> action; the page serialises this dict, so it is the single source of the keyboard map
 SHORTCUTS = {"s": "save", "a": "absorb", "d": "drop", "p": "skip", "z": "undo", "j": "next", "k": "prev", "e": "edit"}
@@ -130,11 +134,13 @@ class UndoResponse(BaseModel):
 
 
 # ---------------------------------------------------------------- Helpers
+def default_vault_path() -> Path:
+    env = os.environ.get("SECOND_BRAIN_VAULT")
+    return Path(env).resolve() if env else HERE.parents[3]
+
+
 def get_vault_path(app: FastAPI) -> Path:
-    vault = getattr(app.state, "vault_path", None)
-    if not vault:
-        env = os.environ.get("SECOND_BRAIN_VAULT")
-        vault = Path(env).resolve() if env else HERE.parents[3]
+    vault = getattr(app.state, "vault_path", None) or default_vault_path()
     return Path(vault).resolve()
 
 
@@ -290,7 +296,11 @@ def create_app(
     vault_path: Optional[Path] = None,
     state_dir: Optional[Path] = None,
     allowed_hosts: Optional[set[str]] = None,
+    token: Optional[str] = None,
+    exposed: bool = False,
 ) -> FastAPI:
+    """`exposed=True` puts authentication on every route (see web_auth) and raises AuthConfigError when `token` is
+    missing or shorter than 32 characters. Without `exposed` the token is ignored and the app behaves as before."""
     app = FastAPI(title="Candidate Review Web API", version="1.0.0")
     templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))  # autoescape is on for .html
     app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
@@ -305,6 +315,69 @@ def create_app(
     def error_fragment(request: Request, code: int, detail: str, errors: List[str]):
         return templates.TemplateResponse(request, "_error.html", {"code": code, "detail": detail, "errors": errors},
                                           status_code=code)
+
+    gate = web_auth.AuthGate(token or "", lambda: get_state_dir(app) / web_auth.AUTH_LOG) if exposed else None
+    app.state.auth_gate = gate
+
+    def known_routes():
+        """Routes that carry a path template; FastAPI keeps included routers opaque, so read that one directly."""
+        return [*app.routes, *web_projects.router.routes]
+
+    if gate is not None:
+        def login_page(request: Request, error: str = "", code: int = 200, headers: Optional[Dict[str, str]] = None):
+            return templates.TemplateResponse(request, "login.html", {"error": error}, status_code=code, headers=headers)
+
+        def refusal(request: Request, decision: web_auth.Decision, as_html: bool):
+            """401 or 429 for a failed attempt. A browser GET gets the login form; everything else gets JSON."""
+            if decision.result == "blocked":
+                code, detail, headers = 429, "Too many authentication failures", {"Retry-After": str(decision.retry_after)}
+            else:
+                code = 401
+                detail = "Invalid credentials" if decision.result == "fail" else "Authentication required"
+                headers = {"WWW-Authenticate": "Bearer"}
+            if as_html:
+                return login_page(request, detail, code, headers)
+            return JSONResponse(status_code=code, content={"detail": detail, "errors": []}, headers=headers)
+
+        # Runs inside local_only_guard: a bad Host or Origin is a 403 before it can count as an auth failure
+        @app.middleware("http")
+        async def auth_guard(request: Request, call_next):
+            path = request.scope["path"]
+            if web_auth.is_open_path(request.method, path):
+                return await call_next(request)
+            decision = gate.check_request(
+                request.headers.get("authorization", ""), request.cookies.get(web_auth.COOKIE_NAME, ""))
+            gate.record(web_auth.route_label(known_routes(), path), decision.result)
+            if decision.allowed:
+                return await call_next(request)
+            wants_html = request.method == "GET" and "text/html" in request.headers.get("accept", "")
+            return refusal(request, decision, wants_html)
+
+        @app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+        def login_form(request: Request):
+            return login_page(request)
+
+        @app.post("/login", include_in_schema=False)
+        async def login(request: Request):
+            raw = await request.body()
+            content_type = request.headers.get("content-type", "")
+            as_json = content_type.split(";")[0].strip().lower() == "application/json"
+            candidate = web_auth.login_token(content_type, raw) if len(raw) <= LOGIN_BODY_LIMIT else None
+            if candidate is None:  # no token to judge: not a guess, so it does not count as a failure
+                gate.record("/login", "malformed")
+                if as_json:
+                    return JSONResponse(status_code=400, content={"detail": "token required", "errors": []})
+                return login_page(request, "Informe o token.", 400)
+            decision = gate.check_token(candidate)
+            gate.record("/login", decision.result)
+            if not decision.allowed:
+                return refusal(request, decision, not as_json)
+            response: Response = (
+                JSONResponse(content={"ok": True}) if as_json else RedirectResponse("/projects", status_code=303))
+            response.set_cookie(
+                web_auth.COOKIE_NAME, gate.session, max_age=web_auth.COOKIE_MAX_AGE, path="/",
+                secure=True, httponly=True, samesite="strict")
+            return response
 
     # The app can write to the vault and listens on loopback: refuse DNS rebinding and cross-site posts
     @app.middleware("http")
@@ -858,10 +931,21 @@ def create_app(
         applied, rejected = today_counts(s_dir)
         return StatsResponse(pending=len(review.pending(s_dir)), today_applied=applied, today_rejected=rejected)
 
-    import web_projects
     app.include_router(web_projects.router)
 
     return app
+
+
+def normalize_allow_hosts(values: Optional[List[str]]) -> set[str]:
+    """Bare host names from `--allow-host`, lowercased. A scheme, port or path would never match a Host header."""
+    names = set()
+    for value in values or []:
+        name = str(value).strip().lower()
+        if not HOST_NAME.match(name):
+            raise web_auth.AuthConfigError(
+                "--allow-host aceita só o nome do host (ex.: pc.tailnet.ts.net), sem esquema, porta ou caminho")
+        names.add(name)
+    return names
 
 
 def run_server(
@@ -871,15 +955,41 @@ def run_server(
     port: int = 8000,
     open_browser: bool = True,
     log_level: str = "info",
+    exposed: bool = False,
+    allow_hosts: Optional[List[str]] = None,
 ) -> int:
-    """Runs the FastAPI candidate review app with uvicorn, optionally opens browser, and handles shutdown cleanly."""
+    """Runs the FastAPI candidate review app with uvicorn, optionally opens browser, and handles shutdown cleanly.
+
+    `exposed` requires the token from the manifest's `web.token_env` variable (default SB_WEB_TOKEN), at least 32
+    characters, and a loopback `host`: the app never listens on another interface, `tailscale serve` is the way in.
+    `allow_hosts` only works with `exposed`. A refused start returns 2 and prints why, never the token."""
     import time
     import webbrowser
     import uvicorn
 
-    app = create_app(vault_path, state_dir)
+    token = None
+    hosts = None
+    try:
+        names = normalize_allow_hosts(allow_hosts)
+        if names and not exposed:  # a non-loopback Host with no token would open the write routes to the tailnet
+            raise web_auth.AuthConfigError("--allow-host exige --exposed: sem token, só o loopback pode chamar o app")
+        if exposed:
+            hosts = {h for h in DEFAULT_ALLOWED_HOSTS if h != "testserver"} | names
+            if host not in web_auth.LOOPBACK_HOSTS:
+                raise web_auth.AuthConfigError("--exposed exige --host loopback (127.0.0.1, localhost ou ::1)")
+            vault = Path(vault_path).resolve() if vault_path else default_vault_path()
+            env_name, token = web_auth.resolve_token(vault)
+            problem = web_auth.token_problem(token)
+            if problem:
+                raise web_auth.AuthConfigError(f"{problem} em ${env_name}")
+        app = create_app(vault_path, state_dir, hosts, token, exposed)
+    except web_auth.AuthConfigError as exc:
+        sys.stderr.write(f"Partida recusada: {exc}\n")
+        return 2
     url = f"http://{host}:{port}/"
     sys.stdout.write(f"Iniciando Second Brain Review Web em {url}\n")
+    if exposed:
+        sys.stdout.write("Modo exposto: autenticação obrigatória em todas as rotas.\n")
     sys.stdout.flush()
 
     if open_browser:

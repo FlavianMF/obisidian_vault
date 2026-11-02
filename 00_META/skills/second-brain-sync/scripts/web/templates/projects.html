@@ -20,7 +20,7 @@ th{background:#f0f0f0}.blk{color:#b00}.ok{color:#080}.warn{color:#b60}
   <span><b>atividade</b>{% if header.activity_age_min is not none %}{{ header.activity_age_min }} min{% else %}—{% endif %}</span>
 </div>
 {% for s in suggestions %}
-<div class="sug"><b>Sugestão {{ s.id }}:</b> {{ s.project }}, ticket "{{ s.ticket }}", {{ s.harness }} {{ s.model }} {{ s.effort }}. Motivo: {{ s.reason }}. <button disabled>Aprovar</button><button disabled>Rejeitar</button></div>
+<div class="sug"><b>Sugestão {{ s.id }}:</b> {{ s.project }}, ticket "{{ s.ticket }}", {{ s.harness }} {{ s.model }} {{ s.effort }}. Motivo: {{ s.reason }}. <button type="button" data-cmd="aprovar {{ s.id }}">Aprovar</button><button type="button" data-cmd="rejeitar {{ s.id }}">Rejeitar</button></div>
 {% endfor %}
 <table><tr><th>P</th><th>Projeto</th><th>Situação</th><th>Fase</th><th>Próximo passo</th><th>Bloqueio</th><th>Agentes</th><th>Tickets</th><th>Git</th><th>Testes</th><th>Últ. sessão</th><th>Ações</th></tr>
 {% for p in projects %}
@@ -36,9 +36,35 @@ th{background:#f0f0f0}.blk{color:#b00}.ok{color:#080}.warn{color:#b60}
   <td>{{ p._git_summary }}</td>
   <td class="{% if p.tests_status == 'ok' %}ok{% elif p.tests_status == 'falha' %}blk{% endif %}">{{ p._tests_summary }}</td>
   <td>{{ p.last_session_age }}</td>
-  <td><button disabled>{% if p.situacao == 'pausado' %}Retomar{% else %}Pausar{% endif %}</button><button disabled>P↑</button><button disabled>P↓</button></td>
+  {% set up = {'P2': 'P1', 'P3': 'P2'}.get(p.prioridade) %}{% set down = {'P1': 'P2', 'P2': 'P3'}.get(p.prioridade) %}
+  <td><button type="button" data-cmd="{% if p.situacao == 'pausado' %}retomar{% else %}pausar{% endif %} {{ p.slug }}">{% if p.situacao == 'pausado' %}Retomar{% else %}Pausar{% endif %}</button><button type="button" data-cmd="priorizar {{ p.slug }} {{ up }}"{% if not up %} disabled{% endif %}>P↑</button><button type="button" data-cmd="priorizar {{ p.slug }} {{ down }}"{% if not down %} disabled{% endif %}>P↓</button></td>
 </tr>
 {% endfor %}
 </table>
 {% endif %}
+<p id="msg" role="status"></p>
+<script>
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-cmd]");
+  if (!button || button.disabled) return;
+  const msg = document.getElementById("msg");
+  button.disabled = true;
+  try {
+    const res = await fetch("/api/command", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text: button.dataset.cmd}),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401) { msg.textContent = "Sessão expirada: entre de novo em /login."; button.disabled = false; return; }
+    if (res.status === 429) { msg.textContent = "Muitas falhas de autenticação. Tente de novo em instantes."; button.disabled = false; return; }
+    msg.textContent = body.message || body.detail || "Sem resposta.";
+    if (res.ok) setTimeout(() => location.reload(), 600); else button.disabled = false;
+  } catch (err) {
+    msg.textContent = "Falha de rede.";
+    button.disabled = false;
+  }
+});
+</script>
 </body></html>

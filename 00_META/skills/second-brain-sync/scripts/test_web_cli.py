@@ -38,6 +38,28 @@ class WebCliIntegrationTest(unittest.TestCase):
         self.assertEqual(args.port, 8000)
         self.assertEqual(args.host, "127.0.0.1")
         self.assertFalse(args.no_browser)
+        self.assertFalse(args.exposed)
+        self.assertIsNone(args.allow_host)
+
+    def test_parser_exposed_and_repeatable_allow_host(self):
+        args = sb.build_parser().parse_args(
+            ["review", "web", "--exposed", "--port", "8765", "--allow-host", "pc.ts.net", "--allow-host", "pc2.ts.net"])
+        self.assertTrue(args.exposed)
+        self.assertEqual(args.allow_host, ["pc.ts.net", "pc2.ts.net"])
+
+    @patch("web_service.run_server", return_value=0)
+    def test_sb_main_passes_exposed_and_hosts_to_run_server(self, mock_run):
+        self.assertEqual(sb.main(["review", "web", "--exposed", "--allow-host", "pc.ts.net", "--no-browser"]), 0)
+        _, kwargs = mock_run.call_args
+        self.assertTrue(kwargs["exposed"])
+        self.assertEqual(kwargs["allow_hosts"], ["pc.ts.net"])
+
+    @patch("web_service.run_server", return_value=0)
+    def test_sb_main_default_is_not_exposed(self, mock_run):
+        sb.main(["review", "web", "--no-browser"])
+        _, kwargs = mock_run.call_args
+        self.assertFalse(kwargs["exposed"])
+        self.assertIsNone(kwargs["allow_hosts"])
 
     @patch("web_service.run_server", return_value=0)
     def test_sb_main_invokes_run_server(self, mock_run):

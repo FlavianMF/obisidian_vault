@@ -402,7 +402,8 @@ class InvariantTest(unittest.TestCase):
                 roots.update(a.name.split(".")[0] for a in node.names)
             elif isinstance(node, ast.ImportFrom) and node.level == 0:
                 roots.add((node.module or "").split(".")[0])
-        allowed = {"fastapi", "pydantic", "starlette", "uvicorn", "jinja2", "candidates", "review", "vault_sync", "lib"}
+        allowed = {"fastapi", "pydantic", "starlette", "uvicorn", "jinja2", "candidates", "review", "vault_sync", "lib",
+               "web_projects", "web_auth"}
         self.assertEqual({r for r in roots if r not in allowed and r not in sys.stdlib_module_names}, set())
 
 

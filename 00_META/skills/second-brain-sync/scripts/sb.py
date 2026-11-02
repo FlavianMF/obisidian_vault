@@ -440,6 +440,8 @@ def run_review(args, vault: Path, state_dir: Path) -> int:
             host=args.host,
             port=args.port,
             open_browser=not args.no_browser,
+            exposed=args.exposed,
+            allow_hosts=args.allow_host,
         )
     if args.stage in ("promote", "stock") and args.action == "next":
         if args.stage == "promote":
@@ -787,6 +789,10 @@ def build_parser() -> argparse.ArgumentParser:
     web.add_argument("--host", default="127.0.0.1", help="host to bind (default: 127.0.0.1)")
     web.add_argument("--port", type=int, default=8000, help="port to bind (default: 8000)")
     web.add_argument("--no-browser", action="store_true", help="do not open browser automatically")
+    web.add_argument("--exposed", action="store_true",
+                     help="require a token on every route (web.token_env of the manifest, default SB_WEB_TOKEN)")
+    web.add_argument("--allow-host", action="append", default=None, metavar="NAME",
+                     help="extra Host header name to accept, e.g. the MagicDNS name (repeatable)")
     stage = stages.add_parser("capture", help="candidates to notes")
     promote = stages.add_parser("promote", help="notes worth an Agent-Instruction.md entry").add_subparsers(
         dest="action", required=True)

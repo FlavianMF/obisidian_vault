@@ -171,8 +171,10 @@ class WebProjectsTest(unittest.TestCase):
             self.assertIn("projeto_p1", html_text)
             self.assertIn("projeto_p2", html_text)
             self.assertIn("Sugestão s-1234", html_text)
-            # Buttons must be disabled in this sprint
-            self.assertIn("<button disabled", html_text)
+            # Sprint 11 enables the action buttons: each one carries the text command it posts to /api/command
+            self.assertIn('data-cmd="aprovar s-1234"', html_text)
+            self.assertIn('data-cmd="pausar projeto_p1"', html_text)
+            self.assertNotIn("<button disabled", html_text)
             self.assertNotIn("secret_token_leaked", html_text)
 
 
