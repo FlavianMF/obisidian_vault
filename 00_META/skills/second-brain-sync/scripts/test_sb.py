@@ -165,6 +165,23 @@ class DoctorTest(VaultFixture):
         self.assertIn("unknown type `coisa`", details)
         self.assertIn("`confidence: certa`", details)
 
+    def test_project_invalid_priority_reports_error(self):
+        self.note("ProjetoRuim", type_="project", folder="40_Projects", extra="prioridade: P4\n")
+        details = " | ".join(i.detail for i in self.checks(self.doctor(), "frontmatter"))
+        self.assertIn("prioridade", details)
+
+    def test_project_long_text_reports_error(self):
+        self.note("PassoLongo", type_="project", folder="40_Projects", extra=f"proximo_passo: {'a' * 201}\n")
+        self.note("BloqueioLongo", type_="project", folder="40_Projects", extra=f"bloqueio: {'b' * 201}\n")
+        details = " | ".join(i.detail for i in self.checks(self.doctor(), "frontmatter"))
+        self.assertIn("proximo_passo", details)
+        self.assertIn("bloqueio", details)
+
+    def test_project_valid_optional_fields_no_errors(self):
+        self.note("ProjetoOk", type_="project", folder="40_Projects", extra="fase: spec\nprioridade: P1\nproximo_passo: Passo curto\nbloqueio: Nenhum\ntraycer_task: task-123\n")
+        details = " | ".join(i.detail for i in self.checks(self.doctor(), "frontmatter"))
+        self.assertNotIn("ProjetoOk", details)
+
     def test_supersedes_must_point_to_an_existing_note(self):
         self.note("Novo", extra="supersedes: [[Antigo]]\n")
         self.note("Orfa", extra="supersedes: [[Inexistente]]\n")

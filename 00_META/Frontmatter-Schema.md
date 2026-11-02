@@ -29,6 +29,11 @@ este schema, atualize os dois scripts junto.
 | `scope` | opcional | `global` (padrão) ou `project`. Nota `project` não é candidata a promoção |
 | `status` | opcional | `active` (padrão quando ausente), `superseded`, `completed` ou `archived` (os dois últimos, para notas de projeto). A nota `superseded` continua no vault e nos manifests; o `sb doctor` avisa quando nenhuma nota a declara em `supersedes` |
 | `supersedes` | opcional | título ou wikilink da nota que esta substitui (ou lista deles), ex.: `supersedes: [[Título Antigo]]`. O `sb doctor` acusa erro se o alvo não existir. Substituir = nota nova com `supersedes` + nota antiga com `status: superseded`; não apague a antiga |
+| `fase` | opcional | fase atual do projeto (ex.: `spec`, `planejamento`, `execucao`, `revisao`). Específico para `type: project` |
+| `prioridade` | opcional | prioridade no painel: `P1`, `P2` ou `P3`. O `sb doctor` rejeita qualquer outro valor. Específico para `type: project` |
+| `proximo_passo` | opcional | próxima ação executável do projeto (máx. 200 caracteres, validado pelo `sb doctor`). Específico para `type: project` |
+| `bloqueio` | opcional | impedimento ou dependência pendente (máx. 200 caracteres, validado pelo `sb doctor`). Vazio/ausente se desbloqueado. Específico para `type: project` |
+| `traycer_task` | opcional | identificador ou slug da task/epic no Traycer para correlação com agentes. Específico para `type: project` |
 
 `path` nunca é campo de frontmatter — é metadado computado, só existe nos
 manifests (`00_META/manifests/`).
@@ -36,7 +41,7 @@ manifests (`00_META/manifests/`).
 `generate_manifests.py` busca os campos por nome (`data.get(...)`), então todo campo
 opcional ausente vira coluna vazia. `confidence` e `seen_in` viram colunas dos manifests
 (e `seen_in` alimenta o `session_hint.sh`); a data no início de `verified` alimenta
-`--stale-report`. `scope` é só lido por agente.
+`--stale-report`. `scope` é só lido por agente. Campos opcionais de projeto (`fase`, `prioridade`, `proximo_passo`, `bloqueio`, `traycer_task`) são consumidos pelo `sb projects` e validados pelo `sb doctor`, mas não viram colunas nos manifests.
 
 **Promoção:** nota com 2+ projetos em `seen_in` é candidata a subir para a lista
 MANDATÓRIO de [[00_META/Agent-Instruction]] ou para o checklist de bootstrap. Manual,

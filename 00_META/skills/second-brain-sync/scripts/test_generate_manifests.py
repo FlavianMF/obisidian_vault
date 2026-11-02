@@ -114,6 +114,16 @@ class ManifestTableTest(unittest.TestCase):
         gm.write_manifests(self.vault)
         self.assertEqual(note.read_bytes(), before)
 
+    def test_project_note_with_optional_fields_has_no_manifest_drift(self):
+        (self.vault / "40_Projects").mkdir(parents=True, exist_ok=True)
+        (self.vault / "40_Projects" / "proj.md").write_text(
+            "---\ntitle: Projeto Teste\ntype: project\ntags: [proj]\ncreated: 2026-11-02\n"
+            "fase: spec\nprioridade: P1\nproximo_passo: Passo curto\nbloqueio: Nenhum\ntraycer_task: task-1\n---\n\nResumo.\n",
+            encoding="utf-8",
+        )
+        self.assertTrue(gm.write_manifests(self.vault))
+        self.assertTrue(gm.check_manifests(self.vault))
+
     def test_git_ignored_notes_are_skipped_and_non_repo_falls_back_silently(self):
         plan = self.vault / ".claude" / "PRPs" / "plans" / "x.plan.md"
         plan.parent.mkdir(parents=True)

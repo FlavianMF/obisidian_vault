@@ -63,6 +63,7 @@ NOTE_TYPES = {
 CONFIDENCE_LEVELS = {"low", "medium", "high"}
 SCOPES = {"global", "project"}
 STATUSES = {"active", "superseded", "completed", "archived"}
+PROJECT_PRIORITIES = {"P1", "P2", "P3"}
 TEMPLATE_DIR = "90_Assets/"  # placeholders such as `type: article/book/paper` are not real values
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SKIP_DIRS = {".git", ".obsidian"}
@@ -169,6 +170,12 @@ def check_note(vault: Path, rel: Path, text: str, index: LinkIndex) -> tuple[lis
         for field, allowed in (("confidence", CONFIDENCE_LEVELS), ("scope", SCOPES), ("status", STATUSES)):
             if data.get(field) and data[field] not in allowed:
                 issues.append(Issue("frontmatter", ERROR, path, f"`{field}: {data[field]}` not in {sorted(allowed)}"))
+        if data.get("type") == "project":
+            if data.get("prioridade") and data["prioridade"] not in PROJECT_PRIORITIES:
+                issues.append(Issue("frontmatter", ERROR, path, f"`prioridade: {data['prioridade']}` not in {sorted(PROJECT_PRIORITIES)}"))
+            for field in ("proximo_passo", "bloqueio"):
+                if data.get(field) and len(str(data[field])) > 200:
+                    issues.append(Issue("frontmatter", ERROR, path, f"`{field}` exceeds 200 characters ({len(str(data[field]))} chars)"))
         for target in normalize_supersedes(data.get("supersedes", [])):
             if not link_resolves(target, index):
                 issues.append(Issue("supersedes", ERROR, path, f"supersedes `{target}`, which does not exist"))
