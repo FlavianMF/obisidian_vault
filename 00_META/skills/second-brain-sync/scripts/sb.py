@@ -240,6 +240,13 @@ def run_doctor(vault: Path, stale_days: int, today: dt.date) -> list[Issue]:
             issues.append(Issue("supersedes", WARN, rel, "status is superseded but no note says `supersedes` it"))
     if not gm.check_manifests(vault):
         issues.append(Issue("manifest-drift", WARN, "00_META/manifests", "manifests differ from a fresh regeneration"))
+    manifest_path = vault / "00_META/projects/manifest.yaml"
+    if manifest_path.exists():
+        try:
+            import projects
+            issues.extend(projects.validate(vault))
+        except projects.MissingDependency:
+            pass
     return issues
 
 
@@ -619,6 +626,29 @@ def report_note_issues(vault: Path, notes: set[str]) -> None:
         sys.stdout.write(f"  {i.severity} {i.check} {i.path}: {i.detail}\n")
 
 
+def run_projects(args, vault: Path) -> int:
+    try:
+        import projects
+    except ImportError:
+        sys.stderr.write("sb projects: missing dependency (PyYAML is required)\n")
+        return 2
+    try:
+        if args.action == "list":
+            return projects.cli_list(vault, as_json=args.json)
+        if args.action == "validate":
+            return projects.cli_validate(vault)
+        if args.action == "add":
+            return projects.cli_add(vault, args.slug, repo=args.repo, checkout=args.checkout, branch=args.branch)
+        if args.action == "archive":
+            return projects.cli_archive(vault, args.slug)
+        if args.action == "update":
+            return projects.cli_update(vault, args.slug, proximo_passo=args.proximo_passo, bloqueio=args.bloqueio, fase=args.fase, prioridade=args.prioridade)
+    except projects.MissingDependency as exc:
+        sys.stderr.write(f"sb projects: {exc}\n")
+        return 2
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--vault-path", type=Path, default=Path(os.environ.get("SECOND_BRAIN_VAULT") or gm.DEFAULT_VAULT_ROOT))
@@ -715,6 +745,25 @@ def build_parser() -> argparse.ArgumentParser:
     rev_drop.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
     rev_drop.add_argument("--reason", required=True)
     rev_drop.add_argument("--apply", action="store_true")
+    proj = sub.add_parser("projects", parents=[common], help="projects registry management")
+    proj_act = proj.add_subparsers(dest="action", required=True)
+    p_list = proj_act.add_parser("list", parents=[common], help="list registered projects")
+    p_list.add_argument("--json", action="store_true")
+    proj_act.add_parser("validate", parents=[common], help="validate projects manifest and notes")
+    p_add = proj_act.add_parser("add", parents=[common], help="add project to manifest and create note")
+    p_add.add_argument("slug")
+    p_add.add_argument("--repo", required=True)
+    p_add.add_argument("--checkout", required=True)
+    p_add.add_argument("--branch", default="master")
+    p_arch = proj_act.add_parser("archive", parents=[common], help="archive a project")
+    p_arch.add_argument("slug")
+    p_up = proj_act.add_parser("update", parents=[common], help="update project note fields")
+    p_up.add_argument("slug")
+    p_up.add_argument("--proximo-passo", default=None)
+    p_up.add_argument("--bloqueio", default=None)
+    p_up.add_argument("--fase", default=None)
+    p_up.add_argument("--prioridade", choices=("P1", "P2", "P3"), default=None)
+
     sub.add_parser("sync", add_help=False, help="vault_sync.py with the vault preset (sb sync --help)")
     return parser
 
@@ -745,6 +794,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_review(args, vault, state_dir)
     if args.command == "search":
         return run_search(vault, " ".join(args.query), args.k, args.json)
+    if args.command == "projects":
+        return run_projects(args, vault)
     issues = run_doctor(vault, args.stale_days, args.today or dt.date.today())
     if args.json:
         json.dump([i._asdict() for i in issues], sys.stdout, ensure_ascii=False, indent=2)
