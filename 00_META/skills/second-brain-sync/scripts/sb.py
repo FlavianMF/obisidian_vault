@@ -633,6 +633,10 @@ def run_projects(args, vault: Path) -> int:
         sys.stderr.write("sb projects: missing dependency (PyYAML is required)\n")
         return 2
     try:
+        if args.action == "scan":
+            import projects_scan
+            state_dir = Path(os.environ.get("SECOND_BRAIN_STATE_DIR") or Path.home() / ".local/state/second-brain")
+            return projects_scan.scan(vault, state_dir, project_slug=args.project, run_tests=args.tests)
         if args.action == "list":
             return projects.cli_list(vault, as_json=args.json)
         if args.action == "validate":
@@ -747,6 +751,9 @@ def build_parser() -> argparse.ArgumentParser:
     rev_drop.add_argument("--apply", action="store_true")
     proj = sub.add_parser("projects", parents=[common], help="projects registry management")
     proj_act = proj.add_subparsers(dest="action", required=True)
+    p_scan = proj_act.add_parser("scan", parents=[common], help="scan projects git, prs, tickets, quota")
+    p_scan.add_argument("--project", default=None, help="scan only single project slug")
+    p_scan.add_argument("--tests", action="store_true", help="run test commands")
     p_list = proj_act.add_parser("list", parents=[common], help="list registered projects")
     p_list.add_argument("--json", action="store_true")
     proj_act.add_parser("validate", parents=[common], help="validate projects manifest and notes")
