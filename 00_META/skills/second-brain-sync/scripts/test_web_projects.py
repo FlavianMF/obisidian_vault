@@ -1,6 +1,8 @@
+import yaml
 import datetime as dt
 import json
 import unittest
+from unittest.mock import patch, MagicMock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -176,6 +178,43 @@ class WebProjectsTest(unittest.TestCase):
             self.assertIn('data-cmd="pausar projeto_p1"', html_text)
             self.assertNotIn("<button disabled", html_text)
             self.assertNotIn("secret_token_leaked", html_text)
+
+
+    def test_api_command_approve_notifies_secretary(self):
+        with TemporaryDirectory() as td:
+            vault = make_vault(Path(td))
+            state_dir = Path(td) / "state"
+            state_dir.mkdir(parents=True, exist_ok=True)
+            manifest_file = vault / "00_META/projects/manifest.yaml"
+            raw_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
+            raw_data["secretario"] = {"agent_id": "sec-agent-999"}
+            manifest_file.write_text(yaml.safe_dump(raw_data), encoding="utf-8")
+
+            s_file = state_dir / "suggestions.jsonl"
+            s_file.write_text(
+                json.dumps({
+                    "id": "s-4321", "slug": "projeto_p1", "ticket": "sp-1", "action": "run",
+                    "harness": "claude", "model": "sonnet", "effort": "high", "reason": "test",
+                    "state": "pending", "ts": "2026-11-02T20:00:00"
+                }) + "\n",
+                encoding="utf-8"
+            )
+
+            app = web_service.create_app(vault_path=vault, state_dir=state_dir)
+            client = TestClient(app)
+
+            with patch("web_projects.subprocess.run") as mock_run:
+                mock_run.return_value = MagicMock(returncode=0)
+                res = client.post("/api/command", json={"text": "aprovar s-4321"})
+                self.assertEqual(res.status_code, 200)
+                self.assertTrue(res.json()["ok"])
+                mock_run.assert_called_once()
+                args, _ = mock_run.call_args
+                cmd = args[0]
+                self.assertIn("agent", cmd)
+                self.assertIn("send", cmd)
+                self.assertIn("sec-agent-999", cmd)
+                self.assertIn("aprovado s-4321", cmd)
 
 
 if __name__ == "__main__":

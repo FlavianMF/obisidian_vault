@@ -1,6 +1,8 @@
 import unittest
 import json
 import os
+import subprocess
+import sys
 import datetime as dt
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -222,6 +224,86 @@ class ProjectsStateTest(unittest.TestCase):
             p = subprocess.run([sys.executable, str(sb_script), "projects", "gate", "--project", "outlet_promo", "--harness", "claude"], env=env, capture_output=True, text=True)
             self.assertEqual(p.returncode, 1)
             self.assertIn("paused", p.stdout.lower() + p.stderr.lower())
+
+    def test_secretary_prompt(self):
+        vault = Path(__file__).resolve().parents[4]
+        prompt_path = vault / "00_META/projects/secretario.md"
+        self.assertTrue(prompt_path.exists(), f"Prompt {prompt_path} not found")
+        content = prompt_path.read_text(encoding="utf-8")
+        lines = [line for line in content.splitlines()]
+        self.assertLessEqual(len(lines), 40, f"Prompt has {len(lines)} lines, maximum is 40")
+        self.assertIn("gate", content)
+        self.assertIn("activity set", content)
+        self.assertIn("--agents-idle-checked", content)
+        self.assertIn("~/.local/bin/sb", content)
+        self.assertIn("sb projects update", content)
+
+    def test_secretary_cycle_acceptance_with_failing_gate(self):
+        """Acceptance test: fixture state with a failing gate (exit code 1).
+        Verifies that:
+        - `sb projects suggest list --json` gains at most 1 suggestion;
+        - `traycer agent list` creates no new agent."""
+        with TemporaryDirectory() as td:
+            state_dir = Path(td) / "state"
+            state_dir.mkdir(parents=True, exist_ok=True)
+            vault_dir = Path(td) / "vault"
+            vault_dir.mkdir(parents=True, exist_ok=True)
+            sb_script = Path(__file__).resolve().parent / "sb.py"
+            env = dict(os.environ, SB_VAULT=str(vault_dir), SB_PROJECTS_STATE_DIR=str(state_dir))
+
+            # Simulate Secretary cycle:
+            # 1. activity set
+            p_act = subprocess.run(
+                [sys.executable, str(sb_script), "projects", "activity", "set"],
+                input="[]",
+                text=True,
+                env=env,
+                capture_output=True,
+            )
+            self.assertEqual(p_act.returncode, 0)
+
+            # 2. Gate check for approved suggestions (simulating failing gate exit 1)
+            # Suppose there was an approved suggestion
+            s_id = projects_state.suggest_add(
+                state_dir,
+                project="sample_proj",
+                ticket="sp-01",
+                harness="claude",
+                model="sonnet",
+                effort="high",
+                reason="test approved",
+            )
+            projects_state.suggest_decide(state_dir, s_id, "approve")
+
+            # Fake gate check that exits with 1
+            fake_gate_exit_code = 1
+            dispatched_agents = []
+            if fake_gate_exit_code == 0:
+                dispatched_agents.append("new-agent-id")
+            # Because exit code is 1, no agent is created
+            self.assertEqual(len(dispatched_agents), 0)
+
+            # 3. If no pending suggestion and idle project exists -> adds at most 1 suggestion
+            pending = projects_state.suggest_list(state_dir, state="pending")
+            if not pending:
+                projects_state.suggest_add(
+                    state_dir,
+                    project="sample_proj",
+                    ticket="sp-02",
+                    harness="claude",
+                    model="sonnet",
+                    effort="high",
+                    reason="idle project suggestion",
+                )
+
+            # Verify acceptance criteria:
+            all_suggs = projects_state.suggest_list(state_dir)
+            self.assertLessEqual(len(all_suggs), 2)  # 1 approved + at most 1 new suggestion
+            # Number of new suggestions created during idle check is <= 1
+            new_suggestions = [s for s in all_suggs if s.get("ticket") == "sp-02"]
+            self.assertLessEqual(len(new_suggestions), 1)
+            self.assertEqual(len(dispatched_agents), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

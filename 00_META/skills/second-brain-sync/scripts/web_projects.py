@@ -3,6 +3,8 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any, Optional
 
@@ -345,6 +347,22 @@ def api_projects(request: Request) -> JSONResponse:
     return JSONResponse(content=resp)
 
 
+def notify_secretary_approved(vault: Path, suggestion_id: str) -> None:
+    try:
+        manifest = projects.load_manifest(vault)
+        sec = manifest.secretario or manifest.raw.get("secretary", {})
+        sec_agent_id = sec.get("agent_id")
+        if sec_agent_id:
+            traycer_bin = shutil.which("traycer") or "/home/flv/.traycer/cli/bin/traycer"
+            subprocess.run(
+                [traycer_bin, "agent", "send", "--to", str(sec_agent_id), "--message", f"aprovado {suggestion_id}"],
+                capture_output=True,
+                timeout=5,
+            )
+    except Exception:
+        pass
+
+
 class CommandRequest(BaseModel):
     text: str = Field(max_length=500)
 
@@ -359,6 +377,8 @@ def api_command(req: CommandRequest, request: Request) -> JSONResponse:
         return JSONResponse(status_code=400, content={"ok": False, "message": parsed.message})
     with request.app.state.lock:  # pausing, prioritising and approving write state and the vault like /api/decide
         result = commands.execute(parsed, vault, state_dir)
+    if result.ok and getattr(parsed, "action", None) == "suggest_decide" and getattr(parsed, "decision", None) == "approve":
+        notify_secretary_approved(vault, parsed.id)
     return JSONResponse(status_code=200 if result.ok else 400, content={"ok": result.ok, "message": result.message})
 
 
