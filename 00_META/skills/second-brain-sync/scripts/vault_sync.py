@@ -364,7 +364,7 @@ def sync(args: argparse.Namespace, vault_root: Path) -> tuple[int, dict]:
     status = run_git(vault_root, ["status", "--porcelain", "--untracked-files=all", "-z"])
     entries = porcelain_entries(status.stdout)
     expected = set(args.note)
-    unexpected = [path for _, path in entries if path not in expected and not is_manifest(path)]
+    unexpected = [path for _, path in entries if path not in expected and not is_manifest(path) and not path.startswith("00_Inbox/")]
     if unexpected:
         event["outcome"] = "refused-dirty"
         return fail("vault has unrelated dirty/untracked files, refusing to proceed:\n  " + "\n  ".join(unexpected)), event
