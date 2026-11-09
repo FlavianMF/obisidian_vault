@@ -10,6 +10,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent
 RANK = SCRIPTS / "vault_rank.sh"
 HINT = SCRIPTS / "prompt_hint.sh"
+SESSION_HINT = SCRIPTS / "session_hint.sh"
 VAULT = SCRIPTS.parents[3]
 
 HEADER = "| Path | Title | Tags | Created | Provenance | Confidence | Seen in | Summary |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n"
@@ -203,6 +204,54 @@ class PromptHintTest(unittest.TestCase):
         self.assertEqual(oct((self.state / "shadow.jsonl").stat().st_mode & 0o777), "0o600")
 
 
+
+
+class SessionHintTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.manifests = Path(self.tmp.name) / "by_type"
+        write_manifest(self.manifests)
+        self.env = {**os.environ, "SECOND_BRAIN_MANIFEST_DIR": str(self.manifests)}
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_session_hint(self, *args, env=None):
+        done = subprocess.run(
+            ["bash", str(SESSION_HINT), *args],
+            capture_output=True,
+            text=True,
+            env=env or self.env,
+            check=False,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        return done.stdout
+
+    def test_default_mode_emits_one_line_hint_when_matched(self):
+        out = self.run_session_hint("jira")
+        self.assertEqual(
+            out,
+            "[Second Brain] Cofre ativo. Consulte notas sob demanda via: sb search <termo>\n",
+        )
+        # Token count / brevity check (under 25 tokens)
+        self.assertLess(len(out.split()), 25)
+
+    def test_full_mode_preserves_ranked_notes(self):
+        for args in (["jira", "--full"], ["--full", "jira"]):
+            out = self.run_session_hint(*args)
+            lines = out.splitlines()
+            self.assertTrue(1 <= len(lines) <= 5)
+            self.assertTrue(any("20/a.md" in line for line in lines))
+            self.assertTrue(any("(pattern)" in line for line in lines))
+
+    def test_graceful_silence_on_no_match(self):
+        self.assertEqual(self.run_session_hint("repo_sem_notas_no_vault"), "")
+        self.assertEqual(self.run_session_hint("repo_sem_notas_no_vault", "--full"), "")
+
+    def test_graceful_silence_without_arguments(self):
+        self.assertEqual(self.run_session_hint(), "")
+        self.assertEqual(self.run_session_hint("--full"), "")
+
 class RealVaultSmokeTest(unittest.TestCase):
     def test_real_vault_answers_within_latency_budget(self):
         import time
@@ -216,6 +265,29 @@ class RealVaultSmokeTest(unittest.TestCase):
         self.assertLess(time.perf_counter() - started, 0.3)
         self.assertTrue(done.stdout.strip())
         self.assertTrue(VAULT.joinpath("00_META").is_dir())
+
+    def test_real_vault_session_hint_default_and_full(self):
+        out_default = subprocess.run(
+            ["bash", str(SESSION_HINT), "outlet_promo"],
+            capture_output=True, text=True, timeout=5, check=False,
+        ).stdout
+        self.assertEqual(
+            out_default,
+            "[Second Brain] Cofre ativo. Consulte notas sob demanda via: sb search <termo>\n",
+        )
+        out_full = subprocess.run(
+            ["bash", str(SESSION_HINT), "outlet_promo", "--full"],
+            capture_output=True, text=True, timeout=5, check=False,
+        ).stdout
+        lines = out_full.splitlines()
+        self.assertTrue(1 <= len(lines) <= 5)
+        self.assertTrue(any("20_Permanent_Notes" in line for line in lines))
+
+        out_unmatched = subprocess.run(
+            ["bash", str(SESSION_HINT), "repo_inexistente_12345"],
+            capture_output=True, text=True, timeout=5, check=False,
+        ).stdout
+        self.assertEqual(out_unmatched, "")
 
 
 if __name__ == "__main__":

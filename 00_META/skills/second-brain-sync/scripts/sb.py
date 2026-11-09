@@ -6,9 +6,10 @@ single writer and delegates every guard to vault_sync.py.
 
   sb status                 vault, notes by type, git state, hook switches, last sync
   sb doctor [--json]        unresolved wikilinks, duplicate titles, frontmatter, secrets, stale notes
-  sb search [-k N] [--json] <query>
-                            the L1 ranker (vault_rank.sh), same TSV output; --json prints a list of {path, title,
-                            type, summary, coverage, confidence, score, terms}, type and summary from the manifests
+  sb search [-k N] [--json] [--reindex] <query>
+                            BM25 over the SQLite FTS5 index (00_META/manifests/index.sqlite, built by generate_manifests.py;
+                            --reindex rebuilds it); without the index, the L1 ranker (vault_rank.sh). Same TSV columns;
+                            --json prints a list of {path, title, type, summary, coverage, confidence, score, terms}
   sb candidate add|list|prune
                             queue of note candidates (local state, 30-day TTL); never writes the vault
   sb observe record|summarize
@@ -19,6 +20,7 @@ single writer and delegates every guard to vault_sync.py.
                             category of the current session (CLAUDE_CODE_SESSION_ID or --session), kept for the usage record
   sb usage report [--days N] [--json]
                             tokens per task category and usage-limit notices per week; reads local state only
+  sb usage backfill         fill the category of old records from the git branch of their transcript
   sb review capture next|apply|drop
                             review the candidate queue; dry run unless --apply, writes only via vault_sync.py
   sb review promote next|apply
@@ -45,15 +47,8 @@ from typing import NamedTuple
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import candidates  # noqa: E402
-import ctxpack  # noqa: E402
-import observe  # noqa: E402
-import patches  # noqa: E402
-import review  # noqa: E402
-import review_notes  # noqa: E402
-import usage  # noqa: E402
-import generate_manifests as gm  # noqa: E402
-from lib import frontmatter, secret_scan  # noqa: E402
+# Same value as generate_manifests.DEFAULT_VAULT_ROOT (a test pins it): the parser must not import the module for it.
+DEFAULT_VAULT_ROOT = HERE.parents[3]
 
 REQUIRED_FIELDS = ("title", "type", "tags", "created")
 NOTE_TYPES = {
@@ -148,6 +143,8 @@ def normalize_supersedes(value) -> list[str]:
 # ---------------------------------------------------------------- doctor
 
 def check_note(vault: Path, rel: Path, text: str, index: LinkIndex) -> tuple[list[Issue], dict]:
+    import generate_manifests as gm
+    from lib import frontmatter, secret_scan
     issues: list[Issue] = []
     path = str(rel)
     if not text.strip():
@@ -195,6 +192,7 @@ def check_note(vault: Path, rel: Path, text: str, index: LinkIndex) -> tuple[lis
 
 def bare_link_targets(body: str) -> set[str]:
     """Stems that a note points at by name only (no folder), which is where duplicates become ambiguous."""
+    import generate_manifests as gm
     targets = set()
     for match in gm.WIKILINK.finditer(strip_code(body)):
         if "\n" not in match.group(1):
@@ -205,6 +203,7 @@ def bare_link_targets(body: str) -> set[str]:
 
 
 def run_doctor(vault: Path, stale_days: int, today: dt.date) -> list[Issue]:
+    import generate_manifests as gm
     index = build_index(vault)
     issues: list[Issue] = []
     by_title: dict[str, list[str]] = defaultdict(list)
@@ -294,6 +293,9 @@ def last_sync(state_dir: Path) -> str:
 
 
 def run_status(vault: Path, state_dir: Path, env) -> str:
+    import candidates
+    import generate_manifests as gm
+    from lib import frontmatter
     counts: dict[str, int] = defaultdict(int)
     total = 0
     for path, _ in gm.iter_notes(vault):
@@ -339,7 +341,32 @@ def rank_json(tsv: str, manifest_rows: dict[str, dict[str, str]]) -> list[dict]:
     return hits
 
 
-def run_search(vault: Path, query: str, k: int, as_json: bool = False) -> int:
+def fts_search(vault: Path, query: str, k: int, as_json: bool, reindex: bool) -> bool:
+    """Answer from the SQLite FTS5 index (BM25). False means "no index": the caller falls back to vault_rank.sh."""
+    try:
+        import vault_index  # lazy: the other subcommands never pay for sqlite3
+        if not vault_index.index_enabled():
+            return False
+        db = vault_index.default_db_path(vault)
+        if reindex:
+            vault_index.build_index(vault, db)
+        elif not db.is_file():
+            return False
+        hits = vault_index.search_fts(query, db, k)
+    except Exception:  # noqa: BLE001 - no FTS5, corrupt or unreadable index: the grep/awk ranker still answers
+        return False
+    if as_json:
+        json.dump([{f: hit[f] for f in SEARCH_FIELDS} for hit in hits], sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+    else:
+        sys.stdout.write(vault_index.format_tsv(hits))
+    return True
+
+
+def run_search(vault: Path, query: str, k: int, as_json: bool = False, reindex: bool = False) -> int:
+    if fts_search(vault, query, k, as_json, reindex):
+        return 0
+    import generate_manifests as gm
     manifests = vault / "00_META/manifests/by_type"
     env = dict(os.environ, SECOND_BRAIN_MANIFEST_DIR=str(manifests))
     if not as_json:
@@ -357,6 +384,7 @@ def run_search(vault: Path, query: str, k: int, as_json: bool = False) -> int:
 
 def read_body(source: str) -> str | None:
     """Draft body for `candidate add --body-file`: a path, or `-` for stdin; capped before it is decoded."""
+    import candidates
     if not source:
         return None
     limit = candidates.MAX_DRAFT_BYTES + 1
@@ -371,10 +399,11 @@ def read_body(source: str) -> str | None:
 
 
 def run_candidate(args, state_dir: Path) -> int:
+    import candidates
     if args.action == "add":
         project = args.project or detect_project()
         session = args.session if args.session is not None else os.environ.get("CLAUDE_CODE_SESSION_ID")
-        if session and observe.SAFE_SESSION.sub("", session) and candidates.safe_session(session) is None:
+        if session and candidates.SAFE_SESSION.sub("", session) and candidates.safe_session(session) is None:
             sys.stderr.write(f"sb candidate: session id refused (over {candidates.MAX_SESSION_RAW} characters "
                              "or shaped like a credential)\n")
             return 2
@@ -443,6 +472,8 @@ def run_review(args, vault: Path, state_dir: Path) -> int:
             exposed=args.exposed,
             allow_hosts=args.allow_host,
         )
+    import review
+    import review_notes
     if args.stage in ("promote", "stock") and args.action == "next":
         if args.stage == "promote":
             sys.stdout.write(review_notes.run_promote_next(vault, state_dir, limit=args.limit))
@@ -486,6 +517,7 @@ def run_review(args, vault: Path, state_dir: Path) -> int:
 
 
 def run_observe(args, state_dir: Path) -> int:
+    import observe
     if args.action == "record":
         try:
             payload = json.load(sys.stdin)
@@ -502,13 +534,15 @@ def run_observe(args, state_dir: Path) -> int:
 
 
 def run_task(args, state_dir: Path) -> int:
+    import usage
+    from lib.session_id import MAX_SESSION_RAW, SAFE_SESSION, safe_session
     raw = args.session if args.session is not None else os.environ.get("CLAUDE_CODE_SESSION_ID", "")
-    if not observe.SAFE_SESSION.sub("", raw):
+    if not SAFE_SESSION.sub("", raw):
         sys.stderr.write("sb task: no session id; set CLAUDE_CODE_SESSION_ID or pass --session\n")
         return 2
-    session = candidates.safe_session(raw, cut=False)
+    session = safe_session(raw, cut=False)
     if session is None:
-        sys.stderr.write(f"sb task: session id refused (over {candidates.MAX_SESSION_RAW} characters "
+        sys.stderr.write(f"sb task: session id refused (over {MAX_SESSION_RAW} characters "
                          "or shaped like a credential)\n")
         return 2
     try:
@@ -521,6 +555,7 @@ def run_task(args, state_dir: Path) -> int:
 
 
 def run_usage(args, state_dir: Path) -> int:
+    import usage
     if not 1 <= args.days <= usage.MAX_DAYS:
         sys.stderr.write(f"sb usage: --days must be between 1 and {usage.MAX_DAYS}\n")
         return 2
@@ -534,6 +569,14 @@ def run_usage(args, state_dir: Path) -> int:
         sys.stdout.write("\n")
     else:
         sys.stdout.write(usage.format_report(report))
+    return 0
+
+
+def run_usage_backfill(state_dir: Path) -> int:
+    import usage
+    done = usage.backfill(state_dir)
+    sys.stdout.write(f"usage backfill: {done['filled']} preenchidas, {done['unchanged']} sem branch util, "
+                     f"{done['no_transcript']} sem transcript\n")
     return 0
 
 
@@ -556,6 +599,7 @@ def detect_project() -> str:
 
 
 def run_patch(args, state_dir: Path) -> int:
+    import patches
     if args.action == "list":
         found = patches.list_patches(state_dir)
         if args.json:
@@ -591,7 +635,7 @@ def run_sync(rest: list[str]) -> int:
     """`sb sync ...` is vault_sync.py with --vault-path preset; every guard stays in vault_sync.py."""
     import vault_sync
 
-    vault = Path(os.environ.get("SECOND_BRAIN_VAULT") or gm.DEFAULT_VAULT_ROOT)
+    vault = Path(os.environ.get("SECOND_BRAIN_VAULT") or DEFAULT_VAULT_ROOT)
     sys.argv = ["sb sync", "--vault-path", str(vault), *rest]  # a later --vault-path in `rest` wins
     code = vault_sync.main()
     if code == 0:
@@ -612,6 +656,7 @@ def synced_notes(rest: list[str]) -> set[str]:
 
 def report_note_issues(vault: Path, notes: set[str]) -> None:
     """Run `doctor` after a successful sync and print only the findings on the notes just synced."""
+    import generate_manifests as gm
     if not notes:
         return
     try:
@@ -734,37 +779,51 @@ def run_projects(args, vault: Path) -> int:
     return 0
 
 
-def build_parser() -> argparse.ArgumentParser:
+# Subcommands whose parser needs a heavy module (choices, defaults) are built only when they are the one running.
+# Any other known subcommand builds none of them; `sb`, `sb --help` and an unknown name build all.
+KNOWN_COMMANDS = {"status", "doctor", "search", "candidate", "observe", "patch", "task", "usage", "ctx", "review", "projects"}
+
+
+def build_parser(command: str | None = None) -> argparse.ArgumentParser:
+    """`command` limits the heavy subparsers to the one being run; None builds them all (help, tests)."""
+    def want(name: str) -> bool:
+        return command is None or command == name
+
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--vault-path", type=Path, default=Path(os.environ.get("SECOND_BRAIN_VAULT") or gm.DEFAULT_VAULT_ROOT))
+    common.add_argument("--vault-path", type=Path, default=Path(os.environ.get("SECOND_BRAIN_VAULT") or DEFAULT_VAULT_ROOT))
     parser = argparse.ArgumentParser(prog="sb", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status", parents=[common], help="vault, git, hooks, last sync")
-    doctor = sub.add_parser("doctor", parents=[common], help="read-only vault health check")
-    doctor.add_argument("--json", action="store_true")
-    doctor.add_argument("--limit", type=int, default=15, help="lines per check (default 15)")
-    doctor.add_argument("--stale-days", type=int, default=gm.DEFAULT_STALE_DAYS)
-    doctor.add_argument("--today", type=dt.date.fromisoformat, default=None, help=argparse.SUPPRESS)
-    search = sub.add_parser("search", parents=[common], help="L1 ranker over the manifests")
+    if want("doctor"):
+        from generate_manifests import DEFAULT_STALE_DAYS
+        doctor = sub.add_parser("doctor", parents=[common], help="read-only vault health check")
+        doctor.add_argument("--json", action="store_true")
+        doctor.add_argument("--limit", type=int, default=15, help="lines per check (default 15)")
+        doctor.add_argument("--stale-days", type=int, default=DEFAULT_STALE_DAYS)
+        doctor.add_argument("--today", type=dt.date.fromisoformat, default=None, help=argparse.SUPPRESS)
+    search = sub.add_parser("search", parents=[common], help="BM25 search (SQLite FTS5 index), vault_rank.sh without it")
     search.add_argument("-k", type=int, default=5)
+    search.add_argument("--reindex", action="store_true", help="rebuild the FTS5 index (00_META/manifests/index.sqlite) first")
     search.add_argument("--json", action="store_true", help="JSON list with type and summary from the manifests")
     search.add_argument("query", nargs="+")
-    cand = sub.add_parser("candidate", parents=[common], help="queue of note candidates (30-day TTL)")
-    cand_sub = cand.add_subparsers(dest="action", required=True)
-    cand_add = cand_sub.add_parser("add", help="queue one candidate; the vault is not touched")
-    cand_add.add_argument("--kind", required=True, choices=candidates.KINDS)
-    cand_add.add_argument("--title", required=True, help=f"up to {candidates.MAX_TITLE} characters")
-    cand_add.add_argument("--summary", default="", help=f"up to {candidates.MAX_SUMMARY} characters, no secrets")
-    cand_add.add_argument("--project", default="", help="default: the git repo name")
-    cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc", "observer"))
-    cand_add.add_argument("--session", default=None, help="session id, default: CLAUDE_CODE_SESSION_ID; "
-                          "a repeat from the same session does not count as a recurrence")
-    cand_add.add_argument("--body-file", default="", help="note draft to keep with the candidate: a path or - for stdin "
-                          f"(up to {candidates.MAX_DRAFT_BYTES // 1024} KB, no secrets)")
-    cand_list = cand_sub.add_parser("list", help="pending candidates, oldest first")
-    cand_list.add_argument("--json", action="store_true")
-    cand_prune = cand_sub.add_parser("prune", help="drop candidates older than 30 days (dry run by default)")
-    cand_prune.add_argument("--apply", action="store_true")
+    if want("candidate"):
+        import candidates
+        cand = sub.add_parser("candidate", parents=[common], help="queue of note candidates (30-day TTL)")
+        cand_sub = cand.add_subparsers(dest="action", required=True)
+        cand_add = cand_sub.add_parser("add", help="queue one candidate; the vault is not touched")
+        cand_add.add_argument("--kind", required=True, choices=candidates.KINDS)
+        cand_add.add_argument("--title", required=True, help=f"up to {candidates.MAX_TITLE} characters")
+        cand_add.add_argument("--summary", default="", help=f"up to {candidates.MAX_SUMMARY} characters, no secrets")
+        cand_add.add_argument("--project", default="", help="default: the git repo name")
+        cand_add.add_argument("--source", default="agent", choices=("agent", "user", "ecc", "observer"))
+        cand_add.add_argument("--session", default=None, help="session id, default: CLAUDE_CODE_SESSION_ID; "
+                              "a repeat from the same session does not count as a recurrence")
+        cand_add.add_argument("--body-file", default="", help="note draft to keep with the candidate: a path or - for stdin "
+                              f"(up to {candidates.MAX_DRAFT_BYTES // 1024} KB, no secrets)")
+        cand_list = cand_sub.add_parser("list", help="pending candidates, oldest first")
+        cand_list.add_argument("--json", action="store_true")
+        cand_prune = cand_sub.add_parser("prune", help="drop candidates older than 30 days (dry run by default)")
+        cand_prune.add_argument("--apply", action="store_true")
     obs = sub.add_parser("observe", parents=[common], help="tool-call metadata log and candidates (no model)")
     obs_sub = obs.add_subparsers(dest="action", required=True)
     obs_sub.add_parser("record", help="read one PostToolUse payload on stdin and log its metadata")
@@ -780,60 +839,71 @@ def build_parser() -> argparse.ArgumentParser:
     apply_cmd = patch_sub.add_parser("apply", help="check one patch against its project; with --apply, write it")
     apply_cmd.add_argument("id")
     apply_cmd.add_argument("--apply", action="store_true", help="write the target in the patch's project root")
-    task = sub.add_parser("task", parents=[common], help="category of the current session")
-    task_set = task.add_subparsers(dest="action", required=True).add_parser("set", help="annotate the session")
-    task_set.add_argument("category", choices=usage.CATEGORIES)
-    task_set.add_argument("--session", default=None, help="default: CLAUDE_CODE_SESSION_ID")
-    use = sub.add_parser("usage", parents=[common], help="token usage per session (numbers only)")
-    use_report = use.add_subparsers(dest="action", required=True).add_parser(
-        "report", help="tokens per category and usage-limit notices per week")
-    use_report.add_argument("--days", type=int, default=30, help=f"window in days, 1 to {usage.MAX_DAYS} (default 30)")
-    use_report.add_argument("--json", action="store_true")
-    use_report.add_argument("--today", type=dt.date.fromisoformat, default=None, help=argparse.SUPPRESS)
+    if want("task"):
+        import usage
+
+        task = sub.add_parser("task", parents=[common], help="category of the current session")
+        task_set = task.add_subparsers(dest="action", required=True).add_parser("set", help="annotate the session")
+        task_set.add_argument("category", choices=usage.CATEGORIES)
+        task_set.add_argument("--session", default=None, help="default: CLAUDE_CODE_SESSION_ID")
+    if want("usage"):
+        import usage
+
+        use = sub.add_parser("usage", parents=[common], help="token usage per session (numbers only)")
+        use_actions = use.add_subparsers(dest="action", required=True)
+        use_actions.add_parser("backfill", help="infer the category of old records from their branch")
+        use_report = use_actions.add_parser("report", help="tokens per category and usage-limit notices per week")
+        use_report.add_argument("--days", type=int, default=30, help=f"window in days, 1 to {usage.MAX_DAYS} (default 30)")
+        use_report.add_argument("--json", action="store_true")
+        use_report.add_argument("--today", type=dt.date.fromisoformat, default=None, help=argparse.SUPPRESS)
     ctx = sub.add_parser("ctx", parents=[common], help="session context pack for subagents (hook payload on stdin)")
     ctx.add_argument("action", choices=("record-read", "record-finding", "render", "prune"))
-    rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
-    stages = rev.add_subparsers(dest="stage", required=True)
-    web = stages.add_parser("web", help="local web review interface for candidate triage")
-    web.add_argument("--host", default="127.0.0.1", help="host to bind (default: 127.0.0.1)")
-    web.add_argument("--port", type=int, default=8000, help="port to bind (default: 8000)")
-    web.add_argument("--no-browser", action="store_true", help="do not open browser automatically")
-    web.add_argument("--exposed", action="store_true",
-                     help="require a token on every route (web.token_env of the manifest, default SB_WEB_TOKEN)")
-    web.add_argument("--allow-host", action="append", default=None, metavar="NAME",
-                     help="extra Host header name to accept, e.g. the MagicDNS name (repeatable)")
-    stage = stages.add_parser("capture", help="candidates to notes")
-    promote = stages.add_parser("promote", help="notes worth an Agent-Instruction.md entry").add_subparsers(
-        dest="action", required=True)
-    promote.add_parser("next", help="notes seen in 2+ projects").add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
-    promote_apply = promote.add_parser("apply", help="validate a decisions file; with --apply, record it")
-    promote_apply.add_argument("--decisions", required=True, help="JSON list of {note, verdict, reason?}")
-    promote_apply.add_argument("--apply", action="store_true")
-    stock = stages.add_parser("stock", help="notes that need a second look").add_subparsers(dest="action", required=True)
-    stock_next = stock.add_parser("next", help="stale, unconfirmed, duplicate or broken notes")
-    stock_apply = stock.add_parser("apply", help="validate a decisions file; with --apply, write through vault_sync.py")
-    stock_apply.add_argument("--decisions", required=True, help="JSON list of {note, verdict, ...}")
-    stock_apply.add_argument("--apply", action="store_true")
-    stock_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
-    stock_next.add_argument("--fresh", action="store_true", help="ignore the open batch")
-    for each in (stock_next, stock_apply):
-        each.add_argument("--stale-days", type=int, default=gm.DEFAULT_STALE_DAYS)
-    act = stage.add_subparsers(dest="action", required=True)
-    rev_next = act.add_parser("next", help="a batch with a proposal for each candidate; resumes an open batch")
-    rev_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
-    rev_next.add_argument("--project", default="")
-    rev_next.add_argument("--kind", default="", choices=("",) + candidates.KINDS)
-    rev_next.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
-    rev_next.add_argument("--fresh", action="store_true", help="ignore the open batch")
-    rev_next.add_argument("--json", action="store_true")
-    rev_apply = act.add_parser("apply", help="validate a decisions file; with --apply, write through vault_sync.py")
-    rev_apply.add_argument("--decisions", required=True, help="JSON list of {id, verdict, ...}")
-    rev_apply.add_argument("--apply", action="store_true")
-    rev_drop = act.add_parser("drop", help="reject a class of candidates with one logged reason")
-    rev_drop.add_argument("--match", required=True, help="regex searched in the title")
-    rev_drop.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
-    rev_drop.add_argument("--reason", required=True)
-    rev_drop.add_argument("--apply", action="store_true")
+    if want("review"):
+        import candidates
+        import review
+        import generate_manifests as gm
+        rev = sub.add_parser("review", parents=[common], help="review the candidate queue (dry run by default)")
+        stages = rev.add_subparsers(dest="stage", required=True)
+        web = stages.add_parser("web", help="local web review interface for candidate triage")
+        web.add_argument("--host", default="127.0.0.1", help="host to bind (default: 127.0.0.1)")
+        web.add_argument("--port", type=int, default=8000, help="port to bind (default: 8000)")
+        web.add_argument("--no-browser", action="store_true", help="do not open browser automatically")
+        web.add_argument("--exposed", action="store_true",
+                         help="require a token on every route (web.token_env of the manifest, default SB_WEB_TOKEN)")
+        web.add_argument("--allow-host", action="append", default=None, metavar="NAME",
+                         help="extra Host header name to accept, e.g. the MagicDNS name (repeatable)")
+        stage = stages.add_parser("capture", help="candidates to notes")
+        promote = stages.add_parser("promote", help="notes worth an Agent-Instruction.md entry").add_subparsers(
+            dest="action", required=True)
+        promote.add_parser("next", help="notes seen in 2+ projects").add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
+        promote_apply = promote.add_parser("apply", help="validate a decisions file; with --apply, record it")
+        promote_apply.add_argument("--decisions", required=True, help="JSON list of {note, verdict, reason?}")
+        promote_apply.add_argument("--apply", action="store_true")
+        stock = stages.add_parser("stock", help="notes that need a second look").add_subparsers(dest="action", required=True)
+        stock_next = stock.add_parser("next", help="stale, unconfirmed, duplicate or broken notes")
+        stock_apply = stock.add_parser("apply", help="validate a decisions file; with --apply, write through vault_sync.py")
+        stock_apply.add_argument("--decisions", required=True, help="JSON list of {note, verdict, ...}")
+        stock_apply.add_argument("--apply", action="store_true")
+        stock_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
+        stock_next.add_argument("--fresh", action="store_true", help="ignore the open batch")
+        for each in (stock_next, stock_apply):
+            each.add_argument("--stale-days", type=int, default=gm.DEFAULT_STALE_DAYS)
+        act = stage.add_subparsers(dest="action", required=True)
+        rev_next = act.add_parser("next", help="a batch with a proposal for each candidate; resumes an open batch")
+        rev_next.add_argument("--limit", type=int, default=review.BATCH_DEFAULT)
+        rev_next.add_argument("--project", default="")
+        rev_next.add_argument("--kind", default="", choices=("",) + candidates.KINDS)
+        rev_next.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
+        rev_next.add_argument("--fresh", action="store_true", help="ignore the open batch")
+        rev_next.add_argument("--json", action="store_true")
+        rev_apply = act.add_parser("apply", help="validate a decisions file; with --apply, write through vault_sync.py")
+        rev_apply.add_argument("--decisions", required=True, help="JSON list of {id, verdict, ...}")
+        rev_apply.add_argument("--apply", action="store_true")
+        rev_drop = act.add_parser("drop", help="reject a class of candidates with one logged reason")
+        rev_drop.add_argument("--match", required=True, help="regex searched in the title")
+        rev_drop.add_argument("--source", default="", choices=("", "agent", "user", "ecc", "observer"))
+        rev_drop.add_argument("--reason", required=True)
+        rev_drop.add_argument("--apply", action="store_true")
     proj = sub.add_parser("projects", parents=[common], help="projects registry management")
     proj_act = proj.add_subparsers(dest="action", required=True)
     p_scan = proj_act.add_parser("scan", parents=[common], help="scan projects git, prs, tickets, quota")
@@ -907,7 +977,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "sync":
         return run_sync(argv[1:])
-    args = build_parser().parse_args(argv)
+    args = build_parser(argv[0] if argv and argv[0] in KNOWN_COMMANDS else None).parse_args(argv)
     vault = args.vault_path.resolve()
     state_dir = Path(os.environ.get("SECOND_BRAIN_STATE_DIR") or Path.home() / ".local/state/second-brain")
     if args.command == "status":
@@ -916,6 +986,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "candidate":
         return run_candidate(args, state_dir)
     if args.command == "ctx":
+        import ctxpack
         return ctxpack.run(args.action, state_dir, sys.stdin, sys.stdout, os.environ)
     if args.command == "observe":
         return run_observe(args, state_dir)
@@ -924,11 +995,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "task":
         return run_task(args, state_dir)
     if args.command == "usage":
-        return run_usage(args, state_dir)
+        return run_usage_backfill(state_dir) if args.action == "backfill" else run_usage(args, state_dir)
     if args.command == "review":
         return run_review(args, vault, state_dir)
     if args.command == "search":
-        return run_search(vault, " ".join(args.query), args.k, args.json)
+        return run_search(vault, " ".join(args.query), args.k, args.json, args.reindex)
     if args.command == "projects":
         return run_projects(args, vault)
     issues = run_doctor(vault, args.stale_days, args.today or dt.date.today())

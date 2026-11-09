@@ -40,6 +40,7 @@ BAD_REL_CHARS = frozenset("`()")
 ID_RE = re.compile(r"[0-9a-f]{8}")
 HEADER_RE = re.compile(r"# ([a-z_-]+): (.*)")
 HEADER_KEYS = ("sb-patch", "rule", "project", "root", "target", "file", "count", "sessions", "session_ids", "created")
+EPHEMERAL_MARKERS = ("/.traycer/worktrees/", "/.traycer/epics/", "/tmp/")  # roots that vanish: no patch, no phantom project
 LINE_PREFIXES = ("- Leia `{rel}` com offset/limit", "- Evite ler `{rel}` inteiro")
 
 
@@ -219,6 +220,16 @@ def check_root(root: str) -> None:
         raise PatchError("root is the home directory")
     if not os.path.isdir(root):
         raise PatchError("root is not a directory")
+
+
+def ephemeral_root(root: str) -> bool:
+    """A root inside a Traycer worktree or epic, or under /tmp: the directory is short-lived, so a patch would go stale.
+
+    `SB_PATCHES_ALLOW_TMP=1` lifts only the /tmp marker, so the test suite can keep its temporary projects.
+    """
+    probe = os.path.normpath(root).rstrip("/") + "/"
+    allow_tmp = os.environ.get("SB_PATCHES_ALLOW_TMP") == "1"
+    return any(marker in probe for marker in EPHEMERAL_MARKERS if not (allow_tmp and marker == "/tmp/"))
 
 
 def relative_to(root: Path | str, path: str) -> str | None:
@@ -480,6 +491,8 @@ def propose(state_dir: Path, findings: list, *, root: Path | str, project: str, 
         real = os.path.realpath(str(root))
         check_root(real)
     except PatchError:
+        return 0
+    if ephemeral_root(real) or ephemeral_root(str(root)):
         return 0
     if sid is None:
         return 0

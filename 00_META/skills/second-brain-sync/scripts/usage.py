@@ -4,7 +4,8 @@
 and of its subagent files, counts the usage-limit notices, and writes one record per session to
 `<state>/usage/<session>.json`. It never stores a message, a command or the text of a notice. The record is a
 function of the transcript, so a second run on the same transcript leaves the same bytes. `sb task set` keeps the
-category of the session in `<state>/usage/<session>.task`. `build_report` and `format_report` back `sb usage report`.
+category of the session in `<state>/usage/<session>.task`; without it, the category is inferred from the git branch
+the transcript recorded (`infer_category`), and an explicit category always wins. `build_report` and `format_report` back `sb usage report`.
 Files are mode 0600 in a 0700 directory and expire after USAGE_TTL_DAYS.
 """
 from __future__ import annotations
@@ -39,6 +40,16 @@ RECORD_KEYS = frozenset((
 INT_KEYS = ("v", "eq", "output", "main_eq", "main_output", "sub_eq", "sub_output", "limit_hits")
 TIMESTAMP = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z")
 VALID_SESSION = re.compile(r"[A-Za-z0-9_-]+")
+# Branch prefix (before the first "/" or "-") to category. Anything else, like "traycer/<random-words>", main or chore,
+# stays uncategorized: guessing would put a wrong number in the report.
+BRANCH_CATEGORIES = {
+    "feat": "feature", "feature": "feature",
+    "fix": "bugfix", "bugfix": "bugfix", "hotfix": "bugfix",
+    "docs": "docs", "doc": "docs",
+    "research": "pesquisa", "pesquisa": "pesquisa", "spike": "pesquisa",
+}
+BRANCH_PREFIX = re.compile(r"(?:traycer/)?([A-Za-z]+)[/-]")
+PROJECTS_ROOT = Path.home() / ".claude" / "projects"
 
 
 class Totals(NamedTuple):
@@ -51,6 +62,7 @@ class Scan(NamedTuple):
     messages: int
     first_ts: str  # first valid timestamp in file order, "" when none
     limit_at: tuple[str, ...]  # one timestamp (or "") per usage-limit notice
+    branch: str = ""  # first git branch the main thread recorded, "" when none or detached
 
 
 def utcnow() -> dt.datetime:
@@ -114,7 +126,7 @@ def scan(path: Path, *, main: bool) -> Scan | None:
     message id counts. Usage-limit notices count only in the main thread.
     """
     replies: dict[str, dict] = {}
-    first_ts = ""
+    first_ts = branch = ""
     limit_at: list[str] = []
     seen_notices: set[str] = set()
     try:
@@ -122,6 +134,9 @@ def scan(path: Path, *, main: bool) -> Scan | None:
             stamp = entry.get("timestamp")
             if main and not first_ts and valid_timestamp(stamp):
                 first_ts = stamp
+            if main and not branch:
+                name = entry.get("gitBranch")
+                branch = name if isinstance(name, str) and name != "HEAD" else ""
             message = entry.get("message")
             message = message if isinstance(message, dict) else {}
             if entry.get("type") == "assistant" and message.get("usage") is not None:
@@ -142,7 +157,7 @@ def scan(path: Path, *, main: bool) -> Scan | None:
             sums[field] += _count(usage.get(field)) if isinstance(usage, dict) else 0
     eq = math.floor(sums["input_tokens"] + sums["cache_creation_input_tokens"] * 1.25
                     + sums["cache_read_input_tokens"] * 0.1)
-    return Scan(Totals(eq, sums["output_tokens"]), len(replies), first_ts, tuple(limit_at))
+    return Scan(Totals(eq, sums["output_tokens"]), len(replies), first_ts, tuple(limit_at), branch)
 
 
 def subagent_files(transcript: Path) -> list[Path]:
@@ -195,6 +210,12 @@ def read_task(state_dir: Path, session: str) -> str | None:
     return value if value in CATEGORIES else None
 
 
+def infer_category(branch: str | None) -> str | None:
+    """Category of a git branch by its prefix (`feat/x`, `fix-x`, `traycer/docs-x`), or None when it says nothing."""
+    match = BRANCH_PREFIX.match(branch or "")
+    return BRANCH_CATEGORIES.get(match.group(1).lower()) if match else None
+
+
 def valid_record(raw: object) -> bool:
     if not isinstance(raw, dict) or set(raw) != RECORD_KEYS:
         return False
@@ -235,7 +256,7 @@ def update(state_dir: Path, session: str, project: str, transcript: Path | None)
     sub_eq, sub_output = sum(s.totals.eq for s in subs), sum(s.totals.output for s in subs)
     record = {
         "v": RECORD_VERSION, "session": session, "date": date, "project": clean_project(project),
-        "category": read_task(state_dir, session),
+        "category": read_task(state_dir, session) or infer_category(main.branch),
         "eq": main.totals.eq + sub_eq, "output": main.totals.output + sub_output,
         "main_eq": main.totals.eq, "main_output": main.totals.output, "sub_eq": sub_eq, "sub_output": sub_output,
         "limit_hits": len(main.limit_at), "limit_at": list(main.limit_at),
@@ -248,6 +269,45 @@ def update(state_dir: Path, session: str, project: str, transcript: Path | None)
         _expire(usage_dir(state_dir), time.time())  # a new record: sweep the old ones
     _write_atomic(state_dir, path, data)
     return record
+
+
+def find_transcript(session: str, projects_root: Path = PROJECTS_ROOT) -> Path | None:
+    if not VALID_SESSION.fullmatch(session):
+        return None
+    try:
+        return next(iter(sorted(projects_root.glob(f"*/{session}.jsonl"))), None)
+    except OSError:
+        return None
+
+
+def backfill(state_dir: Path, projects_root: Path = PROJECTS_ROOT) -> dict:
+    """Give the records without a category the one inferred from their transcript's branch.
+
+    Only `category` changes; every other field stays as stored. An explicit `sb task set` still wins, a record whose
+    transcript is gone or names no usable branch is left alone. Returns the counts.
+    """
+    done = {"filled": 0, "unchanged": 0, "no_transcript": 0}
+    try:
+        files = sorted(usage_dir(state_dir).glob("*.json"))
+    except OSError:
+        return done
+    for path in files:
+        record = load_record(path)
+        if record is None or record["category"] is not None:
+            continue
+        transcript = find_transcript(record["session"], projects_root)
+        main = scan(transcript, main=True) if transcript else None
+        if main is None:
+            done["no_transcript"] += 1
+            continue
+        category = read_task(state_dir, record["session"]) or infer_category(main.branch)
+        if category is None:
+            done["unchanged"] += 1
+            continue
+        _write_atomic(state_dir, path, json.dumps({**record, "category": category}, sort_keys=True,
+                                                  ensure_ascii=False) + "\n")
+        done["filled"] += 1
+    return done
 
 
 def _event_date(stamp: str, fallback: dt.date) -> dt.date:

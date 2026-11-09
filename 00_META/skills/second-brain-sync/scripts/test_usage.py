@@ -527,6 +527,103 @@ class StateTest(Fixture):
         self.assertFalse((self.root / "outside.json").exists())
 
 
+class InferCategoryTest(Fixture):
+    def test_the_prefix_of_the_branch_gives_the_category(self):
+        cases = {
+            "feat/prd2-3-onboarding": "feature", "feature/x": "feature", "Feat/X": "feature",
+            "fix/login": "bugfix", "bugfix/x": "bugfix", "hotfix/x": "bugfix", "fix-login": "bugfix",
+            "docs/prd-flows-ui-mvp-0": "docs", "doc/x": "docs",
+            "research/x": "pesquisa", "pesquisa/x": "pesquisa", "spike/x": "pesquisa",
+            "traycer/fix-login": "bugfix", "traycer/docs-vault": "docs",
+        }
+        for branch, expected in cases.items():
+            with self.subTest(branch):
+                self.assertEqual(usage.infer_category(branch), expected)
+
+    def test_a_branch_that_says_nothing_gives_no_category(self):
+        for branch in (None, "", "main", "master", "HEAD", "chore/x", "refactor/x", "autobuild/harness-tokens",
+                       "traycer/cosmic-turtle", "traycer/mvp4.5", "feature", "fixture/x", "featx/y"):
+            with self.subTest(branch):
+                self.assertIsNone(usage.infer_category(branch))
+
+    def test_the_record_takes_the_first_branch_the_transcript_recorded(self):
+        rows = [{"type": "custom-title"}, reply("m1", out=1, gitBranch="fix/a"), reply("m2", out=1, gitBranch="docs/b")]
+        self.update(rows)
+        self.assertEqual(self.record()["category"], "bugfix")
+
+    def test_a_detached_head_is_skipped_for_the_next_branch(self):
+        self.update([reply("m1", out=1, gitBranch="HEAD"), reply("m2", out=1, gitBranch="feat/x")])
+        self.assertEqual(self.record()["category"], "feature")
+
+    def test_without_a_usable_branch_the_category_stays_empty(self):
+        self.update([reply("m1", out=1), reply("m2", out=1, gitBranch="traycer/cosmic-turtle"), reply("m3", gitBranch=7)])
+        self.assertIsNone(self.record()["category"])
+
+    def test_sb_task_set_beats_the_branch_and_keeps_the_exact_keys(self):
+        usage.write_task(self.state, "s1", "docs")
+        self.update([reply("m1", out=1, gitBranch="fix/x")])
+        self.assertEqual(self.record()["category"], "docs")
+        self.assertEqual(len(self.record()), 13)
+
+    def test_a_tampered_task_file_falls_back_to_the_branch(self):
+        self.update([reply("m1", out=1, gitBranch="fix/x")])
+        (usage.usage_dir(self.state) / "s1.task").write_text("xpto\n")
+        self.update()
+        self.assertEqual(self.record()["category"], "bugfix")
+
+    def test_a_branch_in_a_subagent_file_is_ignored(self):
+        write_jsonl(self.transcript, [reply("m1", out=1)])
+        write_jsonl(self.transcript.parent / "t1" / "subagents" / "agent-a.jsonl", [reply("s1", out=1, gitBranch="fix/x")])
+        usage.update(self.state, "s1", "repo", self.transcript)
+        self.assertIsNone(self.record()["category"])
+
+    def test_the_report_counts_the_inferred_category(self):
+        self.update([reply("m1", out=5, gitBranch="research/x")])
+        report = usage.build_report(self.state, 30, dt.date(2026, 10, 29))
+        self.assertEqual(report["categories"]["pesquisa"]["sessions"], 1)
+        self.assertEqual(report["categories"][usage.UNCATEGORIZED]["sessions"], 0)
+
+
+class BackfillTest(Fixture):
+    def setUp(self):
+        super().setUp()
+        self.projects = self.root / "projects"
+
+    def seed(self, session, branch, category=None, project="repo"):
+        write_jsonl(self.projects / "p" / f"{session}.jsonl", [reply(f"m-{session}", out=3, gitBranch=branch)])
+        usage.update(self.state, session, project, self.projects / "p" / f"{session}.jsonl")
+        path = usage.usage_dir(self.state) / f"{session}.json"
+        record = {**json.loads(path.read_text()), "category": category}
+        path.write_text(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
+        return path
+
+    def test_it_fills_only_the_category_and_counts_the_rest(self):
+        fixed = self.seed("s-fix", "fix/x", project="nome-antigo")
+        main = self.seed("s-main", "main")
+        done_ = self.seed("s-done", "fix/y", category="docs")
+        orphan = self.seed("s-orphan", "fix/z")
+        (self.projects / "p" / "s-orphan.jsonl").unlink()
+        before = json.loads(fixed.read_text())
+        self.assertEqual(usage.backfill(self.state, self.projects), {"filled": 1, "unchanged": 1, "no_transcript": 1})
+        self.assertEqual(json.loads(fixed.read_text()), {**before, "category": "bugfix"})
+        self.assertIsNone(json.loads(main.read_text())["category"])
+        self.assertEqual(json.loads(done_.read_text())["category"], "docs")
+        self.assertIsNone(json.loads(orphan.read_text())["category"])
+
+    def test_an_explicit_task_wins_and_a_second_run_changes_nothing(self):
+        self.seed("s1", "fix/x")
+        usage.write_task(self.state, "s1", "docs")
+        usage.backfill(self.state, self.projects)
+        self.assertEqual(self.record()["category"], "docs")
+        self.assertEqual(usage.backfill(self.state, self.projects), {"filled": 0, "unchanged": 0, "no_transcript": 0})
+
+    def test_the_cli_reports_the_counts(self):
+        self.seed("s1", "feat/x")
+        out = self.run_sb("usage", "backfill", env={"HOME": str(self.root)})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertIn("usage backfill:", out.stdout)
+
+
 class ReportTest(Fixture):
     def seed(self, name, date, category, eq, output, limit_at=()):
         directory = usage.usage_dir(self.state)

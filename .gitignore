@@ -5,3 +5,7 @@
 .obsidian/plugins/*/data.json
 00_META/eval/runs/
 __pycache__/
+
+# derived FTS5 search index (generate_manifests.py / vault_index.py)
+00_META/manifests/index.sqlite
+00_META/manifests/index.sqlite.tmp

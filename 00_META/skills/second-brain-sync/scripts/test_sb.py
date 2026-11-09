@@ -71,7 +71,8 @@ class VaultFixture(unittest.TestCase):
         self.state = Path(self._tmp.name) / "state"
         self.state.mkdir()
         # the ranker reads <state>/*.injected: never the real state dir of the machine
-        patcher = mock.patch.dict(os.environ, {"SECOND_BRAIN_STATE_DIR": str(self.state)})
+        # SECOND_BRAIN_INDEX=0: these tests pin the vault_rank.sh output; the FTS5 path lives in test_search_fts.py
+        patcher = mock.patch.dict(os.environ, {"SECOND_BRAIN_STATE_DIR": str(self.state), "SECOND_BRAIN_INDEX": "0"})
         patcher.start()
         self.addCleanup(patcher.stop)
         (self.vault / "20_Permanent_Notes").mkdir(parents=True)
@@ -418,6 +419,61 @@ class SyncDoctorReportTest(VaultFixture):
     def test_clean_synced_note_says_so(self):
         self.note("Alpha")
         self.assertIn("no issues", self.run_report({"20_Permanent_Notes/Alpha.md"}))
+
+
+class LazyImportsTest(unittest.TestCase):
+    """Short-lived hooks (`sb task set`, `sb status`) must not pay for the modules of other subcommands."""
+
+    HEAVY = ("candidates", "ctxpack", "observe", "patches", "review", "review_notes", "usage", "generate_manifests")
+    PROBE = (
+        "import json, sys\n"
+        "sys.path.insert(0, %r)\n"
+        "import sb\n"
+        "code = sb.main(json.loads(sys.argv[1]))\n"
+        "print(json.dumps(sorted(m for m in sys.modules if m in json.loads(sys.argv[2]))))\n"
+    )
+
+    def loaded(self, argv):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = dict(os.environ, SECOND_BRAIN_STATE_DIR=tmp)
+            argv = [a.replace("@TMP", tmp) for a in argv]
+            done = subprocess.run(
+                [sys.executable, "-c", self.PROBE % str(SB.parent), json.dumps(argv), json.dumps(self.HEAVY)],
+                capture_output=True, text=True, env=env, check=False)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        return set(json.loads(done.stdout.strip().splitlines()[-1]))
+
+    def test_importing_sb_loads_no_subcommand_module(self):
+        done = subprocess.run(
+            [sys.executable, "-c",
+             f"import sys; sys.path.insert(0, {str(SB.parent)!r}); import sb; "
+             f"print([m for m in {list(self.HEAVY)!r} if m in sys.modules])"],
+            capture_output=True, text=True, check=False)
+        self.assertEqual(done.stdout.strip(), "[]", done.stderr)
+
+    def test_task_set_loads_only_usage(self):
+        loaded = self.loaded(["task", "--vault-path", "@TMP", "set", "feature", "--session", "abc123"])
+        self.assertEqual(loaded, {"usage"})
+
+    def test_status_loads_candidates_and_manifests_only(self):
+        loaded = self.loaded(["status", "--vault-path", "@TMP"])
+        self.assertEqual(loaded, {"candidates", "generate_manifests"})
+
+    def test_usage_report_loads_only_usage(self):
+        self.assertEqual(self.loaded(["usage", "--vault-path", "@TMP", "report"]), {"usage"})
+
+    def test_candidate_list_does_not_load_review_or_observe(self):
+        loaded = self.loaded(["candidate", "--vault-path", "@TMP", "list"])
+        self.assertEqual(loaded, {"candidates"})
+
+    def test_default_vault_root_matches_generate_manifests(self):
+        self.assertEqual(sb.DEFAULT_VAULT_ROOT, gm.DEFAULT_VAULT_ROOT)
+
+    def test_full_parser_still_builds_every_subcommand(self):
+        parser = sb.build_parser()
+        for argv in (["task", "set", "docs"], ["usage", "report"], ["candidate", "list"],
+                     ["review", "capture", "next"], ["doctor"], ["review", "stock", "next"]):
+            parser.parse_args(argv)
 
 
 if __name__ == "__main__":

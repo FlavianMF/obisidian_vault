@@ -54,6 +54,10 @@ class Fixture(unittest.TestCase):
         base = Path(os.path.realpath(self._tmp.name))
         self.base, self.state, self.root = base, base / "state", base / "proj"
         self.root.mkdir()
+        # the fixture lives under /tmp, an ephemeral marker; the env var (inherited by CLI subprocesses) lifts only /tmp
+        env = mock.patch.dict(os.environ, {"SB_PATCHES_ALLOW_TMP": "1"})
+        env.start()
+        self.addCleanup(env.stop)
 
     # --- the project and its log
     def write(self, rel, data="x\n", root=None):
@@ -184,6 +188,29 @@ class RulesTest(Fixture):
         self.assertEqual(self.metas(), [])
         self.run_session("s1", [(Path("/etc/passwd"), 10)] * 3, root=Path("/"))
         self.assertEqual(self.metas(), [])
+
+    def test_traycer_worktree_and_epic_roots_make_no_patch(self):
+        for kind in ("worktrees", "epics"):
+            with self.subTest(kind):
+                root = self.base / ".traycer" / kind / "x" / "proj"
+                root.mkdir(parents=True)
+                self.seed("s1", self.thrice(root=root))
+                observe.summarize(self.state, "s1", "proj", None, root=root)
+                self.assertEqual(self.metas(), [])
+
+    def test_a_tmp_root_makes_no_patch(self):
+        with mock.patch.dict(os.environ):
+            os.environ.pop("SB_PATCHES_ALLOW_TMP")
+            self.seed("s1", self.thrice())
+            observe.summarize(self.state, "s1", "proj", None, root=self.root)
+        self.assertEqual(self.metas(), [])
+
+    def test_the_default_markers_reject_tmp_and_traycer_roots(self):
+        os.environ.pop("SB_PATCHES_ALLOW_TMP")
+        for root in ("/tmp/x/proj", "/home/u/.traycer/worktrees/a/b", "/home/u/.traycer/epics/e/artifacts/p"):
+            self.assertTrue(patches.ephemeral_root(root), root)
+        self.assertFalse(patches.ephemeral_root("/home/u/projetos/app"))
+        self.assertFalse(patches.ephemeral_root("/home/u/mytmp/app"))
 
     def test_without_a_root_the_old_behaviour_holds(self):
         result = self.run_session("s1", self.thrice(), root=None)

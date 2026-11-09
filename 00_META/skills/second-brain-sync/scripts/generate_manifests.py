@@ -355,7 +355,24 @@ def write_manifests(vault_root: Path) -> bool:
             except OSError:
                 break
 
+    rebuild_search_index(vault_root)
     return changed
+
+
+def rebuild_search_index(vault_root: Path) -> int | None:
+    """Refresh the FTS5 index (vault_index.py) next to the manifests; None when disabled or it failed.
+
+    The index is a derived cache for `sb search`: a failure here (no FTS5 in this sqlite, read-only disk) must
+    never break manifest generation, and the search falls back to vault_rank.sh without it.
+    """
+    try:
+        import vault_index
+        if not vault_index.index_enabled():
+            return None
+        return vault_index.build_index(vault_root)
+    except Exception as err:  # noqa: BLE001 - derived cache, never fatal
+        print(f"warning: search index not updated ({err})", file=sys.stderr)
+        return None
 
 
 def check_manifests(vault_root: Path) -> bool:

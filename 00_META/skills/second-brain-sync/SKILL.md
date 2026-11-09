@@ -362,6 +362,10 @@ frontmatter, secrets, stale notes; exits 1 on an error-level issue; add `--json`
 `search <query>` (the L1 ranker; `search --json <query>` returns path, title, type, summary, coverage, confidence, score and terms per hit, to judge a note without opening it). Run `doctor` before a large sync. A line with `sb-allow-secret` is
 skipped by the secret scan, for a deliberate fake example.
 
+**Lint canônico do cofre.** `sb.py doctor [--json] [--limit N] [--stale-days N]` é o único lint. Ele substitui a
+skill `/vault-lint` do material Agentic OS. `--json` devolve a lista de achados, vazia quando limpo. `--stale-days N`
+muda o limite das notas desatualizadas (padrão 180, só aviso). O código de saída é 1 só com erro.
+
 **Ranking that learns (`vault_rank.sh`).** The ranker multiplies a note's score by `0.8 + 0.4 * r` once the note entered the context in 10 or more sessions of the last 7 days (`<sid>.injected` in the state dir). `r` is the share of those sessions where the agent also opened it (`<sid>.opened`), each session weighted from 1.0 (now) to 0.25 (7 days). The factor stays in `[0.8, 1.2]`: a note nobody opens loses at most 20% and is never zeroed. The set of rows and the other columns do not change. `SECOND_BRAIN_RANK_LEARN=0` (also `false`, `no`, `off`) turns it off and the output is the plain score; `SECOND_BRAIN_RANK_MIN_INJECTIONS=N` sets the minimum. Measure the golden set with `SECOND_BRAIN_RANK_LEARN=0`. A note that helps only through the hint, without a `Read`, does not rise.
 
 **`sb candidate` (queue of note candidates).** When you are corrected or find a reusable trap or
@@ -383,7 +387,10 @@ queue reaches the vault until a person reviews it.
 (`CLAUDE_CODE_SESSION_ID`, or `--session`). At the end of every turn the Stop hook writes one record per
 session to `~/.local/state/second-brain/usage/` (date, project, category, tokens, usage-limit notices; mode 0600,
 90-day TTL). It never stores message text or the text of a notice. `sb.py usage report [--days N] [--json]` shows
-tokens per category and usage-limit notices per week. The token figures use the same formula as
+tokens per category and usage-limit notices per week. Without `task set`, the Stop hook infers the category from the
+git branch in the transcript (`feat|feature/*` feature, `fix|bugfix|hotfix/*` bugfix, `docs|doc/*` docs,
+`research|pesquisa|spike/*` pesquisa); `main`, `chore/*` and `traycer/<slug>` stay `sem-categoria`, and an explicit
+`task set` always wins. `sb.py usage backfill` applies the same rule to old records. The token figures use the same formula as
 `00_META/eval/usage_baseline.sh`.
 
 **`sb review web` (interface web local de triagem; ativada via `/review-web` ou `/sb-review`).**
