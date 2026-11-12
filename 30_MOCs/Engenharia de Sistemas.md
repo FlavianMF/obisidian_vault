@@ -46,6 +46,8 @@ SORT status DESC
 
 ## 🛠️ Ferramentas e Padrões
 - [[Ruby-Testing-Docker|Padrão: Testes Ruby on Rails com Docker]]
+- [[Dev container via Makefile + compose com UID e grupo do socket Docker|Padrão: dev container com UID e GID do host]]
+- [[Volumes Docker por etapa (node_modules e .next) enchem o disco|Armadilha: volumes Docker por etapa enchem o disco]]
 - [[Plano de Gerenciamento de Engenharia de Sistemas (SEMP)|O SEMP como Guia de Gestão Técnica]]
 ```dataview
 TABLE type as Tipo, project as Projeto
