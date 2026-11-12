@@ -3,18 +3,29 @@ limits:
   quota_min_free_pct: 30
   max_implementers: 2
 secretario:
-  traycer_task: "e1da89de-b22a-4569-b86c-52fa24ae8538"
+  traycer_task: e1da89de-b22a-4569-b86c-52fa24ae8538
 web:
   port: 8765
 projects:
-  - slug: secretario_projetos
-    note: 40_Projects/secretario_projetos.md
-    repo: git@github.com:FlavianMF/dotfiles.git
-    checkout: ~/dotfiles
-    branch: master
-    setup: []
-    test: "make test"
-    harness: claude
-    model: sonnet
-    effort: high
-    env: []
+- slug: secretario_projetos
+  note: 40_Projects/secretario_projetos.md
+  repo: git@github.com:FlavianMF/dotfiles.git
+  checkout: ~/dotfiles
+  branch: master
+  setup: []
+  test: make test
+  harness: claude
+  model: sonnet
+  effort: high
+  env: []
+- slug: flows_editor
+  note: 40_Projects/flows_editor.md
+  repo: FlavianMF/flows-editor
+  checkout: /home/flv/projetos_claude/flows-editor
+  branch: main
+  setup: []
+  test: ''
+  harness: claude
+  model: sonnet
+  effort: high
+  env: []
