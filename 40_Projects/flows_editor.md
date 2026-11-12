@@ -7,7 +7,7 @@ status: active
 confidence: low
 prioridade: P2
 fase: spec
-proximo_passo: 
+proximo_passo: Rodar server.jev_route_report em alguns dias e decidir se liga a aplicação do roteador Jev
 bloqueio: 
 ---
 
